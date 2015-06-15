@@ -23,7 +23,8 @@ type
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
     procedure HandlePreviewClicked(Sender: TObject);
-    procedure SelectedPackageChanged();
+    procedure ChangeSelectedPackage(const APackage: IDNPackage);
+    function GetPreviewForPackage(const APackage: IDNPackage): TPreview;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -74,6 +75,22 @@ begin
   inherited;
 end;
 
+function TPackageOverView.GetPreviewForPackage(
+  const APackage: IDNPackage): TPreview;
+var
+  LPreview: TPreview;
+begin
+  Result := nil;
+  for LPreview in FPreviews do
+  begin
+    if LPreview.Package = APackage then
+    begin
+      Result := LPreview;
+      Break;
+    end;
+  end;
+end;
+
 procedure TPackageOverView.HandlePackagesChanged(Sender: TObject;
   const Item: IDNPackage; Action: TCollectionNotification);
 begin
@@ -85,8 +102,7 @@ end;
 
 procedure TPackageOverView.HandlePreviewClicked(Sender: TObject);
 begin
-  FSelectedPackage := (Sender as TPreview).Package;
-  SelectedPackageChanged();
+  ChangeSelectedPackage((Sender as TPreview).Package);
 end;
 
 procedure TPackageOverView.RemovePreview(const APackage: IDNPackage);
@@ -103,13 +119,29 @@ begin
   end;
   if FSelectedPackage = APackage then
   begin
-    FSelectedPackage := nil;
-    SelectedPackageChanged();
+    ChangeSelectedPackage(nil);
   end;
 end;
 
-procedure TPackageOverView.SelectedPackageChanged;
+procedure TPackageOverView.ChangeSelectedPackage;
+var
+  LPreview: TPreview;
 begin
+  if Assigned(FSelectedPackage) then
+  begin
+    LPreview := GetPreviewForPackage(FSelectedPackage);
+    if Assigned(LPreview) then
+      LPreview.Selected := False;
+  end;
+
+  FSelectedPackage := APackage;
+  if Assigned(FSelectedPackage) then
+  begin
+    LPreview := GetPreviewForPackage(FSelectedPackage);
+    if Assigned(LPreview) then
+      LPreview.Selected := True;
+  end;
+
   if Assigned(FOnSelectedPackageChanged) then
     FOnSelectedPackageChanged(Self);
 end;

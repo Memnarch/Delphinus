@@ -14,6 +14,7 @@ type
     FDescription: string;
     FPicture: TPicture;
     FDownloadLocation: string;
+    FLastUpdated: string;
     function GetDownloadLocation: string;
     procedure SetDownloadLocation(const Value: string);
     function GetAuthor: string;
@@ -23,6 +24,8 @@ type
     procedure SetAuthor(const Value: string);
     procedure SetDescription(const Value: string);
     procedure SetName(const Value: string);
+    function GetLastUpdated: string;
+    procedure SetLastUpdated(const Value: string);
   public
     constructor Create();
     destructor Destroy(); override;
@@ -31,6 +34,7 @@ type
     property Description: string read GetDescription write SetDescription;
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
+    property LastUpdated: string read GetLastUpdated write SetLastUpdated;
   end;
 
 implementation
@@ -64,6 +68,11 @@ begin
   Result := FDownloadLocation;
 end;
 
+function TDNPackage.GetLastUpdated: string;
+begin
+  Result := FLastUpdated;
+end;
+
 function TDNPackage.GetName: string;
 begin
   Result := FName;
@@ -87,6 +96,11 @@ end;
 procedure TDNPackage.SetDownloadLocation(const Value: string);
 begin
   FDownloadLocation := Value;
+end;
+
+procedure TDNPackage.SetLastUpdated(const Value: string);
+begin
+  FLastUpdated := Value;
 end;
 
 procedure TDNPackage.SetName(const Value: string);

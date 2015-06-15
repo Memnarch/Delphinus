@@ -14,12 +14,15 @@ type
   TPreview = class(TCustomControl)
   private
     FPackage: IDNPackage;
+    FSelected: Boolean;
+    procedure SetSelected(const Value: Boolean);
   protected
     procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write FPackage;
+    property Selected: Boolean read FSelected write SetSelected;
     property OnClick;
   end;
 
@@ -56,7 +59,26 @@ begin
     Canvas.Font.Style := [];
     Canvas.TextOut(5, 140, FPackage.Author);
     Canvas.Brush.Style := bsClear;
+    if Selected then
+    begin
+      Canvas.Pen.Color := clBlue;
+      Canvas.Pen.Width := 2;
+    end
+    else
+    begin
+      Canvas.Pen.Color := clNone;
+      Canvas.Pen.Width := 1;
+    end;
     Canvas.Rectangle(0, 0, Width, Height);
+  end;
+end;
+
+procedure TPreview.SetSelected(const Value: Boolean);
+begin
+  if FSelected <> Value then
+  begin
+    FSelected := Value;
+    Invalidate;
   end;
 end;
 

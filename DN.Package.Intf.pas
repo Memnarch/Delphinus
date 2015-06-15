@@ -17,11 +17,14 @@ type
     procedure SetAuthor(const Value: string);
     procedure SetDescription(const Value: string);
     procedure SetName(const Value: string);
+    function GetLastUpdated: string;
+    procedure SetLastUpdated(const Value: string);
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
+    property LastUpdated: string read GetLastUpdated write SetLastUpdated;
   end;
 
 implementation

@@ -159,6 +159,7 @@ begin
             LPackage.Name := LItem.GetValue('name').Value;
             LPackage.Description := LItem.GetValue('description').Value;
             LPackage.Author := TJSonObject(LItem.GetValue('owner')).GetValue('login').Value;
+            LPackage.LastUpdated := LItem.GetValue('pushed_at').Value;
             LPackage.DownloadLoaction := LItem.GetValue('archive_url').Value;
             LPackage.DownloadLoaction := StringReplace(LPackage.DownloadLoaction, CArchivePlaceholder, 'zipball/' + LItem.GetValue('default_branch').Value, []);
             LInfoLocation := CGithubRaw + LItem.GetValue('full_name').Value + '/' + LItem.GetValue('default_branch').Value + '/info.json';
