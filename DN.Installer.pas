@@ -20,9 +20,12 @@ type
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False); virtual;
     procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
     procedure ProcessSourceFolders(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string);
-    procedure ProcessProjects(AObect: TJSONObject);
+    function ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
+    function InstallProject(const AProjectFile: string): Boolean;
     function IsSupported(AObject: TJSonObject): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
+    procedure BeforeCompile(const AProjectFile: string); virtual;
+    procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -36,9 +39,26 @@ uses
   StrUtils,
   Masks;
 
+const
+  CLibDir = 'lib';
+  CBinDir = 'bin';
+  CSourceDir = 'source';
+  CInstallFile = 'install.json';
+
 { TDNInstaller }
 
 procedure TDNInstaller.AddSearchPath(const ASearchPath: string);
+begin
+
+end;
+
+procedure TDNInstaller.AfterCompile(const AProjectFile: string;
+  const ALog: TStrings; ASuccessFull: Boolean);
+begin
+
+end;
+
+procedure TDNInstaller.BeforeCompile(const AProjectFile: string);
 begin
 
 end;
@@ -113,7 +133,7 @@ var
   LStream: TStringStream;
 begin
   Result := False;
-  LInstallerFile := TPath.Combine(ASourceDirectory, 'install.json');
+  LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
   if TFile.Exists(LInstallerFile) then
   begin
     LStream := TStringStream.Create();
@@ -124,9 +144,8 @@ begin
       begin
         try
           ProcessSearchPathes(LInfo, ATargetDirectory);
-          ProcessSourceFolders(LInfo, ASourceDirectory, TPath.Combine(ATargetDirectory, 'source'));
-          ProcessProjects(LInfo);
-          Result := True;
+          ProcessSourceFolders(LInfo, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
+          Result := ProcessProjects(LInfo, ASourceDirectory, ATargetDirectory);
         finally
           LInfo.Free;
         end;
@@ -135,6 +154,11 @@ begin
       LStream.Free;
     end;
   end;
+end;
+
+function TDNInstaller.InstallProject(const AProjectFile: string): Boolean;
+begin
+  Result := False;
 end;
 
 function TDNInstaller.IsSupported(AObject: TJSonObject): Boolean;
@@ -148,12 +172,49 @@ begin
     Result := Result and (FCompilerVersion >= StrToIntDef(LMin.Value, 0));
 
   if Assigned(LMax) then
-    Result := Result and (FCompilerVersion <= STrToIntDef(LMax.Value, 1000));
+    Result := Result and (FCompilerVersion <= StrToIntDef(LMax.Value, 1000));
 end;
 
-procedure TDNInstaller.ProcessProjects(AObect: TJSONObject);
+function TDNInstaller.ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
+var
+  LProjects: TJSONArray;
+  LProject: TJSonObject;
+  LInstallValue: TJSONValue;
+  LInstall: Boolean;
+  LProjectFile: string;
+  i: Integer;
 begin
+  Result := True;
+  FCompiler.DCUOutput := TPath.Combine(ATargetDirectory, CLibDir);
+  FCompiler.ExeOutput := TPath.Combine(ATargetDirectory, CBinDir);
+  LProjects := TJSonArray(AObject.GetValue('projects'));
+  if Assigned(LProjects) then
+  begin
+    for i := 0 to LProjects.Count - 1 do
+    begin
+      LProject := LProjects.Items[i] as TJSonObject;
+      if IsSupported(LProject) then
+      begin
+        LProjectFile := TPath.Combine(ASourceDirectory, LProject.GetValue('project').Value);
+        BeforeCompile(LProjectFile);
+        Result := FCompiler.Compile(LProjectFile);
+        AfterCompile(LProjectFile, FCompiler.Log, Result);
+        if Result then
+        begin
+          LInstallValue := LProject.GetValue('install');
+          if Assigned(LInstallValue) then
+            LInstall := StrToBoolDef(LInstallValue.Value, False)
+          else
+            LInstall := False;
 
+          if LInstall then
+            Result := InstallProject(LProjectFile);
+        end;
+        if not Result then
+          Break;
+      end;
+    end;
+  end;
 end;
 
 procedure TDNInstaller.ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
