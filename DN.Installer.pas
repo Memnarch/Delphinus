@@ -6,16 +6,25 @@ uses
   Classes,
   Types,
   SysUtils,
+  Generics.Collections,
   DN.Installer.Intf,
   DN.Compiler.Intf,
   JSon,
   DBXJSon;
 
 type
+  TCompiledPackage = packed record
+    BPLFile: string;
+    DCPFile: string;
+    Installed: Boolean;
+  end;
+
   TDNInstaller = class(TInterfacedObject, IDNInstaller)
   private
     FCompiler: IDNCompiler;
     FCompilerVersion: Integer;
+    FSearchPathes: string;
+    FPackages: TList<TCompiledPackage>;
     procedure AddSearchPath(const ASearchPath: string); virtual;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False); virtual;
     procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
@@ -26,6 +35,8 @@ type
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
+    procedure SaveUninstall(const ATargetDirectory: string);
+    procedure Reset();
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -37,19 +48,25 @@ implementation
 uses
   IOUtils,
   StrUtils,
-  Masks;
+  Masks,
+  DN.ProjectInfo.Intf,
+  DN.ProjectInfo;
 
 const
   CLibDir = 'lib';
   CBinDir = 'bin';
   CSourceDir = 'source';
   CInstallFile = 'install.json';
+  CUninstallFile = 'uninstall.json';
 
 { TDNInstaller }
 
 procedure TDNInstaller.AddSearchPath(const ASearchPath: string);
 begin
-
+  if FSearchPathes = '' then
+    FSearchPathes := ASearchPath
+  else
+    FSearchPathes := FSearchPathes + ';' + ASearchPath;
 end;
 
 procedure TDNInstaller.AfterCompile(const AProjectFile: string;
@@ -101,10 +118,12 @@ begin
   inherited Create();
   FCompiler := ACompiler;
   FCompilerVersion := ACompilerVersion;
+  FPackages := TList<TCompiledPackage>.Create();
 end;
 
 destructor TDNInstaller.Destroy;
 begin
+  FPackages.Free();
   inherited;
 end;
 
@@ -133,6 +152,7 @@ var
   LStream: TStringStream;
 begin
   Result := False;
+  Reset();
   LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
   if TFile.Exists(LInstallerFile) then
   begin
@@ -154,6 +174,7 @@ begin
       LStream.Free;
     end;
   end;
+  SaveUninstall(ATargetDirectory);
 end;
 
 function TDNInstaller.InstallProject(const AProjectFile: string): Boolean;
@@ -183,8 +204,11 @@ var
   LInstall: Boolean;
   LProjectFile: string;
   i: Integer;
+  LInfo: IDNProjectInfo;
+  LCompiledPackage: TCompiledPackage;
 begin
   Result := True;
+  LInfo := TDNProjectInfo.Create();
   FCompiler.DCUOutput := TPath.Combine(ATargetDirectory, CLibDir);
   FCompiler.ExeOutput := TPath.Combine(ATargetDirectory, CBinDir);
   LProjects := TJSonArray(AObject.GetValue('projects'));
@@ -199,6 +223,7 @@ begin
         BeforeCompile(LProjectFile);
         Result := FCompiler.Compile(LProjectFile);
         AfterCompile(LProjectFile, FCompiler.Log, Result);
+        Result := LInfo.LoadFromFile(LProjectFile);
         if Result then
         begin
           LInstallValue := LProject.GetValue('install');
@@ -208,7 +233,15 @@ begin
             LInstall := False;
 
           if LInstall then
-            Result := InstallProject(LProjectFile);
+            Result := LInfo.IsPackage and InstallProject(LProjectFile);
+
+          if LInfo.IsPackage then
+          begin
+            LCompiledPackage.BPLFile := TPath.Combine(FCompiler.BPLOutput, LInfo.BinaryName);
+            LCompiledPackage.DCPFile := TPath.Combine(FCompiler.DCPOutput, LInfo.DCPName);
+            LCompiledPackage.Installed := LInstall;
+            FPackages.Add(LCompiledPackage);
+          end;
         end;
         if not Result then
           Break;
@@ -277,6 +310,41 @@ begin
         CopyDirectory(TPath.Combine(ASourceDirectory, LRelPath), TPath.Combine(ATargetDirectory, LRelPath), LFilter, LRecursive);
       end;
     end;
+  end;
+end;
+
+procedure TDNInstaller.Reset;
+begin
+  FSearchPathes := '';
+  FPackages.Clear();
+end;
+
+procedure TDNInstaller.SaveUninstall(const ATargetDirectory: string);
+var
+  LData: TStringStream;
+  LUninstall, LPackage: TJSONObject;
+  LPackages: TJSONArray;
+  LCompiledPackage: TCompiledPackage;
+begin
+  LData := TStringStream.Create();
+  LUninstall := TJSONObject.Create();
+  try
+    LUninstall.AddPair('search_pathes', FSearchPathes);
+    LPackages := TJSONArray.Create();
+    LUninstall.AddPair('packages', LPackages);
+    for LCompiledPackage in FPackages do
+    begin
+      LPackage := TJSONObject.Create();
+      LPackage.AddPair('bpl_file', LCompiledPackage.BPLFile);
+      LPackage.AddPair('dcp_file', LCompiledPackage.DCPFile);
+      LPackage.AddPair('installed', BoolToStr(LCompiledPackage.Installed, True));
+      LPackages.AddElement(LPackage);
+    end;
+    LData.WriteString(LUninstall.ToString);
+    LData.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
+  finally
+    LUninstall.Free;
+    LData.Free;
   end;
 end;
 
