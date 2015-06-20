@@ -7,6 +7,7 @@ uses
   Types,
   SysUtils,
   Generics.Collections,
+  DN.Types,
   DN.Installer.Intf,
   DN.Compiler.Intf,
   JSon,
@@ -25,6 +26,7 @@ type
     FCompilerVersion: Integer;
     FSearchPathes: string;
     FPackages: TList<TCompiledPackage>;
+    FOnMessage: TMessageEvent;
     procedure AddSearchPath(const ASearchPath: string); virtual;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False); virtual;
     procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
@@ -37,10 +39,15 @@ type
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     procedure SaveUninstall(const ATargetDirectory: string);
     procedure Reset();
+    function GetOnMessage: TMessageEvent;
+    procedure SetOnMessage(const Value: TMessageEvent);
+  protected
+    procedure DoMessage(AType: TMessageType; const AMessage: string);
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
     function Install(const ASourceDirectory, ATargetDirectory: string): Boolean;
+    property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
 implementation
@@ -73,12 +80,19 @@ end;
 procedure TDNInstaller.AfterCompile(const AProjectFile: string;
   const ALog: TStrings; ASuccessFull: Boolean);
 begin
-
+  if ASuccessFull then
+  begin
+    DoMessage(mtNotification, 'Success');
+  end
+  else
+  begin
+    DoMessage(mtError, 'Failed');
+  end;
 end;
 
 procedure TDNInstaller.BeforeCompile(const AProjectFile: string);
 begin
-
+  DoMessage(mtNotification, 'Compiling ' + ExtractFileName(AProjectFile));
 end;
 
 procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
@@ -128,6 +142,12 @@ begin
   inherited;
 end;
 
+procedure TDNInstaller.DoMessage(AType: TMessageType; const AMessage: string);
+begin
+  if Assigned(FOnMessage) then
+    FOnMessage(AType, AMessage);
+end;
+
 function TDNInstaller.FileMatchesFilter(const AFile: string;
   const AFilter: TStringDynArray): Boolean;
 var
@@ -143,6 +163,11 @@ begin
         Break;
     end;
   end;
+end;
+
+function TDNInstaller.GetOnMessage: TMessageEvent;
+begin
+  Result := FOnMessage;
 end;
 
 function TDNInstaller.Install(const ASourceDirectory,
@@ -235,7 +260,13 @@ begin
             LInstall := False;
 
           if LInstall then
+          begin
             Result := LInfo.IsPackage and InstallProject(LProjectFile);
+            if Result then
+              DoMessage(mtNotification, 'installed')
+            else
+              DoMessage(mtError, 'failed to install');
+          end;
 
           if LInfo.IsPackage then
           begin
@@ -263,6 +294,7 @@ begin
   LPathArray := TJSonArray(AObject.GetValue('search_pathes'));
   if Assigned(LPathArray) then
   begin
+    DoMessage(mtNotification, 'Adding Searchpathes:');
     for i := 0 to LPathArray.Count - 1 do
     begin
       LPath := LPathArray.Items[i] as TJSonObject;
@@ -271,6 +303,7 @@ begin
         LPathes := SplitString(LPath.GetValue('pathes').Value, ';');
         for LRelPath in LPathes do
         begin
+          DoMessage(mtNotification, LRelPath);
           AddSearchPath(TPath.Combine(ARootDirectory, LRelPath));
         end;
       end;
@@ -291,6 +324,7 @@ begin
   LFolders := TJSonArray(AObject.GetValue('source_folders'));
   if Assigned(LFolders) then
   begin
+    DoMessage(mtNotification, 'Copying sourcefolders:');
     for i := 0 to LFolders.Count - 1 do
     begin
       LFolder := LFolders.Items[i] as TJSonObject;
@@ -309,6 +343,9 @@ begin
         else
           SetLength(LFilter, 0);
 
+        DoMessage(mtNotification, LRelPath);
+        if SameText(LRelPath, '.') then
+          LRelPath := '';
         CopyDirectory(TPath.Combine(ASourceDirectory, LRelPath), TPath.Combine(ATargetDirectory, LRelPath), LFilter, LRecursive);
       end;
     end;
@@ -348,6 +385,11 @@ begin
     LUninstall.Free;
     LData.Free;
   end;
+end;
+
+procedure TDNInstaller.SetOnMessage(const Value: TMessageEvent);
+begin
+  FOnMessage := Value;
 end;
 
 end.
