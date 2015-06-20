@@ -227,8 +227,6 @@ function TDNInstaller.ProcessProjects(AObject: TJSONObject; const ASourceDirecto
 var
   LProjects: TJSONArray;
   LProject: TJSonObject;
-  LInstallValue: TJSONValue;
-  LInstall: Boolean;
   LProjectFile: string;
   i: Integer;
   LInfo: IDNProjectInfo;
@@ -253,26 +251,19 @@ begin
         Result := LInfo.LoadFromFile(LProjectFile);
         if Result then
         begin
-          LInstallValue := LProject.GetValue('install');
-          if Assigned(LInstallValue) then
-            LInstall := StrToBoolDef(LInstallValue.Value, False)
-          else
-            LInstall := False;
-
-          if LInstall then
-          begin
-            Result := LInfo.IsPackage and InstallProject(LProjectFile);
-            if Result then
-              DoMessage(mtNotification, 'installed')
-            else
-              DoMessage(mtError, 'failed to install');
-          end;
-
           if LInfo.IsPackage then
           begin
+            if not LInfo.IsRuntimeOnlyPackage then
+            begin
+              Result := InstallProject(LProjectFile);
+              if Result then
+                DoMessage(mtNotification, 'installed')
+              else
+                DoMessage(mtError, 'failed to install');
+            end;
             LCompiledPackage.BPLFile := TPath.Combine(FCompiler.BPLOutput, LInfo.BinaryName);
             LCompiledPackage.DCPFile := TPath.Combine(FCompiler.DCPOutput, LInfo.DCPName);
-            LCompiledPackage.Installed := LInstall;
+            LCompiledPackage.Installed := not LInfo.IsRuntimeOnlyPackage;
             FPackages.Add(LCompiledPackage);
           end;
         end;

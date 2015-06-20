@@ -8,8 +8,10 @@ type
     function GetBinaryName: string;
     function GetDCPName: string;
     function GetIsPackage: Boolean;
+    function GetIsRuntimeOnlyPackage: Boolean;
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
+    property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
   end;

@@ -15,14 +15,17 @@ type
     FBinaryName: string;
     FDCPName: string;
     FIsPackage: Boolean;
+    FIsRuntimeOnlyPackage: Boolean;
     function GetBinaryName: string;
     function GetDCPName: string;
     function GetIsPackage: Boolean;
     function GetDefaultExtension(const AAppType: string): string;
     function GetPropertyGroupOfConfig(const AProject: IXMLNode; const AConfig: string): IXMLNode;
+    function GetIsRuntimeOnlyPackage: Boolean;
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
+    property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
   end;
@@ -39,6 +42,7 @@ const
   CPropertyGroup = 'PropertyGroup';
   CProject = 'Project';
   CCondition = '''$(%s)''!=''''';
+  CBase = 'Base';
   CBaseWin32 = 'Base_Win32';
   CBaseWin64 = 'Base_Win64';
 
@@ -68,6 +72,11 @@ end;
 function TDNProjectInfo.GetIsPackage: Boolean;
 begin
   Result := FIsPackage;
+end;
+
+function TDNProjectInfo.GetIsRuntimeOnlyPackage: Boolean;
+begin
+  Result := FIsRuntimeOnlyPackage;
 end;
 
 function TDNProjectInfo.GetPropertyGroupOfConfig(const AProject: IXMLNode;
@@ -118,6 +127,13 @@ begin
           FDCPName := ChangeFileExt(LBaseName, '.dcp')
         else
           FDCPName := '';
+
+        FIsRuntimeOnlyPackage := False;
+        LBase := GetPropertyGroupOfConfig(LProject, CBase);
+        if Assigned(LBase) then
+        begin
+          FIsRuntimeOnlyPackage := StrToBool(VarToStrDef(LBase.ChildValues['RuntimeOnlyPackage'], 'False'));
+        end;
         LBase := GetPropertyGroupOfConfig(LProject, CBaseWin32);
         if Assigned(LBase) then
         begin
