@@ -104,13 +104,15 @@ procedure TDNPackageProvider.LoadPackageInfo(const APackage: IDNPackage;
   AData: TStringStream);
 var
   LRoot: TJSONObject;
+  LPictureValue: TJSONValue;
   LPicture: TMemoryStream;
   LJPG: TJPEGImage;
 begin
   LRoot := TJSONObject.ParseJSONValue(AData.DataString) as TJSONObject;
   LPicture := TMemoryStream.Create();
   try
-    if ExecuteRequest(LPicture, LRoot.GetValue('Picture').Value) then
+    LPictureValue := LRoot.GetValue('picture');
+    if Assigned(LPictureValue) and ExecuteRequest(LPicture, LPictureValue.Value) then
     begin
       LJPG := TJPEGImage.Create();
       try
