@@ -50,14 +50,15 @@ uses
   StrUtils,
   Masks,
   DN.ProjectInfo.Intf,
-  DN.ProjectInfo;
+  DN.ProjectInfo,
+  DN.Uninstaller.Intf;
 
 const
   CLibDir = 'lib';
   CBinDir = 'bin';
   CSourceDir = 'source';
   CInstallFile = 'install.json';
-  CUninstallFile = 'uninstall.json';
+
 
 { TDNInstaller }
 
@@ -153,6 +154,7 @@ var
 begin
   Result := False;
   Reset();
+  ForceDirectories(ATargetDirectory);
   LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
   if TFile.Exists(LInstallerFile) then
   begin
@@ -179,7 +181,7 @@ end;
 
 function TDNInstaller.InstallProject(const AProjectFile: string): Boolean;
 begin
-  Result := False;
+  Result := True;
 end;
 
 function TDNInstaller.IsSupported(AObject: TJSonObject): Boolean;
@@ -329,14 +331,14 @@ begin
   LData := TStringStream.Create();
   LUninstall := TJSONObject.Create();
   try
-    LUninstall.AddPair('search_pathes', FSearchPathes);
+    LUninstall.AddPair('search_pathes', StringReplace(FSearchPathes, '\', '\\', [rfReplaceAll]));
     LPackages := TJSONArray.Create();
     LUninstall.AddPair('packages', LPackages);
     for LCompiledPackage in FPackages do
     begin
       LPackage := TJSONObject.Create();
-      LPackage.AddPair('bpl_file', LCompiledPackage.BPLFile);
-      LPackage.AddPair('dcp_file', LCompiledPackage.DCPFile);
+      LPackage.AddPair('bpl_file', StringReplace(LCompiledPackage.BPLFile, '\', '\\', [rfReplaceAll]));
+      LPackage.AddPair('dcp_file', StringReplace(LCompiledPackage.DCPFile, '\', '\\', [rfReplaceAll]));
       LPackage.AddPair('installed', BoolToStr(LCompiledPackage.Installed, True));
       LPackages.AddElement(LPackage);
     end;
