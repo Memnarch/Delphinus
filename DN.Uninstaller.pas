@@ -69,7 +69,7 @@ begin
   if Assigned(LPackages) then
   begin
     Result := False;
-    for i := 0 to LPackages.Count - 1 do
+    for i := LPackages.Count - 1 downto 0 do
     begin
       LPackage := LPackages.Items[i] as TJSONObject;
       LBPLFile := LPackage.GetValue('bpl_file').Value;
