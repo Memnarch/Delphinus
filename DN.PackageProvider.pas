@@ -8,10 +8,11 @@ uses
   SysUtils,
   IdHttp,
   Generics.Collections,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  DN.PackageProvider.Intf;
 
 type
-  TDNPackageProvider = class
+  TDNPackageProvider = class(TInterfacedObject, IDNPackageProvider)
   private
     FPackages: TList<IDNPackage>;
     FRequest: TIdHTTP;

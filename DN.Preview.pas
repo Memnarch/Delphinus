@@ -33,8 +33,8 @@ implementation
 constructor TPreview.Create(AOwner: TComponent);
 begin
   inherited;
-  Width := 192;
-  Height := 120+40;
+  Width := 138;
+  Height := Width+40;
 end;
 
 destructor TPreview.Destroy;
@@ -44,6 +44,8 @@ begin
 end;
 
 procedure TPreview.Paint;
+var
+  LLeft, LTop: Integer;
 begin
   inherited;
   if Assigned(FPackage) then
@@ -52,17 +54,19 @@ begin
     Canvas.FillRect(Canvas.ClipRect);
     if Assigned(FPackage.Picture.Graphic) then
     begin
-      Canvas.Draw(0, 0, FPackage.Picture.Graphic);
+      LLeft := (Width - 128) div 2;
+      LTop := 5;
+      Canvas.StretchDraw(Rect(LLeft, LTop, LLeft + 128, LTop + 128), FPackage.Picture.Graphic);
     end;
     Canvas.Font.Style := [TFontStyle.fsBold];
-    Canvas.TextOut(5, 122, FPackage.Name);
+    Canvas.TextOut(5, Width, FPackage.Name);
     Canvas.Font.Style := [];
-    Canvas.TextOut(5, 140, FPackage.Author);
+    Canvas.TextOut(5, Width + 20, FPackage.Author);
     Canvas.Brush.Style := bsClear;
     if Selected then
     begin
       Canvas.Pen.Color := clBlue;
-      Canvas.Pen.Width := 2;
+      Canvas.Pen.Width := 1;
     end
     else
     begin
