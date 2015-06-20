@@ -42,7 +42,7 @@ implementation
 
 uses
   IOUtils,
-  DN.PackageProvider,
+  DN.PackageProvider.GitHub,
   Delphinus.SetupDialog,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
@@ -79,7 +79,7 @@ begin
   FDetailView.btnUninstall.OnClick := HandleUninstallPackage;
   FDetailView.Parent := Self;
   FPackages := TList<IDNPackage>.Create();
-  FPackageProvider := TDNPackageProvider.Create();
+  FPackageProvider := TDNGitHubPackageProvider.Create();
 end;
 
 destructor TDelphinusDialog.Destroy;
