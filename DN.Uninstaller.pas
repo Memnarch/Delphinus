@@ -167,9 +167,12 @@ begin
       if Assigned(LJSon) then
       begin
         try
-          Result := ProcessPackages(LJSon)
-            and DeleteFiles(ADirectory)
-            and RemoveSearchPathes(LJSon);
+          //remove searchpathes first, because it's less criticall
+          //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
+          //them manually from disk, than removing individual searchpathes manually from IDE
+          Result :=  RemoveSearchPathes(LJSon)
+            and ProcessPackages(LJSon)
+            and DeleteFiles(ADirectory);
         finally
           LJSon.Free;
         end;
