@@ -25,10 +25,17 @@ type
     FOverView: TPackageOverView;
     FDetailView: TPackageDetailView;
     FPackageProvider: IDNPackageProvider;
+    FInstalledPackageProvider: IDNPackageProvider;
     FPackages: TList<IDNPackage>;
+    FInstalledPackages: TList<IDNPackage>;
     procedure HandleSelectedPackageChanged(Sender: TObject);
     procedure HandleInstallPackage(Sender: TObject);
     procedure HandleUninstallPackage(Sender: TObject);
+    function GetComponentDirectory: string;
+    function GetBPLDirectory: string;
+    function GetDCPDirectory: string;
+    procedure RefreshInstalledPackages;
+    function IsPackageInstalled(const APackage: IDNPackage): Boolean;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -43,11 +50,14 @@ implementation
 uses
   IOUtils,
   DN.PackageProvider.GitHub,
+  DN.PackageProvider.Installed,
   Delphinus.SetupDialog,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
   DN.Installer.Intf,
-  DN.Installer;
+  DN.Installer,
+  DN.Uninstaller.Intf,
+  DN.Uninstaller;
 
 {$R *.dfm}
 
@@ -62,6 +72,7 @@ begin
     FOverView.Clear;
     FOverView.Packages.AddRange(FPackages);
   end;
+  RefreshInstalledPackages();
 end;
 
 constructor TDelphinusDialog.Create(AOwner: TComponent);
@@ -79,14 +90,34 @@ begin
   FDetailView.btnUninstall.OnClick := HandleUninstallPackage;
   FDetailView.Parent := Self;
   FPackages := TList<IDNPackage>.Create();
+  FInstalledPackages := TList<IDNPackage>.Create();
   FPackageProvider := TDNGitHubPackageProvider.Create();
+  FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
 end;
 
 destructor TDelphinusDialog.Destroy;
 begin
+  FOverView.OnSelectedPackageChanged := nil;
   FPackages.Free;
+  FInstalledPackages.Free;
   FPackageProvider := nil;
+  FInstalledPackageProvider := nil;
   inherited;
+end;
+
+function TDelphinusDialog.GetBPLDirectory: string;
+begin
+  Result := TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Bpl');
+end;
+
+function TDelphinusDialog.GetComponentDirectory: string;
+begin
+  Result := TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Comps');
+end;
+
+function TDelphinusDialog.GetDCPDirectory: string;
+begin
+  Result := TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Dcp');
 end;
 
 procedure TDelphinusDialog.HandleInstallPackage(Sender: TObject);
@@ -100,25 +131,67 @@ begin
     LDialog := TSetupDialog.Create(nil);
     try
       LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
-      LCompiler.BPLOutput := TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Bpl');
-      LCompiler.DCPOutput := TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Dcp');
+      LCompiler.BPLOutput := GetBPLDirectory();
+      LCompiler.DCPOutput := GetDCPDirectory();
       LInstaller := TDNInstaller.Create(LCompiler, Trunc(CompilerVersion));
       LDialog.ExecuteInstallation(FOverView.SelectedPackage, FPackageProvider, LInstaller,
-        TPath.Combine(GetEnvironmentVariable('BDSCOMMONDIR'), 'Comps'));
+        GetComponentDirectory());
     finally
       LDialog.Free;
     end;
+    RefreshInstalledPackages();
   end;
 end;
 
 procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
 begin
   FDetailView.Package := FOverView.SelectedPackage;
+  FDetailView.btnUninstall.Enabled := IsPackageInstalled(FOverView.SelectedPackage);
+  FDetailView.btnInstall.Enabled := not FDetailView.btnUninstall.Enabled;
 end;
 
 procedure TDelphinusDialog.HandleUninstallPackage(Sender: TObject);
+var
+  LDialog: TSetupDialog;
+  LUninstaller: IDNUninstaller;
 begin
+  if Assigned(FOverView.SelectedPackage) then
+  begin
+    LDialog := TSetupDialog.Create(nil);
+    try
+      LUninstaller := TDNUnInstaller.Create();
+      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), FOverview.SelectedPackage.Name), LUninstaller);
+    finally
+      LDialog.Free;
+    end;
+    RefreshInstalledPackages();
+  end;
+end;
 
+function TDelphinusDialog.IsPackageInstalled(
+  const APackage: IDNPackage): Boolean;
+var
+  LPackage: IDNPackage;
+begin
+  Result := False;
+  if Assigned(APackage) then
+  begin
+    for LPackage in FInstalledPackages do
+    begin
+      if LPackage.Name = APackage.Name then
+        Exit(True);
+    end;
+  end;
+end;
+
+procedure TDelphinusDialog.RefreshInstalledPackages;
+begin
+  if FInstalledPackageProvider.Reload() then
+  begin
+    FInstalledPackages.Clear;
+    FInstalledPackages.AddRange(FInstalledPackageProvider.Packages);
+    HandleSelectedPackageChanged(FDetailView);
+  end;
 end;
 
 end.

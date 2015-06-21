@@ -7,7 +7,9 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
-  DN.Installer.Intf, Vcl.StdCtrls,
+  DN.Installer.Intf,
+  DN.Uninstaller.Intf,
+  Vcl.StdCtrls,
   DN.Types;
 
 const
@@ -25,7 +27,9 @@ type
     FPackage: IDNPackage;
     FProvider: IDNPackageProvider;
     FInstaller: IDNInstaller;
+    FUninstaller: IDNUninstaller;
     FComponentDirectory: string;
+    FInstalledComponentDirectory: string;
     procedure HandleCustomMessage(var AMSG: TMessage); message CStart;
     procedure Install;
     procedure Uninstall;
@@ -34,6 +38,7 @@ type
   public
     { Public declarations }
     procedure ExecuteInstallation(const APackage: IDNPackage; AProvider: IDNPackageProvider; AInstaller: IDNInstaller; const AComponentDirectory: string);
+    procedure ExecuteUninstallation(const ATargetDirectory: string; const AUninstaller: IDNUninstaller);
   end;
 
 var
@@ -56,6 +61,15 @@ begin
   FInstaller := AInstaller;
   FComponentDirectory := AComponentDirectory;
   FMode := sdmInstall;
+  ShowModal();
+end;
+
+procedure TSetupDialog.ExecuteUninstallation(const ATargetDirectory: string;
+  const AUninstaller: IDNUninstaller);
+begin
+  FUninstaller := AUninstaller;
+  FInstalledComponentDirectory := ATargetDirectory;
+  FMode := sdmUninstall;
   ShowModal();
 end;
 
@@ -122,7 +136,13 @@ end;
 
 procedure TSetupDialog.Uninstall;
 begin
-
+  mLog.Clear;
+  FUninstaller.OnMessage := HandleLogMessage;
+  Log('uninstalling...');
+  if FUninstaller.Uninstall(FInstalledComponentDirectory) then
+    Log('success')
+  else
+    Log('failed');
 end;
 
 end.

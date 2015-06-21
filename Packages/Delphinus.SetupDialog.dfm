@@ -23,9 +23,5 @@ object SetupDialog: TSetupDialog
     Align = alClient
     ReadOnly = True
     TabOrder = 0
-    ExplicitLeft = 192
-    ExplicitTop = 120
-    ExplicitWidth = 185
-    ExplicitHeight = 89
   end
 end

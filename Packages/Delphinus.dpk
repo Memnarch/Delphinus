@@ -51,7 +51,7 @@ contains
   DN.Package in '..\DN.Package.pas',
   DN.PackageOverview in '..\DN.PackageOverview.pas',
   DN.PackageProvider.Intf in '..\DN.PackageProvider.Intf.pas',
-  DN.PackageProvider in '..\DN.PackageProvider.pas',
+  DN.PackageProvider.GitHub in '..\DN.PackageProvider.GitHub.pas',
   DN.Preview in '..\DN.Preview.pas',
   DN.ProjectInfo.Intf in '..\DN.ProjectInfo.Intf.pas',
   DN.ProjectInfo in '..\DN.ProjectInfo.pas',
@@ -60,6 +60,8 @@ contains
   DN.Uninstaller in '..\DN.Uninstaller.pas',
   DN.Zip in '..\DN.Zip.pas',
   Delphinus.PackageDetailView in 'Delphinus.PackageDetailView.pas' {PackageDetailView: TFrame},
-  Delphinus.SetupDialog in 'Delphinus.SetupDialog.pas' {SetupDialog};
+  Delphinus.SetupDialog in 'Delphinus.SetupDialog.pas' {SetupDialog},
+  DN.PackageProvider in '..\DN.PackageProvider.pas',
+  DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas';
 
 end.

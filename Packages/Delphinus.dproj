@@ -102,7 +102,7 @@
         <DCCReference Include="..\DN.Package.pas"/>
         <DCCReference Include="..\DN.PackageOverview.pas"/>
         <DCCReference Include="..\DN.PackageProvider.Intf.pas"/>
-        <DCCReference Include="..\DN.PackageProvider.pas"/>
+        <DCCReference Include="..\DN.PackageProvider.GitHub.pas"/>
         <DCCReference Include="..\DN.Preview.pas"/>
         <DCCReference Include="..\DN.ProjectInfo.Intf.pas"/>
         <DCCReference Include="..\DN.ProjectInfo.pas"/>
@@ -119,6 +119,8 @@
             <Form>SetupDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\DN.PackageProvider.pas"/>
+        <DCCReference Include="..\DN.PackageProvider.Installed.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
