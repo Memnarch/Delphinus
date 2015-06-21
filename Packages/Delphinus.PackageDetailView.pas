@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  DN.Package.Intf;
+  DN.Package.Intf, Vcl.ImgList;
 
 type
   TPackageDetailView = class(TFrame)
@@ -14,6 +14,7 @@ type
     lbAuthor: TLabel;
     btnInstall: TButton;
     btnUninstall: TButton;
+    imgButtons: TImageList;
   private
     FPackage: IDNPackage;
     procedure SetPackage(const Value: IDNPackage);

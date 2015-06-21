@@ -10,6 +10,7 @@ uses
   DN.Types,
   DN.Installer.Intf,
   DN.Compiler.Intf,
+  DN.ProjectInfo.Intf,
   JSon,
   DBXJSon;
 
@@ -27,26 +28,27 @@ type
     FSearchPathes: string;
     FPackages: TList<TCompiledPackage>;
     FOnMessage: TMessageEvent;
-    procedure AddSearchPath(const ASearchPath: string); virtual;
-    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False); virtual;
+    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
     procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
     procedure ProcessSourceFolders(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
-    function InstallProject(const AProjectFile: string): Boolean;
     function IsSupported(AObject: TJSonObject): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
-    procedure BeforeCompile(const AProjectFile: string); virtual;
-    procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
+
     procedure SaveUninstall(const ATargetDirectory: string);
     procedure Reset();
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
+    procedure AddSearchPath(const ASearchPath: string); virtual;
+    procedure BeforeCompile(const AProjectFile: string); virtual;
+    procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
+    function InstallProject(const AProject: IDNProjectInfo): Boolean; virtual;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
-    function Install(const ASourceDirectory, ATargetDirectory: string): Boolean;
+    function Install(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
@@ -56,7 +58,6 @@ uses
   IOUtils,
   StrUtils,
   Masks,
-  DN.ProjectInfo.Intf,
   DN.ProjectInfo,
   DN.Uninstaller.Intf;
 
@@ -204,7 +205,7 @@ begin
   SaveUninstall(ATargetDirectory);
 end;
 
-function TDNInstaller.InstallProject(const AProjectFile: string): Boolean;
+function TDNInstaller.InstallProject(const AProject: IDNProjectInfo): Boolean;
 begin
   Result := True;
 end;
@@ -255,7 +256,7 @@ begin
           begin
             if not LInfo.IsRuntimeOnlyPackage then
             begin
-              Result := InstallProject(LProjectFile);
+              Result := InstallProject(LInfo);
               if Result then
                 DoMessage(mtNotification, 'installed')
               else

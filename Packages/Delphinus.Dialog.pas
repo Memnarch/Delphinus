@@ -9,6 +9,7 @@ uses
   Vcl.ComCtrls,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
+  ContNrs,
   Generics.Collections,
   Delphinus.PackageDetailView;
 
@@ -19,6 +20,7 @@ type
     DialogActions: TActionList;
     ToolButton1: TToolButton;
     actRefresh: TAction;
+    ToolButton2: TToolButton;
     procedure actRefreshExecute(Sender: TObject);
   private
     { Private declarations }
@@ -48,16 +50,19 @@ var
 implementation
 
 uses
+  ToolsApi,
   IOUtils,
+  RTTI,
+  Types,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   Delphinus.SetupDialog,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
   DN.Installer.Intf,
-  DN.Installer,
+  DN.Installer.IDE,
   DN.Uninstaller.Intf,
-  DN.Uninstaller;
+  DN.Uninstaller.IDE;
 
 {$R *.dfm}
 
@@ -133,7 +138,7 @@ begin
       LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
       LCompiler.BPLOutput := GetBPLDirectory();
       LCompiler.DCPOutput := GetDCPDirectory();
-      LInstaller := TDNInstaller.Create(LCompiler, Trunc(CompilerVersion));
+      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
       LDialog.ExecuteInstallation(FOverView.SelectedPackage, FPackageProvider, LInstaller,
         GetComponentDirectory());
     finally
@@ -159,7 +164,7 @@ begin
   begin
     LDialog := TSetupDialog.Create(nil);
     try
-      LUninstaller := TDNUnInstaller.Create();
+      LUninstaller := TDNIDEUninstaller.Create();
       LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), FOverview.SelectedPackage.Name), LUninstaller);
     finally
       LDialog.Free;

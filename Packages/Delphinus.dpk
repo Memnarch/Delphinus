@@ -62,6 +62,9 @@ contains
   Delphinus.PackageDetailView in 'Delphinus.PackageDetailView.pas' {PackageDetailView: TFrame},
   Delphinus.SetupDialog in 'Delphinus.SetupDialog.pas' {SetupDialog},
   DN.PackageProvider in '..\DN.PackageProvider.pas',
-  DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas';
+  DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas',
+  DN.Installer.IDE in '..\DN.Installer.IDE.pas',
+  DN.ToolsApi in 'DN.ToolsApi.pas',
+  DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas';
 
 end.

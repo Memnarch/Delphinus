@@ -21,11 +21,11 @@ type
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
   protected
-    function UninstallPackage(const ADCPFile: string): Boolean; virtual;
+    function UninstallPackage(const ABPLFile: string): Boolean; virtual;
     function RemoveSearchPath(const ASearchPath: string): Boolean; virtual;
     procedure DoMessage(AType: TMessageType; const AMessage: string);
   public
-    function Uninstall(const ADirectory: string): Boolean;
+    function Uninstall(const ADirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
@@ -77,19 +77,37 @@ begin
       LBPI := ChangeFileExt(LDCPFile, '.bpi');
       LLib := ChangeFileExt(LDCPFile, '.lib');
       LInstalled := LPackage.GetValue('installed');
-      if Assigned(LInstalled) and (LInstalled is TJSONTrue) then
-        if not UninstallPackage(LDCPFile) then
+      if Assigned(LInstalled) and (SameText(LInstalled.Value, 'true')) then
+      begin
+        DoMessage(mtNotification, 'uninstalling package ' + LBPLFile);
+        if not UninstallPackage(LBPLFile) then
           break;
+      end;
 
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPLFile));
-      Result := DeleteFile(LBPLFile);
+      Result := True;
       if TFile.Exists(LBPLFile) then
-        DoMessage(mtError, 'failed to delete');
+      begin
+        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPLFile));
+        Result := DeleteFile(LBPLFile);
+        if TFile.Exists(LBPLFile) then
+          DoMessage(mtError, 'failed to delete');
+      end
+      else
+      begin
+        DoMessage(mtWarning, 'file did not exist ' + LBPLFile);
+      end;
 
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LDCPFile));
-      Result := DeleteFile(LDCPFile) and Result;
       if TFile.Exists(LDCPFile) then
-        DoMessage(mtError, 'failed to delete');
+      begin
+        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LDCPFile));
+        Result := DeleteFile(LDCPFile) and Result;
+        if TFile.Exists(LDCPFile) then
+          DoMessage(mtError, 'failed to delete');
+      end
+      else
+      begin
+        DoMessage(mtWarning, 'file did not exist ' + LDCPFile);
+      end;
 
       if TFile.Exists(LBPI) then
       begin
@@ -183,7 +201,7 @@ begin
   end;
 end;
 
-function TDNUninstaller.UninstallPackage(const ADCPFile: string): Boolean;
+function TDNUninstaller.UninstallPackage(const ABPLFile: string): Boolean;
 begin
   Result := True;
 end;
