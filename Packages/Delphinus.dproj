@@ -122,7 +122,7 @@
         <DCCReference Include="..\DN.PackageProvider.pas"/>
         <DCCReference Include="..\DN.PackageProvider.Installed.pas"/>
         <DCCReference Include="..\DN.Installer.IDE.pas"/>
-        <DCCReference Include="DN.ToolsApi.pas"/>
+        <DCCReference Include="..\DN.ToolsApi.pas"/>
         <DCCReference Include="..\DN.Uninstaller.IDE.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
