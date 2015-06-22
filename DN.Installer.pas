@@ -411,7 +411,7 @@ var
   LValue: TJSONValue;
   LRecursive: Boolean;
   LFilter: TStringDynArray;
-  LRelPath: string;
+  LRelPath, LRelTargetPath, LBase: string;
   i: Integer;
 begin
   LFolders := TJSonArray(AObject.GetValue('source_folders'));
@@ -424,6 +424,22 @@ begin
       if IsSupported(LFolder) then
       begin
         LRelPath := LFolder.GetValue('folder').Value;
+        LRelTargetPath := LRelPath;
+        if not TPath.IsRelativePath(LRelPath) then
+        begin
+          DoMessage(mtError, 'Path is not relative ' + LRelPath);
+        end;
+        LValue := LFolder.GetValue('base');
+        if Assigned(LValue) then
+        begin
+          LBase := IncludeTrailingPathDelimiter(LValue.Value);
+          LRelTargetPath := IncludeTrailingPathDelimiter(LRelTargetPath);
+          if StartsText(LRelTargetPath, LBase) then
+            LRelTargetPath := Copy(LRelTargetPath, Length(LBase) + 1, Length(LRelTargetPath))
+          else
+            DoMessage(mtError, 'base must be exactly overlapping with folder string to remove it');
+        end;
+
         LValue := LFolder.GetValue('recursive');
         if Assigned(LValue) then
           LRecursive := StrToBoolDef(LValue.Value, False)
@@ -439,7 +455,7 @@ begin
         DoMessage(mtNotification, LRelPath);
         if SameText(LRelPath, '.') then
           LRelPath := '';
-        CopyDirectory(TPath.Combine(ASourceDirectory, LRelPath), TPath.Combine(ATargetDirectory, LRelPath), LFilter, LRecursive);
+        CopyDirectory(TPath.Combine(ASourceDirectory, LRelPath), TPath.Combine(ATargetDirectory, LRelTargetPath), LFilter, LRecursive);
       end;
     end;
   end;
