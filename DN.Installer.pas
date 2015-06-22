@@ -45,6 +45,7 @@ type
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     function InstallProject(const AProject: IDNProjectInfo): Boolean; virtual;
+    function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -129,6 +130,48 @@ begin
   end;
 end;
 
+function TDNInstaller.CopyMetaData(const ASourceDirectory,
+  ATargetDirectory: string): Boolean;
+var
+  LSourceInfo, LTargetInfo, LSourcePic, LTargetPic: string;
+  LData: TStringStream;
+  LInfo: TJSONObject;
+  LValue: TJSONValue;
+begin
+  Result := True;
+  LSourceInfo := TPath.Combine(ASourceDirectory, 'info.json');
+  LTargetInfo := TPath.Combine(ATargetDirectory, 'info.json');
+  if TFile.Exists(LSourceInfo) then
+  begin
+    TFile.Copy(LSourceInfo, LTargetInfo);
+    LData := TStringStream.Create();
+    try
+      LData.LoadFromFile(LSourceInfo);
+      LInfo := TJSonObject.ParseJSONValue(LData.DataString) as TJSONObject;
+      if Assigned(LInfo) then
+      begin
+        try
+          LValue := LInfo.GetValue('picture');
+          if Assigned(LValue) then
+          begin
+            LSourcePic := TPath.Combine(ASourceDirectory, LValue.Value);
+            LTargetPic := TPath.Combine(ATargetDirectory, LValue.Value);
+            if TFile.Exists(LSourcePic) then
+            begin
+              ForceDirectories(ExtractFilePath(LTargetPic));
+              TFile.Copy(LSourcePic, LTargetPic);
+            end;
+          end;
+        finally
+          LInfo.Free;
+        end;
+      end;
+    finally
+      LData.Free;
+    end;
+  end;
+end;
+
 constructor TDNInstaller.Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
 begin
   inherited Create();
@@ -194,6 +237,8 @@ begin
           ProcessSearchPathes(LInfo, ATargetDirectory);
           ProcessSourceFolders(LInfo, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
           Result := ProcessProjects(LInfo, ASourceDirectory, ATargetDirectory);
+          if Result then
+            CopyMetaData(ASourceDirectory, ATargetDirectory);
         finally
           LInfo.Free;
         end;
