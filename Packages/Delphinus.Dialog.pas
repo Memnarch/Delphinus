@@ -21,7 +21,13 @@ type
     ToolButton1: TToolButton;
     actRefresh: TAction;
     ToolButton2: TToolButton;
+    btnInstallFolder: TToolButton;
+    dlgSelectInstallFile: TOpenDialog;
+    btnUninstall: TToolButton;
+    dlgSelectUninstallFile: TOpenDialog;
     procedure actRefreshExecute(Sender: TObject);
+    procedure btnInstallFolderClick(Sender: TObject);
+    procedure btnUninstallClick(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -78,6 +84,47 @@ begin
     FOverView.Packages.AddRange(FPackages);
   end;
   RefreshInstalledPackages();
+end;
+
+procedure TDelphinusDialog.btnInstallFolderClick(Sender: TObject);
+var
+  LDialog: TSetupDialog;
+  LCompiler: IDNCompiler;
+  LInstaller: IDNInstaller;
+begin
+  if dlgSelectInstallFile.Execute() then
+  begin
+    LDialog := TSetupDialog.Create(nil);
+    try
+      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+      LCompiler.BPLOutput := GetBPLDirectory();
+      LCompiler.DCPOutput := GetDCPDirectory();
+      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
+      LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName), LInstaller,
+        GetComponentDirectory());
+    finally
+      LDialog.Free;
+    end;
+    RefreshInstalledPackages();
+  end;
+end;
+
+procedure TDelphinusDialog.btnUninstallClick(Sender: TObject);
+var
+  LDialog: TSetupDialog;
+  LUninstaller: IDNUninstaller;
+begin
+  if dlgSelectUninstallFile.Execute() then
+  begin
+    LDialog := TSetupDialog.Create(nil);
+    try
+      LUninstaller := TDNIDEUninstaller.Create();
+      LDialog.ExecuteUninstallation(ExtractFilePath(dlgSelectUninstallFile.FileName), LUninstaller);
+    finally
+      LDialog.Free;
+    end;
+    RefreshInstalledPackages();
+  end;
 end;
 
 constructor TDelphinusDialog.Create(AOwner: TComponent);

@@ -16,7 +16,7 @@ const
   CStart = WM_USER + 1;
 
 type
-  TSetupDialogMode = (sdmInstall, sdmUninstall);
+  TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall);
 
   TSetupDialog = class(TForm)
     mLog: TMemo;
@@ -30,6 +30,7 @@ type
     FUninstaller: IDNUninstaller;
     FComponentDirectory: string;
     FInstalledComponentDirectory: string;
+    FDirectoryToInstall: string;
     procedure HandleCustomMessage(var AMSG: TMessage); message CStart;
     procedure Install;
     procedure Uninstall;
@@ -38,6 +39,7 @@ type
   public
     { Public declarations }
     procedure ExecuteInstallation(const APackage: IDNPackage; AProvider: IDNPackageProvider; AInstaller: IDNInstaller; const AComponentDirectory: string);
+    procedure ExecuteInstallationFromDirectory(const ADirectory: string; AInstaller: IDNInstaller; const AComponentDirectory: string);
     procedure ExecuteUninstallation(const ATargetDirectory: string; const AUninstaller: IDNUninstaller);
   end;
 
@@ -64,6 +66,17 @@ begin
   ShowModal();
 end;
 
+procedure TSetupDialog.ExecuteInstallationFromDirectory(
+  const ADirectory: string; AInstaller: IDNInstaller;
+  const AComponentDirectory: string);
+begin
+  FDirectoryToInstall := ADirectory;
+  FInstaller := AInstaller;
+  FComponentDirectory := AComponentDirectory;
+  FMode := sdmInstallDirectory;
+  ShowModal();
+end;
+
 procedure TSetupDialog.ExecuteUninstallation(const ATargetDirectory: string;
   const AUninstaller: IDNUninstaller);
 begin
@@ -81,7 +94,7 @@ end;
 procedure TSetupDialog.HandleCustomMessage(var AMSG: TMessage);
 begin
   case FMode of
-    sdmInstall: Install;
+    sdmInstall, sdmInstallDirectory: Install;
     sdmUninstall: Uninstall;
   end;
 end;
@@ -98,31 +111,54 @@ end;
 
 procedure TSetupDialog.Install;
 var
-  LTempDir, LContentDir: string;
+  LTempDir, LContentDir, LPackageName: string;
   LError: Boolean;
 begin
   mLog.Clear;
   LError := False;
-  Log('Downloading ' + FPackage.Name);
-  LTempDir := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
-  ForceDirectories(LTempDir);
-  if FProvider.Download(FPackage, LTempDir, LContentDir) then
+  if FMode = sdmInstall then
   begin
-    Log('installing...');
-    FInstaller.OnMessage := HandleLogMessage;
-    if not FInstaller.Install(LContentDir, TPath.Combine(FComponentDirectory, FPackage.Name)) then
+    Log('Downloading ' + FPackage.Name);
+    LTempDir := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
+    ForceDirectories(LTempDir);
+    if not FProvider.Download(FPackage, LTempDir, LContentDir) then
     begin
-      Log('installation failed');
+      Log('failed to download');
       LError := True;
     end;
   end
   else
   begin
-    Log('failed to download');
-    LError := True;
+    //else we are installing from directory
+    LContentDir := FDirectoryToInstall;
   end;
-  Log('cleaning tempfiles');
-  TDirectory.Delete(LTempDir, True);
+
+  if not LError then
+  begin
+    Log('installing...');
+    FInstaller.OnMessage := HandleLogMessage;
+    if FMode = sdmInstall then
+      LPackageName := FPackage.Name
+    else
+      LPackageName := ExtractFileName(ExcludeTrailingPathDelimiter(LContentDir));
+
+    if not FInstaller.Install(LContentDir, TPath.Combine(FComponentDirectory, LPackageName)) then
+    begin
+      Log('installation failed');
+      LError := True;
+    end;
+  end;
+
+  if FMode = sdmInstall then
+  begin
+    Log('cleaning tempfiles');
+    TDirectory.Delete(LTempDir, True);
+  end;
+
+  if LError then
+    Log('Installation aborted')
+  else
+    Log('Installation finished');
 //  if not LError then
 //  begin
 //    ModalResult := mrOk;
