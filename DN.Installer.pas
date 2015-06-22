@@ -201,6 +201,10 @@ begin
     finally
       LStream.Free;
     end;
+  end
+  else
+  begin
+    DoMessage(mtError, 'No installation file');
   end;
   SaveUninstall(ATargetDirectory);
 end;

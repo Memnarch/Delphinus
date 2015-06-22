@@ -198,6 +198,10 @@ begin
     finally
       LData.Free;
     end;
+  end
+  else
+  begin
+    DoMessage(mtError, 'No uninstallation file');
   end;
 end;
 
