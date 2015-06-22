@@ -7,7 +7,8 @@ uses
 
 type
   TDNCompilerTarget = (ctBuild, ctCompile);
-  TDNCompilerConfig = (ctRelease, ctDebug);
+  TDNCompilerConfig = (ccRelease, ccDebug);
+  TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32);
 
   IDNCompiler = interface
   ['{AA41BA34-BBD7-454D-A3AA-0730590077A4}']
@@ -21,6 +22,8 @@ type
     function GetTarget: TDNCompilerTarget;
     procedure SetConfig(const Value: TDNCompilerConfig);
     procedure SetTarget(const Value: TDNCompilerTarget);
+    function GetPlatform: TDNCompilerPlatform;
+    procedure SetPlatform(const Value: TDNCompilerPlatform);
     function GetBPLOutput: string;
     procedure SetBPLOutput(const Value: string);
     function GetLog: TStrings;
@@ -31,8 +34,14 @@ type
     property BPLOutput: string read GetBPLOutput write SetBPLOutput;
     property Target: TDNCompilerTarget read GetTarget write SetTarget;
     property Config: TDNCompilerConfig read GetConfig write SetConfig;
+    property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
   end;
+
+const
+  TDNCompilerTargetName: array[Low(TDNCompilerTarget)..High(TDNCompilerTarget)] of string = ('Build', 'Compile');
+  TDNCompilerConfigName: array[Low(TDNCompilerConfig)..High(TDNCompilerConfig)] of string = ('Release', 'Debug');
+  TDNCompilerPlatformName: array[Low(TDNCompilerPlatform)..High(TDNCompilerPlatform)] of string = ('Win32', 'Win64', 'OSX32');
 
 implementation
 

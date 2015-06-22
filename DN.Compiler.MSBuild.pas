@@ -73,27 +73,21 @@ end;
 
 function TDNMSBuildCompiler.GetMSBuildProperties: string;
 begin
-  case Target of
-    ctBuild: Result := '/target:Build';
-    ctCompile: Result := '/target:Compile';
-  end;
-
-  case Config of
-    ctRelease: Result := Result + ' /p:config=Release';
-    ctDebug: Result := Result + ' /p:config=Debug';
-  end;
+  Result := '/target:' + TDNCompilerTargetName[Target];
+  Result := Result + ' /p:config=' + TDNCompilerConfigName[Config];
+  Result := Result + ' /P:platform=' + TDNCompilerPlatformName[Platform];
 
   if DCUOutput <> '' then
-    Result := Result + ' /p:DCC_DcuOutput="' + ExcludeTrailingPathDelimiter(DCUOutput) + '"';
+    Result := Result + ' /p:DCC_DcuOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(DCUOutput)) + '"';
 
   if DCPOutput <> '' then
-    Result := Result + ' /p:DCC_DcpOutput="' + ExcludeTrailingPathDelimiter(DCPOutput) + '"';
+    Result := Result + ' /p:DCC_DcpOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(DCPOutput)) + '"';
 
   if EXEOutput <> '' then
-    Result := Result + ' /p:DCC_ExeOutput="' + ExcludeTrailingPathDelimiter(ExeOutput) + '"';
+    Result := Result + ' /p:DCC_ExeOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(ExeOutput)) + '"';
 
   if BPLOutput <> '' then
-    Result := Result + ' /p:DCC_BplOutput="' + ExcludeTrailingPathDelimiter(BPLOutput) + '"';
+    Result := Result + ' /p:DCC_BplOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(BPLOutput)) + '"';
 end;
 
 end.

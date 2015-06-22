@@ -15,6 +15,7 @@ type
     FBPLOutput: string;
     FTarget: TDNCompilerTarget;
     FConfig: TDNCompilerConfig;
+    FPlatform: TDNCompilerPlatform;
     FLog: TStringList;
     function GetEXEOutput: string;
     function GetDCPOutput: string;
@@ -29,6 +30,10 @@ type
     function GetBPLOutput: string;
     procedure SetBPLOutput(const Value: string);
     function GetLog: TStrings;
+    function GetPlatform: TDNCompilerPlatform;
+    procedure SetPlatform(const Value: TDNCompilerPlatform);
+  protected
+    function ResolveVars(const APath: string): string;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -39,10 +44,14 @@ type
     property BPLOutput: string read GetBPLOutput write SetBPLOutput;
     property Target: TDNCompilerTarget read GetTarget write SetTarget;
     property Config: TDNCompilerConfig read GetConfig write SetConfig;
+    property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
   end;
 
 implementation
+
+uses
+  StrUtils;
 
 { TDNCompiler }
 
@@ -55,6 +64,9 @@ constructor TDNCompiler.Create;
 begin
   inherited;
   FLog := TStringList.Create();
+  FTarget := ctBuild;
+  FConfig := ccRelease;
+  FPlatform := cpWin32;
 end;
 
 destructor TDNCompiler.Destroy;
@@ -66,6 +78,11 @@ end;
 function TDNCompiler.GetLog: TStrings;
 begin
   Result := FLog;
+end;
+
+function TDNCompiler.GetPlatform: TDNCompilerPlatform;
+begin
+  Result := FPlatform;
 end;
 
 function TDNCompiler.GetBPLOutput: string;
@@ -93,9 +110,20 @@ begin
   Result := FTarget;
 end;
 
+function TDNCompiler.ResolveVars(const APath: string): string;
+begin
+  Result := ReplaceText(APath, '$(Platform)', TDNCompilerPlatformName[Platform]);
+  Result := ReplaceText(Result, '$(Config)', TDNCompilerConfigName[Config])
+end;
+
 procedure TDNCompiler.SetEXEOutput(const Value: string);
 begin
   FEXEOutput := Value;
+end;
+
+procedure TDNCompiler.SetPlatform(const Value: TDNCompilerPlatform);
+begin
+  FPlatform := Value;
 end;
 
 procedure TDNCompiler.SetBPLOutput(const Value: string);

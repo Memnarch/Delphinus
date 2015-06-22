@@ -235,8 +235,8 @@ var
 begin
   Result := True;
   LInfo := TDNProjectInfo.Create();
-  FCompiler.DCUOutput := TPath.Combine(ATargetDirectory, CLibDir);
-  FCompiler.ExeOutput := TPath.Combine(ATargetDirectory, CBinDir);
+  FCompiler.DCUOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CLibDir), '$(Platform)\$(Config)');
+  FCompiler.ExeOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CBinDir), '$(Platform)\$(Config)');
   LProjects := TJSonArray(AObject.GetValue('projects'));
   if Assigned(LProjects) then
   begin
@@ -280,13 +280,14 @@ var
   LPathes: TStringDynArray;
   LPathArray: TJSONArray;
   LPath: TJSonObject;
-  LRelPath: string;
+  LRelPath, LBasePath: string;
   i: Integer;
 begin
   LPathArray := TJSonArray(AObject.GetValue('search_pathes'));
   if Assigned(LPathArray) then
   begin
     DoMessage(mtNotification, 'Adding Searchpathes:');
+    LBasePath := TPath.Combine(ARootDirectory, CSourceDir);
     for i := 0 to LPathArray.Count - 1 do
     begin
       LPath := LPathArray.Items[i] as TJSonObject;
@@ -296,7 +297,14 @@ begin
         for LRelPath in LPathes do
         begin
           DoMessage(mtNotification, LRelPath);
-          AddSearchPath(TPath.Combine(ARootDirectory, LRelPath));
+          if ExtractFileName(ExcludeTrailingPathDelimiter(LRelPath)) <> '.' then
+          begin
+            AddSearchPath(TPath.Combine(LBasePath, LRelPath));
+          end
+          else
+          begin
+            AddSearchPath(TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath))));
+          end;
         end;
       end;
     end;

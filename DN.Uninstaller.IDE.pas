@@ -56,7 +56,10 @@ begin
       for LPath in LPathes do
       begin
         if LPath <> ASearchPath then
-          LPathStr := LPathStr + ';' + LPath;
+          if LPathStr <> '' then
+            LPathStr := LPathStr + ';' + LPath
+          else
+            LPathStr := LPath;
       end;
       LReg.WriteString(CSearchPath, LPathStr);
       Result := True;

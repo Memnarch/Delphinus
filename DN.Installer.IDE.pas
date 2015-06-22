@@ -49,7 +49,11 @@ begin
     if LReg.OpenKey(LRegistryKey + CKey, False) then
     begin
       LPathes := LReg.ReadString(CSearchPath);
-      LPathes := LPathes + ';' + ASearchPath;
+      if LPathes <> '' then
+        LPathes := LPathes + ';' + ASearchPath
+      else
+        LPathes := ASearchPath;
+
       LReg.WriteString(CSearchPath, LPathes);
     end;
   finally
