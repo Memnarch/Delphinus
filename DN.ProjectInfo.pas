@@ -14,6 +14,7 @@ type
   private
     FBinaryName: string;
     FDCPName: string;
+    FFileName: string;
     FIsPackage: Boolean;
     FIsRuntimeOnlyPackage: Boolean;
     function GetBinaryName: string;
@@ -22,12 +23,14 @@ type
     function GetDefaultExtension(const AAppType: string): string;
     function GetPropertyGroupOfConfig(const AProject: IXMLNode; const AConfig: string): IXMLNode;
     function GetIsRuntimeOnlyPackage: Boolean;
+    function GetFileName: string;
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
+    property FileName: string read GetFileName;
   end;
 
 implementation
@@ -67,6 +70,11 @@ begin
     Result := '.bpl'
   else
     Result := '.exe';
+end;
+
+function TDNProjectInfo.GetFileName: string;
+begin
+  Result := FFileName;
 end;
 
 function TDNProjectInfo.GetIsPackage: Boolean;
@@ -111,6 +119,7 @@ begin
   Result := False;
   if TFile.Exists(AProjectFile) then
   begin
+    FFileName := AProjectFile;
     LXML := TXMLDocument.Create(nil);
     LXML.LoadFromFile(AProjectFile);
     LProject := LXML.ChildNodes.FindNode(CProject);

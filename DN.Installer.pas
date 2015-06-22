@@ -32,6 +32,7 @@ type
     procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
     procedure ProcessSourceFolders(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
+    function ProcessProject(const AProject: IDNProjectInfo): Boolean;
     function IsSupported(AObject: TJSonObject): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
 
@@ -60,6 +61,8 @@ uses
   StrUtils,
   Masks,
   DN.ProjectInfo,
+  DN.ProjectGroupInfo,
+  DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf;
 
 const
@@ -281,14 +284,41 @@ begin
   end;
 end;
 
+function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
+var
+  LCompiledPackage: TCompiledPackage;
+begin
+  BeforeCompile(AProject.FileName);
+  Result := FCompiler.Compile(AProject.FileName);
+  AfterCompile(AProject.FileName, FCompiler.Log, Result);
+  if AProject.IsPackage then
+  begin
+    if not AProject.IsRuntimeOnlyPackage then
+    begin
+      Result := InstallProject(AProject);
+      if Result then
+        DoMessage(mtNotification, 'installed')
+      else
+        DoMessage(mtError, 'failed to install');
+    end;
+    LCompiledPackage.BPLFile := TPath.Combine(FCompiler.BPLOutput, AProject.BinaryName);
+    LCompiledPackage.DCPFile := TPath.Combine(FCompiler.DCPOutput, AProject.DCPName);
+    LCompiledPackage.Installed := not AProject.IsRuntimeOnlyPackage;
+    FPackages.Add(LCompiledPackage);
+  end;
+end;
+
 function TDNInstaller.ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
 var
   LProjects: TJSONArray;
   LProject: TJSonObject;
-  LProjectFile: string;
+  LProjectFile, LFileExt: string;
   i: Integer;
   LInfo: IDNProjectInfo;
-  LCompiledPackage: TCompiledPackage;
+  LGroupInfo: IDNProjectGroupInfo;
+const
+  CGroup = '.groupproj';
+  CProject = '.proj';
 begin
   Result := True;
   LInfo := TDNProjectInfo.Create();
@@ -303,28 +333,34 @@ begin
       if IsSupported(LProject) then
       begin
         LProjectFile := TPath.Combine(ASourceDirectory, LProject.GetValue('project').Value);
-        BeforeCompile(LProjectFile);
-        Result := FCompiler.Compile(LProjectFile);
-        AfterCompile(LProjectFile, FCompiler.Log, Result);
-        Result := LInfo.LoadFromFile(LProjectFile);
-        if Result then
+        LFileExt := ExtractFileExt(LProjectFile);
+        if SameText(LFileExt, CGroup) then
         begin
-          if LInfo.IsPackage then
+          LGroupInfo := TDNProjectGroupInfo.Create();
+          Result := LGroupInfo.LoadFromFile(LProjectFile);
+          if Result then
           begin
-            if not LInfo.IsRuntimeOnlyPackage then
+            for LInfo in LGroupInfo.Projects do
             begin
-              Result := InstallProject(LInfo);
-              if Result then
-                DoMessage(mtNotification, 'installed')
-              else
-                DoMessage(mtError, 'failed to install');
+              Result := ProcessProject(LInfo);
+              if not Result then
+                Break;
             end;
-            LCompiledPackage.BPLFile := TPath.Combine(FCompiler.BPLOutput, LInfo.BinaryName);
-            LCompiledPackage.DCPFile := TPath.Combine(FCompiler.DCPOutput, LInfo.DCPName);
-            LCompiledPackage.Installed := not LInfo.IsRuntimeOnlyPackage;
-            FPackages.Add(LCompiledPackage);
           end;
+        end
+        else if SameText(LFileExt, CProject) then
+        begin
+          LInfo := TDNProjectInfo.Create();
+          Result := LInfo.LoadFromFile(LProjectFile);
+          if Result then
+            ProcessProject(LInfo);
+        end
+        else
+        begin
+          DoMessage(mtError, 'Unknown fileextension for project ' + LProjectFile);
         end;
+
+
         if not Result then
           Break;
       end;

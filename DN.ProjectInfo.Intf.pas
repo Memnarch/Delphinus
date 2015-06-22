@@ -9,11 +9,13 @@ type
     function GetDCPName: string;
     function GetIsPackage: Boolean;
     function GetIsRuntimeOnlyPackage: Boolean;
+    function GetFileName: string;
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
+    property FileName: string read GetFileName;
   end;
 
 implementation

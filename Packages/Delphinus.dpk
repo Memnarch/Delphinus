@@ -65,6 +65,8 @@ contains
   DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas',
   DN.Installer.IDE in '..\DN.Installer.IDE.pas',
   DN.ToolsApi in '..\DN.ToolsApi.pas',
-  DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas';
+  DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas',
+  DN.ProjectGroupInfo in '..\DN.ProjectGroupInfo.pas',
+  DN.ProjectGroupInfo.Intf in 'DN.ProjectGroupInfo.Intf.pas';
 
 end.
