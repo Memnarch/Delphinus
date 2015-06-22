@@ -25,12 +25,16 @@ type
     dlgSelectInstallFile: TOpenDialog;
     btnUninstall: TToolButton;
     dlgSelectUninstallFile: TOpenDialog;
+    PageControl: TPageControl;
+    tsAvailable: TTabSheet;
+    tsInstalled: TTabSheet;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
+    FInstalledOverview: TPackageOverView;
     FDetailView: TPackageDetailView;
     FPackageProvider: IDNPackageProvider;
     FInstalledPackageProvider: IDNPackageProvider;
@@ -44,6 +48,7 @@ type
     function GetDCPDirectory: string;
     procedure RefreshInstalledPackages;
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
+    function GetActiveOverView: TPackageOverView;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -82,6 +87,7 @@ begin
     FPackages.AddRange(FPackageProvider.Packages);
     FOverView.Clear;
     FOverView.Packages.AddRange(FPackages);
+    tsAvailable.Caption := 'Available (' + IntToStr(FPackages.Count) + ')';
   end;
   RefreshInstalledPackages();
 end;
@@ -132,9 +138,12 @@ begin
   inherited;
   FOverView := TPackageOverView.Create(Self);
   FOverView.Align := alClient;
-  FOverView.Parent := Self;
+  FOverView.Parent := tsAvailable;
   FOverView.OnSelectedPackageChanged := HandleSelectedPackageChanged;
-  FOverView.BorderStyle := bsSingle;
+  FInstalledOverview := TPackageOverView.Create(Self);
+  FInstalledOverview.Align := alClient;
+  FInstalledOverview.Parent := tsInstalled;
+  FInstalledOverview.OnSelectedPackageChanged := HandleSelectedPackageChanged;
   FDetailView := TPackageDetailView.Create(Self);
   FDetailView.Align := alRight;
   FDetailView.AlignWithMargins := True;
@@ -145,16 +154,26 @@ begin
   FInstalledPackages := TList<IDNPackage>.Create();
   FPackageProvider := TDNGitHubPackageProvider.Create();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
+  RefreshInstalledPackages();
 end;
 
 destructor TDelphinusDialog.Destroy;
 begin
   FOverView.OnSelectedPackageChanged := nil;
+  FInstalledOverview.OnSelectedPackageChanged := nil;
   FPackages.Free;
   FInstalledPackages.Free;
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
   inherited;
+end;
+
+function TDelphinusDialog.GetActiveOverView: TPackageOverView;
+begin
+  if PageControl.ActivePageIndex = 1 then
+    Result := FInstalledOverview
+  else
+    Result := FOverView;
 end;
 
 function TDelphinusDialog.GetBPLDirectory: string;
@@ -178,7 +197,7 @@ var
   LCompiler: IDNCompiler;
   LInstaller: IDNInstaller;
 begin
-  if Assigned(FOverView.SelectedPackage) then
+  if Assigned(GetActiveOverView.SelectedPackage) then
   begin
     LDialog := TSetupDialog.Create(nil);
     try
@@ -186,7 +205,7 @@ begin
       LCompiler.BPLOutput := GetBPLDirectory();
       LCompiler.DCPOutput := GetDCPDirectory();
       LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
-      LDialog.ExecuteInstallation(FOverView.SelectedPackage, FPackageProvider, LInstaller,
+      LDialog.ExecuteInstallation(GetActiveOverView.SelectedPackage, FPackageProvider, LInstaller,
         GetComponentDirectory());
     finally
       LDialog.Free;
@@ -197,8 +216,8 @@ end;
 
 procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
 begin
-  FDetailView.Package := FOverView.SelectedPackage;
-  FDetailView.btnUninstall.Enabled := IsPackageInstalled(FOverView.SelectedPackage);
+  FDetailView.Package := TPackageOverView(Sender).SelectedPackage;
+  FDetailView.btnUninstall.Enabled := IsPackageInstalled(TPackageOverView(Sender).SelectedPackage);
   FDetailView.btnInstall.Enabled := not FDetailView.btnUninstall.Enabled;
 end;
 
@@ -207,12 +226,12 @@ var
   LDialog: TSetupDialog;
   LUninstaller: IDNUninstaller;
 begin
-  if Assigned(FOverView.SelectedPackage) then
+  if Assigned(GetActiveOverView.SelectedPackage) then
   begin
     LDialog := TSetupDialog.Create(nil);
     try
       LUninstaller := TDNIDEUninstaller.Create();
-      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), FOverview.SelectedPackage.Name), LUninstaller);
+      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), GetActiveOverView.SelectedPackage.Name), LUninstaller);
     finally
       LDialog.Free;
     end;
@@ -242,7 +261,10 @@ begin
   begin
     FInstalledPackages.Clear;
     FInstalledPackages.AddRange(FInstalledPackageProvider.Packages);
-    HandleSelectedPackageChanged(FDetailView);
+    FInstalledOverview.Clear;
+    FInstalledOverview.Packages.AddRange(FInstalledPackages);
+    HandleSelectedPackageChanged(GetActiveOverView());
+    tsInstalled.Caption := 'Installed (' + IntToStr(FInstalledPackages.Count) + ')';
   end;
 end;
 

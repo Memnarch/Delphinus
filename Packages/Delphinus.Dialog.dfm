@@ -51,6 +51,22 @@ object DelphinusDialog: TDelphinusDialog
       OnClick = btnUninstallClick
     end
   end
+  object PageControl: TPageControl
+    Left = 0
+    Top = 30
+    Width = 554
+    Height = 260
+    ActivePage = tsAvailable
+    Align = alClient
+    TabOrder = 1
+    object tsAvailable: TTabSheet
+      Caption = 'Available'
+    end
+    object tsInstalled: TTabSheet
+      Caption = 'Installed'
+      ImageIndex = 1
+    end
+  end
   object imgMenu: TImageList
     ColorDepth = cd32Bit
     Height = 24
@@ -58,7 +74,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800640018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800740018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
