@@ -142,10 +142,7 @@ begin
         if Assigned(LBase) then
         begin
           FIsRuntimeOnlyPackage := StrToBool(VarToStrDef(LBase.ChildValues['RuntimeOnlyPackage'], 'False'));
-        end;
-        LBase := GetPropertyGroupOfConfig(LProject, CBaseWin32);
-        if Assigned(LBase) then
-        begin
+          //read extensions, post/suffix and version
           LExtension := VarToStr(LBase.ChildValues['OutputExt']);
           if (LExtension <> '') and (not StartsText('.', LExtension)) then
             LExtension := '.' + LExtension;
