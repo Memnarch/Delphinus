@@ -261,16 +261,24 @@ end;
 
 function TDNInstaller.IsSupported(AObject: TJSonObject): Boolean;
 var
-  LMin, LMax: TJSonValue;
+  LMin, LMax, LSpecific: TJSonValue;
 begin
   Result := True;
-  LMin := AObject.GetValue('compiler_min');
-  LMax := AObject.GetValue('compiler_max');
-  if Assigned(LMin) then
-    Result := Result and (FCompilerVersion >= StrToIntDef(LMin.Value, 0));
+  LSpecific := AObject.GetValue('compiler');
+  if Assigned(LSpecific) then
+  begin
+    Result := FCompilerVersion = StrToIntDef(LSpecific.Value, FCompilerVersion);
+  end
+  else
+  begin
+    LMin := AObject.GetValue('compiler_min');
+    LMax := AObject.GetValue('compiler_max');
+    if Assigned(LMin) then
+      Result := Result and (FCompilerVersion >= StrToIntDef(LMin.Value, 0));
 
-  if Assigned(LMax) then
-    Result := Result and (FCompilerVersion <= StrToIntDef(LMax.Value, 1000));
+    if Assigned(LMax) then
+      Result := Result and (FCompilerVersion <= StrToIntDef(LMax.Value, 1000));
+  end;
 end;
 
 function TDNInstaller.ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
