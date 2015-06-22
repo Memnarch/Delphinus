@@ -17,7 +17,7 @@ type
     FRequest: TIdHTTP;
     FLastContentDisposition: string;
     function ExecuteRequest(const ATarget: TStream; const ARequest: string): Boolean;
-    procedure LoadPackageInfo(const APackage: IDNPackage; AData: TStringStream);
+    procedure LoadPackageInfo(const APackage: IDNPackage; const ABranch: string; AData: TStringStream);
   public
     constructor Create();
     destructor Destroy(); override;
@@ -92,7 +92,7 @@ begin
 end;
 
 procedure TDNGitHubPackageProvider.LoadPackageInfo(const APackage: IDNPackage;
-  AData: TStringStream);
+  const ABranch: string; AData: TStringStream);
 var
   LRoot: TJSONObject;
   LPictureValue: TJSONValue;
@@ -103,7 +103,7 @@ begin
   LPicture := TMemoryStream.Create();
   try
     LPictureValue := LRoot.GetValue('picture');
-    if Assigned(LPictureValue) and ExecuteRequest(LPicture, LPictureValue.Value) then
+    if Assigned(LPictureValue) and ExecuteRequest(LPicture, CGithubRaw + APackage.Author + '/' + APackage.Name + '/' + ABranch + '/' + LPictureValue.Value) then
     begin
       LJPG := TJPEGImage.Create();
       try
@@ -158,7 +158,7 @@ begin
             LInfoLocation := CGithubRaw + LItem.GetValue('full_name').Value + '/' + LItem.GetValue('default_branch').Value + '/info.json';
             if ExecuteRequest(LInfoData, LInfoLocation) then
             begin
-              LoadPackageInfo(LPackage, LInfoData);
+              LoadPackageInfo(LPackage, LItem.GetValue('default_branch').Value, LInfoData);
             end;
           finally
             Packages.Add(LPackage);
