@@ -318,7 +318,7 @@ var
   LGroupInfo: IDNProjectGroupInfo;
 const
   CGroup = '.groupproj';
-  CProject = '.proj';
+  CProject = '.dproj';
 begin
   Result := True;
   LInfo := TDNProjectInfo.Create();
