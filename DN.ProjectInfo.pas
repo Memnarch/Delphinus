@@ -133,7 +133,7 @@ begin
         LAppType := VarToStr(LPropertyGroup.ChildValues['AppType']);
         FIsPackage := SameText(LAppType, 'Package');
         if FIsPackage then
-          FDCPName := ChangeFileExt(LBaseName, '.dcp')
+          FDCPName := LBaseName + '.dcp'
         else
           FDCPName := '';
 
