@@ -40,6 +40,8 @@ type
     FInstalledPackageProvider: IDNPackageProvider;
     FPackages: TList<IDNPackage>;
     FInstalledPackages: TList<IDNPackage>;
+    procedure InstallPackage(const APackage: IDNPackage);
+    procedure UnInstallPackage(const APackage: IDNPackage);
     procedure HandleSelectedPackageChanged(Sender: TObject);
     procedure HandleInstallPackage(Sender: TObject);
     procedure HandleUninstallPackage(Sender: TObject);
@@ -140,10 +142,15 @@ begin
   FOverView.Align := alClient;
   FOverView.Parent := tsAvailable;
   FOverView.OnSelectedPackageChanged := HandleSelectedPackageChanged;
+  FOverView.OnCheckIsPackageInstalled := IsPackageInstalled;
+  FOverView.OnInstallPackage :=  InstallPackage;
+  FOverView.OnUninstallPackage := UninstallPackage;
   FInstalledOverview := TPackageOverView.Create(Self);
   FInstalledOverview.Align := alClient;
   FInstalledOverview.Parent := tsInstalled;
   FInstalledOverview.OnSelectedPackageChanged := HandleSelectedPackageChanged;
+  FInstalledOverview.OnCheckIsPackageInstalled := function(const APackage: IDNPackage): Boolean begin Result := True end;
+  FInstalledOverview.OnUninstallPackage := UnInstallPackage;
   FDetailView := TPackageDetailView.Create(Self);
   FDetailView.Align := alRight;
   FDetailView.AlignWithMargins := True;
@@ -192,26 +199,9 @@ begin
 end;
 
 procedure TDelphinusDialog.HandleInstallPackage(Sender: TObject);
-var
-  LDialog: TSetupDialog;
-  LCompiler: IDNCompiler;
-  LInstaller: IDNInstaller;
 begin
-  if Assigned(GetActiveOverView.SelectedPackage) then
-  begin
-    LDialog := TSetupDialog.Create(nil);
-    try
-      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
-      LCompiler.BPLOutput := GetBPLDirectory();
-      LCompiler.DCPOutput := GetDCPDirectory();
-      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
-      LDialog.ExecuteInstallation(GetActiveOverView.SelectedPackage, FPackageProvider, LInstaller,
-        GetComponentDirectory());
-    finally
-      LDialog.Free;
-    end;
-    RefreshInstalledPackages();
-  end;
+  if Assigned(GetActiveOverView().SelectedPackage) then
+    InstallPackage(GetActiveOverView().SelectedPackage);
 end;
 
 procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
@@ -222,16 +212,27 @@ begin
 end;
 
 procedure TDelphinusDialog.HandleUninstallPackage(Sender: TObject);
+begin
+  if Assigned(GetActiveOverView().SelectedPackage) then
+    UninstallPackage(GetActiveOverView().SelectedPackage);
+end;
+
+procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
-  LUninstaller: IDNUninstaller;
+  LCompiler: IDNCompiler;
+  LInstaller: IDNInstaller;
 begin
-  if Assigned(GetActiveOverView.SelectedPackage) then
+  if Assigned(APackage) then
   begin
     LDialog := TSetupDialog.Create(nil);
     try
-      LUninstaller := TDNIDEUninstaller.Create();
-      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), GetActiveOverView.SelectedPackage.Name), LUninstaller);
+      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+      LCompiler.BPLOutput := GetBPLDirectory();
+      LCompiler.DCPOutput := GetDCPDirectory();
+      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
+      LDialog.ExecuteInstallation(APackage, FPackageProvider, LInstaller,
+        GetComponentDirectory());
     finally
       LDialog.Free;
     end;
@@ -265,6 +266,25 @@ begin
     FInstalledOverview.Packages.AddRange(FInstalledPackages);
     HandleSelectedPackageChanged(GetActiveOverView());
     tsInstalled.Caption := 'Installed (' + IntToStr(FInstalledPackages.Count) + ')';
+    FOverView.Refresh();
+  end;
+end;
+
+procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);
+var
+  LDialog: TSetupDialog;
+  LUninstaller: IDNUninstaller;
+begin
+  if Assigned(APackage) then
+  begin
+    LDialog := TSetupDialog.Create(nil);
+    try
+      LUninstaller := TDNIDEUninstaller.Create();
+      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), APackage.Name), LUninstaller);
+    finally
+      LDialog.Free;
+    end;
+    RefreshInstalledPackages();
   end;
 end;
 

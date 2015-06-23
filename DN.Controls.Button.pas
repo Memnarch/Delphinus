@@ -48,7 +48,6 @@ const
 
 procedure TDNButton.PaintTo(ACanvas: TCanvas);
 var
-  LRect: TRect;
   LSize: TSize;
 begin
   inherited;

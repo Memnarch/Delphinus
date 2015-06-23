@@ -13,25 +13,44 @@ uses
   DN.Preview;
 
 type
+  TCheckIsPackageInstalled = reference to function(const APackage: IDNPackage): Boolean;
+  TPackageEvent = reference to procedure(const APackage: IDNPackage);
+
   TPackageOverView = class(TScrollBox)
   private
     FPreviews: TObjectList<TPreview>;
     FPackages: TList<IDNPackage>;
     FSelectedPackage: IDNPackage;
     FOnSelectedPackageChanged: TNotifyEvent;
+    FOnCheckIsPackageInstalled: TCheckIsPackageInstalled;
+    FOnCheckHasPackageUpdate: TCheckIsPackageInstalled;
+    FOnInstallPackage: TPackageEvent;
+    FOnUninstallPackage: TPackageEvent;
+    FOnUpdatePackage: TPackageEvent;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
     procedure HandlePreviewClicked(Sender: TObject);
     procedure ChangeSelectedPackage(const APackage: IDNPackage);
     function GetPreviewForPackage(const APackage: IDNPackage): TPreview;
+    function IsPackageInstalled(const APackage: IDNPackage): Boolean;
+    function HasPackageUpdate(const APackage: IDNPackage): Boolean;
+    procedure InstallPackage(const APackage: IDNPackage);
+    procedure UninstallPackage(const APackage: IDNPackage);
+    procedure UpdatePackage(const APackage: IDNPackage);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
     procedure Clear();
+    procedure Refresh();
     property Packages: TList<IDNPackage> read FPackages;
     property SelectedPackage: IDNPackage read FSelectedPackage;
     property OnSelectedPackageChanged: TNotifyEvent read FOnSelectedPackageChanged write FOnSelectedPackageChanged;
+    property OnCheckIsPackageInstalled: TCheckIsPackageInstalled read FOnCheckIsPackageInstalled write FOnCheckIsPackageInstalled;
+    property OnCheckHasPackageUpdate: TCheckIsPackageInstalled read FOnCheckHasPackageUpdate write FOnCheckHasPackageUpdate;
+    property OnInstallPackage: TPackageEvent read FOnInstallPackage write FOnInstallPackage;
+    property OnUninstallPackage: TPackageEvent read FOnUninstallPackage write FOnUninstallPackage;
+    property OnUpdatePackage: TPackageEvent read FOnUpdatePackage write FOnUpdatePackage;
   end;
 
 implementation
@@ -47,7 +66,12 @@ begin
   LPreview.Parent := Self;
   LPreview.Top := (FPreviews.Count div 3) * (LPreview.Height + 10);
   LPreview.Left := (FPreviews.Count mod 3) * (LPreview.Width + 10);
+  LPreview.Installed := IsPackageInstalled(APackage);
+  LPreview.HasUpdate := HasPackageUpdate(APackage);
   LPreview.OnClick := HandlePreviewClicked;
+  LPreview.OnInstall := procedure(Sender: TObject) begin InstallPackage(TPreview(Sender).Package) end;
+  LPreview.OnUninstall := procedure(Sender: TObject) begin UninstallPackage(TPreview(Sender).Package) end;
+  LPreview.OnUpdate := procedure(Sender: TObject) begin UpdatePackage(TPreview(Sender).Package) end;
   FPreviews.Add(LPreview)
 end;
 
@@ -105,6 +129,34 @@ begin
   ChangeSelectedPackage((Sender as TPreview).Package);
 end;
 
+function TPackageOverView.HasPackageUpdate(const APackage: IDNPackage): Boolean;
+begin
+  Result := Assigned(FOnCheckHasPackageUpdate) and FOnCheckHasPackageUpdate(APackage);
+end;
+
+procedure TPackageOverView.InstallPackage(const APackage: IDNPackage);
+begin
+  if Assigned(FOnInstallPackage) then
+    FOnInstallPackage(APackage);
+end;
+
+function TPackageOverView.IsPackageInstalled(
+  const APackage: IDNPackage): Boolean;
+begin
+  Result := Assigned(FOnCheckIsPackageInstalled) and FOnCheckIsPackageInstalled(APackage);
+end;
+
+procedure TPackageOverView.Refresh;
+var
+  LPreview: TPreview;
+begin
+  for LPreview in FPreviews do
+  begin
+    LPreview.Installed := IsPackageInstalled(LPreview.Package);
+    LPreview.HasUpdate := HasPackageUpdate(LPreview.Package);
+  end;
+end;
+
 procedure TPackageOverView.RemovePreview(const APackage: IDNPackage);
 var
   i: Integer;
@@ -121,6 +173,18 @@ begin
   begin
     ChangeSelectedPackage(nil);
   end;
+end;
+
+procedure TPackageOverView.UninstallPackage(const APackage: IDNPackage);
+begin
+  if Assigned(FOnUninstallPackage) then
+    FOnUninstallPackage(APackage);
+end;
+
+procedure TPackageOverView.UpdatePackage(const APackage: IDNPackage);
+begin
+  if Assigned(FOnUpdatePackage) then
+    FOnUpdatePackage(APackage);
 end;
 
 procedure TPackageOverView.ChangeSelectedPackage;

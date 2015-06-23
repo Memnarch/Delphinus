@@ -183,7 +183,7 @@ procedure TDNControlsController.HandleControlChanged(Sender: TObject);
 var
   LRect: TRect;
 begin
-  if Assigned(FParent) then
+  if Assigned(FParent) and FParent.HandleAllocated then
   begin
     LRect.Left := TDNControl(Sender).Left;
     LRect.Top := TDNControl(Sender).Top;
