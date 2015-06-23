@@ -56,6 +56,10 @@ begin
       if Assigned(LInfo) then
       begin
         try
+          LValue := LInfo.GetValue('author');
+          if Assigned(LValue) then
+            APackage.Author := LValue.Value;
+
           LValue := LInfo.GetValue('picture');
           if Assigned(LValue) then
           begin
