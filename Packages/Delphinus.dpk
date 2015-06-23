@@ -67,6 +67,6 @@ contains
   DN.ToolsApi in '..\DN.ToolsApi.pas',
   DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas',
   DN.ProjectGroupInfo in '..\DN.ProjectGroupInfo.pas',
-  DN.ProjectGroupInfo.Intf in 'DN.ProjectGroupInfo.Intf.pas';
+  DN.ProjectGroupInfo.Intf in '..\DN.ProjectGroupInfo.Intf.pas';
 
 end.
