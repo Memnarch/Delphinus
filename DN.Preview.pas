@@ -69,7 +69,7 @@ begin
   Width := 128;
   Height := Width + 40 + 25;
 
-  FBGSelectedStart := RGBToColor(250, 134, 30);
+  FBGSelectedStart := RGB(250, 134, 30);
   FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
   FBGStart := AlterColor(clWhite, -30);
   FBGEnd := AlterColor(FBGStart, -5);
@@ -176,12 +176,12 @@ begin
   if FInstalled then
   begin
     FButton.Caption := 'Uninstall';
-    FButton.HoverColor := RGBToColor(224, 25, 51); //clRed;
+    FButton.HoverColor := RGB(224, 25, 51); //clRed;
   end
   else
   begin
     FButton.Caption := 'Install';
-    FButton.HoverColor := RGBToColor(151, 224, 25) //clGreen;
+    FButton.HoverColor := RGB(151, 224, 25) //clGreen;
   end;
 end;
 
@@ -215,7 +215,7 @@ begin
   FUpdateButton.Width := Width div 2;
   FUpdateButton.Height := 25;
   FUpdateButton.Color := clSilver;
-  FUpdateButton.HoverColor := RGBToColor(153, 242, 222);
+  FUpdateButton.HoverColor := RGB(153, 242, 222);
   FUpdateButton.Visible := False;
   FUpdateButton.Caption := 'Update';
   FUpdateButton.OnClick := HandleButtonClick;

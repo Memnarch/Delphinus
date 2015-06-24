@@ -10,7 +10,6 @@ uses
   Math;
 
 procedure GradientFillRectVertical(ACanvas: TCanvas; const AStartColor, AEndColor: TColor; const ARect: TRect); inline;
-function RGBToColor(const R, G, B: Byte): TColor; inline;
 function AlterColor(const AColor: TColor; const AAmount: SmallInt): TColor; inline;
 
 implementation
@@ -40,19 +39,14 @@ begin
   GradientFill(ACanvas.Handle, @LVertices[0], Length(LVertices), @LMeshes[0], Length(LMeshes), GRADIENT_FILL_RECT_V);
 end;
 
-function RGBToColor(const R, G, B: Byte): TColor; inline;
-begin
-  TColors(Result).R := R;
-  TColors(Result).G := G;
-  TColors(Result).B := B;
-end;
-
 function AlterColor(const AColor: TColor; const AAmount: SmallInt): TColor; inline;
 begin
-  Result := RGBToColor(
-    Max(GetRValue(AColor) + AAmount, 0),
-    Max(GetGValue(AColor) + AAmount, 0),
-    Max(GetBValue(AColor) + AAmount, 0));
+  Result :=
+    RGB(
+      Max(GetRValue(AColor) + AAmount, 0),
+      Max(GetGValue(AColor) + AAmount, 0),
+      Max(GetBValue(AColor) + AAmount, 0)
+    );
 end;
 
 end.

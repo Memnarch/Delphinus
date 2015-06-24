@@ -38,8 +38,8 @@ uses
   DN.Graphics;
 
 const
-  CAlterEnd = -10;
-  CAlterEndForBorder = -15;
+  CAlterForEnd =  -10;
+  CAlterForBorder = -25;
   CAlterDown = +10;
   CAlterEndDown = -20;
   CAlterEndForBorderDown = 0;
@@ -92,15 +92,15 @@ end;
 procedure TDNButton.SetColor(const Value: TColor);
 begin
   FColor := Value;
-  FEndColor := AlterColor(FColor, CAlterEnd);
-  FBorderColor := AlterColor(FEndColor, CAlterEndForBorder);
+  FEndColor := AlterColor(FColor, CAlterForEnd);
+  FBorderColor := AlterColor(FColor, CAlterForBorder);
 end;
 
 procedure TDNButton.SetHoverColor(const Value: TColor);
 begin
   FHoverColor := Value;
-  FEndHoverColor := AlterColor(FHoverColor, CAlterEnd);
-  FBorderHoverColor := AlterColor(FEndHoverColor, CAlterEndForBorder);
+  FEndHoverColor := AlterColor(FHoverColor, CAlterForEnd);
+  FBorderHoverColor := AlterColor(FHoverColor, CAlterForBorder);
 
 //  FHoverDownColor := ALterColor(Value, CAlterDown);
 //  FEndHoverDownColor := AlterColor(FHoverDownColor, CAlterEndDown);
