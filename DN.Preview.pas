@@ -6,6 +6,7 @@ uses
   Classes,
   Types,
   Windows,
+  Messages,
   System.UITypes,
   Controls,
   Graphics,
@@ -24,36 +25,46 @@ type
     FBGSelectedEnd: TColor;
     FBGStart: TColor;
     FBGEnd: TColor;
+    FInstallColor: TColor;
+    FUninstallColor: TColor;
+    FUpdateColor: TColor;
+    FInfoColor: TColor;
     FGUI: TDNControlsController;
     FButton: TDNButton;
     FUpdateButton: TDNButton;
-    FInstalled: Boolean;
-    FHasUpdate: Boolean;
+    FInfoButton: TDNButton;
+    FInstalledVersion: string;
+    FUpdateVersion: string;
     FOnUpdate: TNotifyEvent;
     FOnInstall: TNotifyEvent;
     FOnUninstall: TNotifyEvent;
+    FOnInfo: TNotifyEvent;
     procedure SetSelected(const Value: Boolean);
     procedure SetPackage(const Value: IDNPackage);
-    procedure SetInstalled(const Value: Boolean);
-    procedure SetHasUpdate(const Value: Boolean);
+    procedure SetInstalledVersion(const Value: string);
+    procedure SetUpdateVersion(const Value: string);
     procedure DoInstall();
     procedure DoUninstall();
     procedure DoUpdate();
+    procedure DoInfo();
     procedure HandleButtonClick(Sender: TObject);
   protected
     procedure Paint; override;
     procedure SetupControls;
+    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
     property Selected: Boolean read FSelected write SetSelected;
-    property Installed: Boolean read FInstalled write SetInstalled;
-    property HasUpdate: Boolean read FHasUpdate write SetHasUpdate;
+    property InstalledVersion: string read FInstalledVersion write SetInstalledVersion;
+    property UpdateVersion: string read FUpdateVersion write SetUpdateVersion;
     property OnClick;
     property OnInstall: TNotifyEvent read FOnInstall write FOnInstall;
     property OnUninstall: TNotifyEvent read FOnUninstall write FOnUninstall;
     property OnUpdate: TNotifyEvent read FOnUpdate write FOnUpdate;
+    property OnInfo: TNotifyEvent read FOnInfo write FOnInfo;
   end;
 
 implementation
@@ -63,16 +74,36 @@ uses
 
 { TPreview }
 
+procedure TPreview.CMMouseEnter(var Message: TMessage);
+begin
+  if Message.LParam = 0 then
+    FInfoButton.Visible := True;
+
+  inherited;
+end;
+
+procedure TPreview.CMMouseLeave(var Message: TMessage);
+begin
+  if Message.LParam = 0 then
+    FInfoButton.Visible := False;
+
+  inherited;
+end;
+
 constructor TPreview.Create(AOwner: TComponent);
 begin
   inherited;
   Width := 128;
-  Height := Width + 40 + 25;
+  Height := Width + 40 + 25 + 20;
 
   FBGSelectedStart := RGB(250, 134, 30);
   FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
   FBGStart := AlterColor(clWhite, -30);
   FBGEnd := AlterColor(FBGStart, -5);
+  FInstallColor := RGB(151, 224, 25);
+  FUninstallColor := RGB(224, 25, 51);
+  FUpdateColor := RGB(153, 242, 222);
+  FInfoColor := RGB(242, 211, 153);
   FGUI := TDNControlsController.Create();
   FGUI.Parent := Self;
   SetupControls();
@@ -82,6 +113,12 @@ destructor TPreview.Destroy;
 begin
   FGUI.Free;
   inherited;
+end;
+
+procedure TPreview.DoInfo;
+begin
+  if Assigned(FOnInfo) then
+    FOnInfo(Self);
 end;
 
 procedure TPreview.DoInstall;
@@ -106,7 +143,7 @@ procedure TPreview.HandleButtonClick(Sender: TObject);
 begin
   if Sender = FButton then
   begin
-    if Installed then
+    if InstalledVersion <> '' then
     begin
       DoUninstall();
     end
@@ -118,7 +155,9 @@ begin
   else
   begin
     if Sender = FUpdateButton then
-      DoUpdate();
+      DoUpdate()
+    else if Sender = FInfoButton then
+      DoInfo();
   end;
 end;
 
@@ -130,9 +169,6 @@ begin
   if Assigned(FPackage) then
   begin
     Canvas.Brush.Style := bsClear;
-//    if Selected then
-//      GradientFillRectVertical(Canvas, FBGSelectedStart, FBGSelectedEnd, Rect(0, 128, Width, Height-25))
-//    else
     GradientFillRectVertical(Canvas, FBGStart, FBGEnd, Rect(0, 128, Width, Height-25));
 
 
@@ -143,10 +179,23 @@ begin
       LTop := 0;
       Canvas.StretchDraw(Rect(LLeft, LTop, LLeft + 128, LTop + 128), FPackage.Picture.Graphic);
     end;
+
     Canvas.Font.Style := [TFontStyle.fsBold];
     Canvas.TextOut(5, Width, FPackage.Name);
     Canvas.Font.Style := [];
     Canvas.TextOut(5, Width + 20, FPackage.Author);
+
+    if InstalledVersion <> '' then
+    begin
+      Canvas.Font.Style := [fsBold];
+      Canvas.TextOut(5, Width + 40, '' + InstalledVersion);
+      if FUpdateVersion <> '' then
+      begin
+        LLeft := 5 + Canvas.TextWidth(InstalledVersion);
+        Canvas.TextOut(LLeft, Width + 40, ' -> ' + UpdateVersion);
+      end;
+      Canvas.Font.Style := [];
+    end;
 
     Canvas.Pen.Color := clBtnShadow; //cl3DLight;
     Canvas.Rectangle(0, 0, Width, Height-24);
@@ -154,11 +203,11 @@ begin
   end;
 end;
 
-procedure TPreview.SetHasUpdate(const Value: Boolean);
+procedure TPreview.SetUpdateVersion(const Value: string);
 begin
-  FHasUpdate := Value;
-  FUpdateButton.Visible := FHasUpdate;
-  if FHasUpdate then
+  FUpdateVersion := Value;
+  FUpdateButton.Visible := FUpdateVersion <> '';
+  if FUpdateVersion <> '' then
   begin
     FButton.Width := Width div 2;
     FButton.Left := Width div 2;
@@ -170,18 +219,18 @@ begin
   end;
 end;
 
-procedure TPreview.SetInstalled(const Value: Boolean);
+procedure TPreview.SetInstalledVersion(const Value: string);
 begin
-  FInstalled := Value;
-  if FInstalled then
+  FInstalledVersion := Value;
+  if FInstalledVersion <> '' then
   begin
     FButton.Caption := 'Uninstall';
-    FButton.HoverColor := RGB(224, 25, 51); //clRed;
+    FButton.HoverColor := FUninstallColor; //clRed;
   end
   else
   begin
     FButton.Caption := 'Install';
-    FButton.HoverColor := RGB(151, 224, 25) //clGreen;
+    FButton.HoverColor := FInstallColor //clGreen;
   end;
 end;
 
@@ -215,11 +264,23 @@ begin
   FUpdateButton.Width := Width div 2;
   FUpdateButton.Height := 25;
   FUpdateButton.Color := clSilver;
-  FUpdateButton.HoverColor := RGB(153, 242, 222);
+  FUpdateButton.HoverColor := FUpdateColor;
   FUpdateButton.Visible := False;
   FUpdateButton.Caption := 'Update';
   FUpdateButton.OnClick := HandleButtonClick;
   FGUI.Controls.Add(FUpdateButton);
+
+  FInfoButton := TDNButton.Create();
+  FInfoButton.Left := Width - 25;
+  FInfoButton.Top := 128;// Height - 50;
+  FInfoButton.Width := 25;
+  FInfoButton.Height := 25;
+  FInfoButton.Color := clSilver;
+  FInfoButton.HoverColor := FInfoColor;
+  FInfoButton.Caption := 'i';
+  FInfoButton.Visible := False;
+  FInfoButton.OnClick := HandleButtonClick;
+  FGUI.Controls.Add(FInfoButton);
 end;
 
 end.
