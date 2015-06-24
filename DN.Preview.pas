@@ -10,6 +10,7 @@ uses
   System.UITypes,
   Controls,
   Graphics,
+  Math,
   DN.Package.Intf,
   DN.Controls,
   DN.Controls.Button;
@@ -94,7 +95,7 @@ constructor TPreview.Create(AOwner: TComponent);
 begin
   inherited;
   Width := 128;
-  Height := Width + 40 + 25 + 20;
+  Height := Width + 25 + Abs(Canvas.Font.Height*3) + 5;
 
   FBGSelectedStart := RGB(250, 134, 30);
   FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
@@ -183,16 +184,16 @@ begin
     Canvas.Font.Style := [TFontStyle.fsBold];
     Canvas.TextOut(5, Width, FPackage.Name);
     Canvas.Font.Style := [];
-    Canvas.TextOut(5, Width + 20, FPackage.Author);
+    Canvas.TextOut(5, Width + Abs(Canvas.Font.Height), FPackage.Author);
 
     if InstalledVersion <> '' then
     begin
       Canvas.Font.Style := [fsBold];
-      Canvas.TextOut(5, Width + 40, '' + InstalledVersion);
+      Canvas.TextOut(5, Width + Abs(Canvas.Font.Height)*2, '' + InstalledVersion);
       if FUpdateVersion <> '' then
       begin
         LLeft := 5 + Canvas.TextWidth(InstalledVersion);
-        Canvas.TextOut(LLeft, Width + 40, ' -> ' + UpdateVersion);
+        Canvas.TextOut(LLeft, Width + Abs(Canvas.Font.Height)*2, ' -> ' + UpdateVersion);
       end;
       Canvas.Font.Style := [];
     end;

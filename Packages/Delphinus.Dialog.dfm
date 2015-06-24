@@ -5,7 +5,7 @@ object DelphinusDialog: TDelphinusDialog
   BorderStyle = bsSingle
   Caption = 'DelphinusDialog'
   ClientHeight = 460
-  ClientWidth = 657
+  ClientWidth = 440
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object DelphinusDialog: TDelphinusDialog
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 657
+    Width = 440
     Height = 30
     AutoSize = True
     ButtonHeight = 30
@@ -26,6 +26,7 @@ object DelphinusDialog: TDelphinusDialog
     Caption = 'ToolBar1'
     Images = imgMenu
     TabOrder = 0
+    ExplicitWidth = 430
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -56,15 +57,15 @@ object DelphinusDialog: TDelphinusDialog
   object PageControl: TPageControl
     Left = 0
     Top = 30
-    Width = 657
+    Width = 440
     Height = 430
     ActivePage = tsAvailable
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 440
+    ExplicitWidth = 430
     object tsAvailable: TTabSheet
       Caption = 'Available'
-      ExplicitHeight = 412
+      ExplicitWidth = 422
     end
     object tsInstalled: TTabSheet
       Caption = 'Installed'
@@ -82,7 +83,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800900018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800A80018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

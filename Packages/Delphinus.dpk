@@ -59,7 +59,6 @@ contains
   DN.Uninstaller.Intf in '..\DN.Uninstaller.Intf.pas',
   DN.Uninstaller in '..\DN.Uninstaller.pas',
   DN.Zip in '..\DN.Zip.pas',
-  Delphinus.PackageDetailView in 'Delphinus.PackageDetailView.pas' {PackageDetailView: TFrame},
   Delphinus.SetupDialog in 'Delphinus.SetupDialog.pas' {SetupDialog},
   DN.PackageProvider in '..\DN.PackageProvider.pas',
   DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas',

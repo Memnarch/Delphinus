@@ -7,6 +7,7 @@ uses
   UITypes,
   Windows,
   Graphics,
+  Math,
   DN.Controls;
 
 type

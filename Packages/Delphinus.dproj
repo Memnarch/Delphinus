@@ -113,11 +113,6 @@
         <DCCReference Include="..\DN.Uninstaller.Intf.pas"/>
         <DCCReference Include="..\DN.Uninstaller.pas"/>
         <DCCReference Include="..\DN.Zip.pas"/>
-        <DCCReference Include="Delphinus.PackageDetailView.pas">
-            <Form>PackageDetailView</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="Delphinus.SetupDialog.pas">
             <Form>SetupDialog</Form>
             <FormType>dfm</FormType>
