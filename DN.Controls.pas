@@ -78,7 +78,7 @@ uses
 
 procedure TDNControl.Changed;
 begin
-  if Visible and Assigned(FOnChanged) then
+  if Assigned(FOnChanged) then
   begin
     FOnChanged(Self);
   end;
