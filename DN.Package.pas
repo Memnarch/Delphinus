@@ -3,6 +3,7 @@ unit DN.Package;
 interface
 
 uses
+  Types,
   Graphics,
   DN.Package.Intf;
 
@@ -15,6 +16,7 @@ type
     FPicture: TPicture;
     FDownloadLocation: string;
     FLastUpdated: string;
+    FVersions: TStringDynArray;
     function GetDownloadLocation: string;
     procedure SetDownloadLocation(const Value: string);
     function GetAuthor: string;
@@ -26,6 +28,7 @@ type
     procedure SetName(const Value: string);
     function GetLastUpdated: string;
     procedure SetLastUpdated(const Value: string);
+    function GetVersions: TStringDynArray;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -35,6 +38,7 @@ type
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
+    property Versions: TStringDynArray read GetVersions;
   end;
 
 implementation
@@ -81,6 +85,11 @@ end;
 function TDNPackage.GetPicture: TPicture;
 begin
   Result := FPicture;
+end;
+
+function TDNPackage.GetVersions: TStringDynArray;
+begin
+  Result := FVersions;
 end;
 
 procedure TDNPackage.SetAuthor(const Value: string);
