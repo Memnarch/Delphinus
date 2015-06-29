@@ -11,29 +11,26 @@ uses
   DN.Installer.Intf,
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
+  DN.JSonFile.Installation,
   JSon,
-  DBXJSon;
+  DBXJSon,
+  DN.JSonFile.Uninstallation;
 
 type
-  TCompiledPackage = packed record
-    BPLFile: string;
-    DCPFile: string;
-    Installed: Boolean;
-  end;
 
   TDNInstaller = class(TInterfacedObject, IDNInstaller)
   private
     FCompiler: IDNCompiler;
     FCompilerVersion: Integer;
     FSearchPathes: string;
-    FPackages: TList<TCompiledPackage>;
+    FPackages: TList<TPackage>;
     FOnMessage: TMessageEvent;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
-    procedure ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
-    procedure ProcessSourceFolders(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string);
-    function ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
+    procedure ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
+    procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
+    function ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
     function ProcessProject(const AProject: IDNProjectInfo): Boolean;
-    function IsSupported(AObject: TJSonObject): Boolean;
+    function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
 
     procedure SaveUninstall(const ATargetDirectory: string);
@@ -180,7 +177,7 @@ begin
   inherited Create();
   FCompiler := ACompiler;
   FCompilerVersion := ACompilerVersion;
-  FPackages := TList<TCompiledPackage>.Create();
+  FPackages := TList<TPackage>.Create();
 end;
 
 destructor TDNInstaller.Destroy;
@@ -220,9 +217,8 @@ end;
 function TDNInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
-  LInfo: TJSONObject;
+  LInfo: TInstallationFile;
   LInstallerFile: string;
-  LStream: TStringStream;
 begin
   Result := False;
   Reset();
@@ -230,24 +226,16 @@ begin
   LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
   if TFile.Exists(LInstallerFile) then
   begin
-    LStream := TStringStream.Create();
+    LInfo := TInstallationFile.Create();
     try
-      LStream.LoadFromFile(LInstallerFile);
-      LInfo := TJSONObject.ParseJSONValue(LStream.DataString) as TJSonObject;
-      if Assigned(LInfo) then
-      begin
-        try
-          ProcessSearchPathes(LInfo, ATargetDirectory);
-          ProcessSourceFolders(LInfo, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
-          Result := ProcessProjects(LInfo, ASourceDirectory, ATargetDirectory);
-          if Result then
-            CopyMetaData(ASourceDirectory, ATargetDirectory);
-        finally
-          LInfo.Free;
-        end;
-      end;
+      LInfo.LoadFromFile(LInstallerFile);
+      ProcessSearchPathes(LInfo.SearchPathes, ATargetDirectory);
+      ProcessSourceFolders(LInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
+      Result := ProcessProjects(LInfo.Projects, ASourceDirectory, ATargetDirectory);
+      if Result then
+        CopyMetaData(ASourceDirectory, ATargetDirectory);
     finally
-      LStream.Free;
+      LInfo.Free;
     end;
   end
   else
@@ -262,31 +250,20 @@ begin
   Result := True;
 end;
 
-function TDNInstaller.IsSupported(AObject: TJSonObject): Boolean;
-var
-  LMin, LMax, LSpecific: TJSonValue;
+function TDNInstaller.IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
 begin
   Result := True;
-  LSpecific := AObject.GetValue('compiler');
-  if Assigned(LSpecific) then
-  begin
-    Result := FCompilerVersion = StrToIntDef(LSpecific.Value, FCompilerVersion);
-  end
-  else
-  begin
-    LMin := AObject.GetValue('compiler_min');
-    LMax := AObject.GetValue('compiler_max');
-    if Assigned(LMin) then
-      Result := Result and (FCompilerVersion >= StrToIntDef(LMin.Value, 0));
 
-    if Assigned(LMax) then
-      Result := Result and (FCompilerVersion <= StrToIntDef(LMax.Value, 1000));
-  end;
+  if ACompiler_Min > 0 then
+    Result := Result and (FCompilerVersion >= ACompiler_Min);
+
+  if ACompiler_Max > 0 then
+    Result := Result and (FCompilerVersion <= ACompiler_Max);
 end;
 
 function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
 var
-  LCompiledPackage: TCompiledPackage;
+  LCompiledPackage: TPackage;
 begin
   BeforeCompile(AProject.FileName);
   Result := FCompiler.Compile(AProject.FileName);
@@ -308,12 +285,10 @@ begin
   end;
 end;
 
-function TDNInstaller.ProcessProjects(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string): Boolean;
+function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
 var
-  LProjects: TJSONArray;
-  LProject: TJSonObject;
+  LProject: TProject;
   LProjectFile, LFileExt: string;
-  i: Integer;
   LInfo: IDNProjectInfo;
   LGroupInfo: IDNProjectGroupInfo;
 const
@@ -324,15 +299,13 @@ begin
   LInfo := TDNProjectInfo.Create();
   FCompiler.DCUOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CLibDir), '$(Platform)\$(Config)');
   FCompiler.ExeOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CBinDir), '$(Platform)\$(Config)');
-  LProjects := TJSonArray(AObject.GetValue('projects'));
-  if Assigned(LProjects) then
+  if Length(AProjects) > 0 then
   begin
-    for i := 0 to LProjects.Count - 1 do
+    for LProject in AProjects do
     begin
-      LProject := LProjects.Items[i] as TJSonObject;
-      if IsSupported(LProject) then
+      if IsSupported(LProject.CompilerMin, LProject.CompilerMax) then
       begin
-        LProjectFile := TPath.Combine(ASourceDirectory, LProject.GetValue('project').Value);
+        LProjectFile := TPath.Combine(ASourceDirectory, LProject.Project);
         LFileExt := ExtractFileExt(LProjectFile);
         if SameText(LFileExt, CGroup) then
         begin
@@ -368,25 +341,21 @@ begin
   end;
 end;
 
-procedure TDNInstaller.ProcessSearchPathes(AObject: TJSONObject; const ARootDirectory: string);
+procedure TDNInstaller.ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
 var
   LPathes: TStringDynArray;
-  LPathArray: TJSONArray;
-  LPath: TJSonObject;
+  LPath: TSearchPath;
   LRelPath, LBasePath: string;
-  i: Integer;
 begin
-  LPathArray := TJSonArray(AObject.GetValue('search_pathes'));
-  if Assigned(LPathArray) then
+  if Length(APathes) > 0 then
   begin
     DoMessage(mtNotification, 'Adding Searchpathes:');
     LBasePath := TPath.Combine(ARootDirectory, CSourceDir);
-    for i := 0 to LPathArray.Count - 1 do
+    for LPath in APathes do
     begin
-      LPath := LPathArray.Items[i] as TJSonObject;
-      if IsSupported(LPath) then
+      if IsSupported(LPath.CompilerMin, LPath.CompilerMax) then
       begin
-        LPathes := SplitString(LPath.GetValue('pathes').Value, ';');
+        LPathes := SplitString(LPath.Path, ';');
         for LRelPath in LPathes do
         begin
           DoMessage(mtNotification, LRelPath);
@@ -404,58 +373,40 @@ begin
   end;
 end;
 
-procedure TDNInstaller.ProcessSourceFolders(AObject: TJSONObject; const ASourceDirectory, ATargetDirectory: string);
+procedure TDNInstaller.ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
 var
-  LFolders: TJSONArray;
-  LFolder: TJSonObject;
-  LValue: TJSONValue;
-  LRecursive: Boolean;
+  LFolder: TFolder;
   LFilter: TStringDynArray;
-  LRelPath, LRelTargetPath, LBase: string;
-  i: Integer;
+  LRelTargetPath, LBase: string;
 begin
-  LFolders := TJSonArray(AObject.GetValue('source_folders'));
-  if Assigned(LFolders) then
+  if Length(ASourceFolders) > 0 then
   begin
     DoMessage(mtNotification, 'Copying sourcefolders:');
-    for i := 0 to LFolders.Count - 1 do
+    for LFolder in ASourceFolders do
     begin
-      LFolder := LFolders.Items[i] as TJSonObject;
-      if IsSupported(LFolder) then
+      if IsSupported(LFolder.CompilerMin, LFolder.CompilerMax) then
       begin
-        LRelPath := LFolder.GetValue('folder').Value;
-        LRelTargetPath := LRelPath;
-        if not TPath.IsRelativePath(LRelPath) then
+        if not TPath.IsRelativePath(LFolder.Folder) then
         begin
-          DoMessage(mtError, 'Path is not relative ' + LRelPath);
+          DoMessage(mtError, 'Path is not relative ' + LFolder.Folder);
         end;
-        LValue := LFolder.GetValue('base');
-        if Assigned(LValue) then
+        LRelTargetPath := LFolder.Folder;
+        if LFolder.Base <> '' then
         begin
-          LBase := IncludeTrailingPathDelimiter(LValue.Value);
-          LRelTargetPath := IncludeTrailingPathDelimiter(LRelTargetPath);
+          LBase := IncludeTrailingPathDelimiter(LFolder.Base);
+          LRelTargetPath := IncludeTrailingPathDelimiter(LFolder.Folder);
           if StartsText(LRelTargetPath, LBase) then
             LRelTargetPath := Copy(LRelTargetPath, Length(LBase) + 1, Length(LRelTargetPath))
           else
             DoMessage(mtError, 'base must be exactly overlapping with folder string to remove it');
         end;
 
-        LValue := LFolder.GetValue('recursive');
-        if Assigned(LValue) then
-          LRecursive := StrToBoolDef(LValue.Value, False)
-        else
-          LRecursive := False;
+        LFilter := SplitString(LFolder.Filter, ';');
 
-        LValue := LFolder.GetValue('filter');
-        if Assigned(LValue) then
-          LFilter := SplitString(LValue.Value, ';')
-        else
-          SetLength(LFilter, 0);
-
-        DoMessage(mtNotification, LRelPath);
-        if SameText(LRelPath, '.') then
-          LRelPath := '';
-        CopyDirectory(TPath.Combine(ASourceDirectory, LRelPath), TPath.Combine(ATargetDirectory, LRelTargetPath), LFilter, LRecursive);
+        DoMessage(mtNotification, LFolder.Folder);
+        CopyDirectory(
+          TPath.Combine(ASourceDirectory, IfThen(LFolder.Folder = '.', '', LFolder.Folder)),
+          TPath.Combine(ATargetDirectory, LRelTargetPath), LFilter, LFolder.Recursive);
       end;
     end;
   end;
@@ -469,30 +420,15 @@ end;
 
 procedure TDNInstaller.SaveUninstall(const ATargetDirectory: string);
 var
-  LData: TStringStream;
-  LUninstall, LPackage: TJSONObject;
-  LPackages: TJSONArray;
-  LCompiledPackage: TCompiledPackage;
+  LUninstall: TUninstallationFile;
 begin
-  LData := TStringStream.Create();
-  LUninstall := TJSONObject.Create();
+  LUninstall := TUninstallationFile.Create();
   try
-    LUninstall.AddPair('search_pathes', StringReplace(FSearchPathes, '\', '\\', [rfReplaceAll]));
-    LPackages := TJSONArray.Create();
-    LUninstall.AddPair('packages', LPackages);
-    for LCompiledPackage in FPackages do
-    begin
-      LPackage := TJSONObject.Create();
-      LPackage.AddPair('bpl_file', StringReplace(LCompiledPackage.BPLFile, '\', '\\', [rfReplaceAll]));
-      LPackage.AddPair('dcp_file', StringReplace(LCompiledPackage.DCPFile, '\', '\\', [rfReplaceAll]));
-      LPackage.AddPair('installed', BoolToStr(LCompiledPackage.Installed, True));
-      LPackages.AddElement(LPackage);
-    end;
-    LData.WriteString(LUninstall.ToString);
-    LData.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
+    LUninstall.SearchPathes := FSearchPathes;
+    LUninstall.Packages := FPackages.ToArray;
+    LUninstall.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
   finally
     LUninstall.Free;
-    LData.Free;
   end;
 end;
 

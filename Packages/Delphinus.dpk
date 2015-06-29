@@ -66,6 +66,15 @@ contains
   DN.ToolsApi in '..\DN.ToolsApi.pas',
   DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas',
   DN.ProjectGroupInfo in '..\DN.ProjectGroupInfo.pas',
-  DN.ProjectGroupInfo.Intf in '..\DN.ProjectGroupInfo.Intf.pas';
+  DN.ProjectGroupInfo.Intf in '..\DN.ProjectGroupInfo.Intf.pas',
+  DN.JSonFile in '..\DN.JSonFile.pas',
+  DN.JSonFile.Info in '..\DN.JSonFile.Info.pas',
+  DN.JSonFile.Installation in '..\DN.JSonFile.Installation.pas',
+  DN.Controls.Button in '..\DN.Controls.Button.pas',
+  DN.Controls in '..\DN.Controls.pas',
+  DN.Graphics in '..\DN.Graphics.pas',
+  DN.PackageDetailView in '..\DN.PackageDetailView.pas' {PackageDetailView: TFrame},
+  DN.JSonFile.Uninstallation in '..\DN.JSonFile.Uninstallation.pas';
 
 end.
+

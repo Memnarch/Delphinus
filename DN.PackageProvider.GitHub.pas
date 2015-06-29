@@ -35,7 +35,8 @@ uses
   DBXJSon,
   JSon,
   JPeg,
-  DN.Zip;
+  DN.Zip,
+  DN.JSOnFile.Info;
 
 const
   CGithubRaw = 'https://raw.githubusercontent.com/';
@@ -94,16 +95,15 @@ end;
 procedure TDNGitHubPackageProvider.LoadPackageInfo(const APackage: IDNPackage;
   const ABranch: string; AData: TStringStream);
 var
-  LRoot: TJSONObject;
-  LPictureValue: TJSONValue;
+  LInfo: TInfoFile;
   LPicture: TMemoryStream;
   LJPG: TJPEGImage;
 begin
-  LRoot := TJSONObject.ParseJSONValue(AData.DataString) as TJSONObject;
+  LInfo := TInfoFile.Create();
   LPicture := TMemoryStream.Create();
   try
-    LPictureValue := LRoot.GetValue('picture');
-    if Assigned(LPictureValue) and ExecuteRequest(LPicture, CGithubRaw + APackage.Author + '/' + APackage.Name + '/' + ABranch + '/' + LPictureValue.Value) then
+    LInfo.LoadFromString(AData.DataString);
+    if (LInfo.Picture <> '') and ExecuteRequest(LPicture, CGithubRaw + APackage.Author + '/' + APackage.Name + '/' + ABranch + '/' + LInfo.Picture) then
     begin
       LJPG := TJPEGImage.Create();
       try
@@ -115,7 +115,7 @@ begin
       end;
     end;
   finally
-    LRoot.Free;
+    LInfo.Free;
     LPicture.Free;
   end;
 end;

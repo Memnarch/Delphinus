@@ -9,15 +9,16 @@ uses
   DN.Types,
   DN.Uninstaller.Intf,
   DBXJSon,
-  JSon;
+  JSon,
+  DN.JSonFile.Uninstallation;
 
 type
   TDNUninstaller = class(TInterfacedObject, IDNUninstaller)
   private
     FOnMessage: TMessageEvent;
-    function ProcessPackages(AObject: TJSONObject): Boolean;
+    function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
     function DeleteFiles(const ADirectory: string): Boolean;
-    function RemoveSearchPathes(AObject: TJSONObject): Boolean;
+    function RemoveSearchPathes(const ASearchPathes: string): Boolean;
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
   protected
@@ -57,78 +58,63 @@ begin
   Result := FOnMessage;
 end;
 
-function TDNUninstaller.ProcessPackages(AObject: TJSONObject): Boolean;
+function TDNUninstaller.ProcessPackages(const APackages: TArray<TPackage>): Boolean;
 var
-  LPackages: TJSONArray;
-  LPackage: TJSONObject;
-  LInstalled: TJSONValue;
-  LBPLFile, LDCPFile, LBPI, LLib: string;
-  i: Integer;
+  LPackage: TPackage;
+  LBPI, LLib: string;
 begin
-  LPackages := TJSONArray(AObject.GetValue('packages'));
-  if Assigned(LPackages) then
+  Result := Length(APackages) = 0;
+  for LPackage in APackages do
   begin
-    Result := False;
-    for i := LPackages.Count - 1 downto 0 do
+    LBPI := ChangeFileExt(LPackage.DCPFile, '.bpi');
+    LLib := ChangeFileExt(LPackage.DCPFile, '.lib');
+    if LPackage.Installed then
     begin
-      LPackage := LPackages.Items[i] as TJSONObject;
-      LBPLFile := LPackage.GetValue('bpl_file').Value;
-      LDCPFile := LPackage.GetValue('dcp_file').Value;
-      LBPI := ChangeFileExt(LDCPFile, '.bpi');
-      LLib := ChangeFileExt(LDCPFile, '.lib');
-      LInstalled := LPackage.GetValue('installed');
-      if Assigned(LInstalled) and (SameText(LInstalled.Value, 'true')) then
-      begin
-        DoMessage(mtNotification, 'uninstalling package ' + LBPLFile);
-        if not UninstallPackage(LBPLFile) then
-          break;
-      end;
-
-      Result := True;
-      if TFile.Exists(LBPLFile) then
-      begin
-        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPLFile));
-        Result := DeleteFile(LBPLFile);
-        if TFile.Exists(LBPLFile) then
-          DoMessage(mtError, 'failed to delete');
-      end
-      else
-      begin
-        DoMessage(mtWarning, 'file did not exist ' + LBPLFile);
-      end;
-
-      if TFile.Exists(LDCPFile) then
-      begin
-        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LDCPFile));
-        Result := DeleteFile(LDCPFile) and Result;
-        if TFile.Exists(LDCPFile) then
-          DoMessage(mtError, 'failed to delete');
-      end
-      else
-      begin
-        DoMessage(mtWarning, 'file did not exist ' + LDCPFile);
-      end;
-
-      if TFile.Exists(LBPI) then
-      begin
-        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPI));
-        Result := DeleteFile(LBPI) and Result;
-        if TFile.Exists(LBPI) then
-          DoMessage(mtError, 'failed to delete');
-      end;
-
-      if TFile.Exists(LLib) then
-      begin
-        DoMessage(mtNotification, 'deleting ' + ExtractFileName(LLib));
-        Result := DeleteFile(LLib) and Result;
-        if TFile.Exists(LLib) then
-          DoMessage(mtError, 'failed to delete');
-      end;
+      DoMessage(mtNotification, 'uninstalling package ' + LPackage.BPLFile);
+      if not UninstallPackage(LPackage.BPLFile) then
+        break;
     end;
-  end
-  else
-  begin
+
     Result := True;
+    if TFile.Exists(LPackage.BPLFile) then
+    begin
+      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LPackage.BPLFile));
+      Result := DeleteFile(LPackage.BPLFile);
+      if TFile.Exists(LPackage.BPLFile) then
+        DoMessage(mtError, 'failed to delete');
+    end
+    else
+    begin
+      DoMessage(mtWarning, 'file did not exist ' + LPackage.BPLFile);
+    end;
+
+    if TFile.Exists(LPackage.DCPFile) then
+    begin
+      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LPackage.DCPFile));
+      Result := DeleteFile(LPackage.DCPFile) and Result;
+      if TFile.Exists(LPackage.DCPFile) then
+        DoMessage(mtError, 'failed to delete');
+    end
+    else
+    begin
+      DoMessage(mtWarning, 'file did not exist ' + LPackage.DCPFile);
+    end;
+
+    if TFile.Exists(LBPI) then
+    begin
+      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPI));
+      Result := DeleteFile(LBPI) and Result;
+      if TFile.Exists(LBPI) then
+        DoMessage(mtError, 'failed to delete');
+    end;
+
+    if TFile.Exists(LLib) then
+    begin
+      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LLib));
+      Result := DeleteFile(LLib) and Result;
+      if TFile.Exists(LLib) then
+        DoMessage(mtError, 'failed to delete');
+    end;
   end;
 end;
 
@@ -137,19 +123,16 @@ begin
   Result := True;
 end;
 
-function TDNUninstaller.RemoveSearchPathes(AObject: TJSONObject): Boolean;
+function TDNUninstaller.RemoveSearchPathes(const ASearchPathes: string): Boolean;
 var
-  LPathes: TJSONValue;
   LPathArray: TStringDynArray;
   LPath: string;
 begin
   Result := True;
-  LPathes := AObject.GetValue('search_pathes');
-  if Assigned(LPathes) then
+  LPathArray := SplitString(ASearchPathes, ';');
+  if Length(LPathArray) > 0 then
   begin
-    Result := False;
     DoMessage(mtNotification, 'Removing Searchpathes:');
-    LPathArray := SplitString(LPathes.Value, ';');
     for LPath in LPathArray do
     begin
       DoMessage(mtNotification, LPath);
@@ -170,33 +153,30 @@ end;
 
 function TDNUninstaller.Uninstall(const ADirectory: string): Boolean;
 var
-  LUninstall: string;
-  LData: TStringStream;
-  LJSon: TJSONObject;
+  LUninstallFile: string;
+  LUninstall: TUninstallationFile;
 begin
   Result := False;
-  LUninstall := TPath.Combine(ADirectory, CUninstallFile);
-  if TFile.Exists(LUninstall) then
+  LUninstallFile := TPath.Combine(ADirectory, CUninstallFile);
+  if TFile.Exists(LUninstallFile) then
   begin
-    LData := TStringStream.Create();
+    LUninstall := TUninstallationFile.Create();
     try
-      LData.LoadFromFile(LUninstall);
-      LJSon := TJSOnObject(TJSONObject.ParseJSONValue(LData.DataString));
-      if Assigned(LJSon) then
+      if LUninstall.LoadFromFile(LUninstallFile) then
       begin
-        try
-          //remove searchpathes first, because it's less criticall
-          //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
-          //them manually from disk, than removing individual searchpathes manually from IDE
-          Result :=  RemoveSearchPathes(LJSon)
-            and ProcessPackages(LJSon)
-            and DeleteFiles(ADirectory);
-        finally
-          LJSon.Free;
-        end;
+        //remove searchpathes first, because it's less criticall
+        //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
+        //them manually from disk, than removing individual searchpathes manually from IDE
+        Result :=  RemoveSearchPathes(LUninstall.SearchPathes)
+          and ProcessPackages(LUninstall.Packages)
+          and DeleteFiles(ADirectory);
+      end
+      else
+      begin
+        DoMessage(mtError, 'uninstallation file is corrupt');
       end;
     finally
-      LData.Free;
+      LUninstall.Free;
     end;
   end
   else
