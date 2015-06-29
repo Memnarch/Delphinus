@@ -3,6 +3,7 @@ unit DN.Package.Intf;
 interface
 
 uses
+  Types,
   Graphics;
 
 type
@@ -19,12 +20,14 @@ type
     procedure SetName(const Value: string);
     function GetLastUpdated: string;
     procedure SetLastUpdated(const Value: string);
+    function GetVersions: TStringDynArray;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
+    property Versions: TStringDynArray read GetVersions;
   end;
 
 implementation
