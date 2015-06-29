@@ -10,7 +10,8 @@ uses
   DN.PackageProvider.Intf,
   DN.Package.Intf,
   ContNrs,
-  Generics.Collections;
+  Generics.Collections,
+  DN.PackageDetailView;
 
 type
   TDelphinusDialog = class(TForm)
@@ -38,6 +39,7 @@ type
     FInstalledPackageProvider: IDNPackageProvider;
     FPackages: TList<IDNPackage>;
     FInstalledPackages: TList<IDNPackage>;
+    FDetailView: TPackageDetailView;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     function GetComponentDirectory: string;
@@ -48,6 +50,7 @@ type
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
     function GetInstalledVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
+    procedure ShowDetail(const APackage: IDNPackage);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -135,17 +138,24 @@ end;
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
+  FDetailView := TPackageDetailView.Create(Self);
+  FDetailView.Align := alClient;
+  FDetailView.Visible := False;
+  FDetailView.Parent := Self;
+
   FOverView := TPackageOverView.Create(Self);
   FOverView.Align := alClient;
   FOverView.Parent := tsAvailable;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
   FOverView.OnInstallPackage :=  InstallPackage;
   FOverView.OnUninstallPackage := UninstallPackage;
+  FOverView.OnInfoPackage := ShowDetail;
   FInstalledOverview := TPackageOverView.Create(Self);
   FInstalledOverview.Align := alClient;
   FInstalledOverview.Parent := tsInstalled;
   FInstalledOverview.OnCheckIsPackageInstalled := GetInstalledVersion;
   FInstalledOverview.OnUninstallPackage := UnInstallPackage;
+  FInstalledOverview.OnInfoPackage := ShowDetail;
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FPackageProvider := TDNGitHubPackageProvider.Create();
@@ -259,6 +269,15 @@ begin
     tsInstalled.Caption := 'Installed (' + IntToStr(FInstalledPackages.Count) + ')';
     FOverView.Refresh();
   end;
+  FDetailView.Visible := False;
+end;
+
+procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
+begin
+  FDetailView.Package := APackage;
+//  PageControl.Visible := False;
+  FDetailView.BringToFront();
+  FDetailView.Visible := True;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);

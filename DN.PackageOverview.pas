@@ -60,6 +60,10 @@ implementation
 
 { TPackageOverView }
 
+const
+  CColumns = 4;
+  CSpace = 10;
+
 procedure TPackageOverView.AddPreview(const APackage: IDNPackage);
 var
   LPreview: TPreview;
@@ -67,8 +71,8 @@ begin
   LPreview := TPreview.Create(nil);
   LPreview.Package := APackage;
   LPreview.Parent := Self;
-  LPreview.Top := (FPreviews.Count div 3) * (LPreview.Height + 10);
-  LPreview.Left := (FPreviews.Count mod 3) * (LPreview.Width + 10);
+  LPreview.Top := (FPreviews.Count div CColumns) * (LPreview.Height + CSpace);
+  LPreview.Left := (FPreviews.Count mod CColumns) * (LPreview.Width + CSpace);
   LPreview.InstalledVersion := GetInstalledVersion(APackage);
   LPreview.UpdateVersion := GetUpdateVersion(APackage);
   LPreview.OnClick := HandlePreviewClicked;
