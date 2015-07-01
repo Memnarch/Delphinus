@@ -17,19 +17,20 @@ type
     FDownloadLocation: string;
     FLastUpdated: string;
     FVersions: TStringDynArray;
-    function GetDownloadLocation: string;
-    procedure SetDownloadLocation(const Value: string);
-    function GetAuthor: string;
-    function GetDescription: string;
-    function GetName: string;
-    function GetPicture: TPicture;
-    procedure SetAuthor(const Value: string);
-    procedure SetDescription(const Value: string);
-    procedure SetName(const Value: string);
-    function GetLastUpdated: string;
-    procedure SetLastUpdated(const Value: string);
-    function GetVersions: TStringDynArray;
-    procedure SetVersions(const Value: TStringDynArray);
+  protected
+    function GetDownloadLocation: string; virtual;
+    procedure SetDownloadLocation(const Value: string); virtual;
+    function GetAuthor: string; virtual;
+    function GetDescription: string; virtual;
+    function GetName: string; virtual;
+    function GetPicture: TPicture; virtual;
+    procedure SetAuthor(const Value: string); virtual;
+    procedure SetDescription(const Value: string); virtual;
+    procedure SetName(const Value: string); virtual;
+    function GetLastUpdated: string; virtual;
+    procedure SetLastUpdated(const Value: string); virtual;
+    function GetVersions: TStringDynArray; virtual;
+    procedure SetVersions(const Value: TStringDynArray); virtual;
   public
     constructor Create();
     destructor Destroy(); override;

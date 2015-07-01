@@ -75,7 +75,8 @@ contains
   DN.Graphics in '..\DN.Graphics.pas',
   DN.PackageDetailView in '..\DN.PackageDetailView.pas' {PackageDetailView: TFrame},
   DN.JSonFile.Uninstallation in '..\DN.JSonFile.Uninstallation.pas',
-  DN.JSonFile.InstalledInfo in '..\DN.JSonFile.InstalledInfo.pas';
+  DN.JSonFile.InstalledInfo in '..\DN.JSonFile.InstalledInfo.pas',
+  DN.Package.Github in '..\DN.Package.Github.pas';
 
 end.
 

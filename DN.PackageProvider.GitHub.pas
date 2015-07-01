@@ -22,14 +22,17 @@ type
     constructor Create();
     destructor Destroy(); override;
     function Reload(): Boolean; override;
-    function Download(const APackage: IDNPackage; const AFolder: string; out AContentFolder: string): Boolean; override;
+    function Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean; override;
+    function LoadVersions(const APackage: IDNPackage): TStringDynArray;
   end;
 
 implementation
 
 uses
   IOUtils,
+  StrUtils,
   DN.Package,
+  DN.Package.Github,
   IdIOHandlerStack,
   IdSSLOpenSSl,
   DBXJSon,
@@ -41,6 +44,7 @@ uses
 const
   CGithubRaw = 'https://raw.githubusercontent.com/';
   CGitRepoSearch = 'https://api.github.com/search/repositories?q="Delphinus-Support"+in:readme&per_page=100';
+  CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
 //  CGitRepoSearch = 'https://api.github.com/search/repositories?q=tetris&per_page=30';
 
 { TDCPMPackageProvider }
@@ -59,25 +63,33 @@ begin
   inherited;
 end;
 
-function TDNGitHubPackageProvider.Download(const APackage: IDNPackage; const AFolder: string; out AContentFolder: string): Boolean;
+function TDNGitHubPackageProvider.Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean;
 var
   LArchive: TFileStream;
   LArchiveFile, LFileName: string;
+  LDirs: TStringDynArray;
 const
   CNamePrefix = 'filename=';
 begin
   LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
   LArchive := TFileStream.Create(LArchiveFile, fmCreate or fmOpenReadWrite);
   try
-    Result := ExecuteRequest(LArchive, APackage.DownloadLoaction);
+    Result := ExecuteRequest(LArchive, APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch));
   finally
     LArchive.Free;
   end;
   LFileName := Copy(FLastContentDisposition, Pos(CNamePrefix, FLastContentDisposition) + Length(CNamePrefix), Length(FLastContentDisposition));
-  AContentFolder := TPath.Combine(AFolder, ChangeFileExt(LFileName, ''));
+//  AContentFolder := TPath.Combine(AFolder, ChangeFileExt(StringReplace(LFileName, AVersion, '', []), ''));
   if Result then
     Result := ShellUnzip(LArchiveFile, AFolder);
 
+  if Result then
+  begin
+    LDirs := TDirectory.GetDirectories(AFolder);
+    Result := Length(LDirs) = 1;
+    if Result then
+      AContentFolder := LDirs[0];
+  end;
   TFile.Delete(LArchiveFile);
 end;
 
@@ -120,6 +132,29 @@ begin
   end;
 end;
 
+function TDNGitHubPackageProvider.LoadVersions(
+  const APackage: IDNPackage): TStringDynArray;
+var
+  LData: TStringStream;
+  LRoot: TJSONArray;
+  i: Integer;
+begin
+  LData := TStringStream.Create();
+  try
+    if ExecuteRequest(LData, Format(CGithubRepoReleases, [APackage.Author, APackage.Name])) then
+    begin
+      LRoot := TJSONObject.ParseJSONValue(LData.DataString) as TJSONArray;
+      SetLength(Result, LRoot.Count);
+      for i := 0 to LRoot.Count - 1 do
+      begin
+        Result[i] := TJSONObject(LRoot.Items[i]).GetValue('tag_name').Value;
+      end;
+    end;
+  finally
+    LData.Free;
+  end;
+end;
+
 function TDNGitHubPackageProvider.Reload: Boolean;
 var
   LData, LInfoData: TStringStream;
@@ -128,7 +163,7 @@ var
   LItems: TJSONArray;
   i: Integer;
   LItem: TJSonObject;
-  LPackage: TDNPackage;
+  LPackage: TDNGitHubPackage;
   LInfoLocation: string;
 const
   CArchivePlaceholder = '{archive_format}{/ref}';
@@ -146,7 +181,7 @@ begin
         for i := 0 to LItems.Count - 1 do
         begin
           LItem := LItems.Items[i] as TJSonObject;
-          LPackage := TDNPackage.Create();
+          LPackage := TDNGitHubPackage.Create(Self);
           LInfoData := TStringStream.Create();
           try
             LPackage.Name := LItem.GetValue('name').Value;
@@ -154,7 +189,8 @@ begin
             LPackage.Author := TJSonObject(LItem.GetValue('owner')).GetValue('login').Value;
             LPackage.LastUpdated := LItem.GetValue('pushed_at').Value;
             LPackage.DownloadLoaction := LItem.GetValue('archive_url').Value;
-            LPackage.DownloadLoaction := StringReplace(LPackage.DownloadLoaction, CArchivePlaceholder, 'zipball/' + LItem.GetValue('default_branch').Value, []);
+            LPackage.DownloadLoaction := StringReplace(LPackage.DownloadLoaction, CArchivePlaceholder, 'zipball/', []);
+            LPackage.DefaultBranch := LItem.GetValue('default_branch').Value;
             LInfoLocation := CGithubRaw + LItem.GetValue('full_name').Value + '/' + LItem.GetValue('default_branch').Value + '/info.json';
             if ExecuteRequest(LInfoData, LInfoLocation) then
             begin

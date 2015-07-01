@@ -42,6 +42,7 @@ type
     FDetailView: TPackageDetailView;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
+    procedure UpdatePackage(const APackage: IDNPackage);
     function GetComponentDirectory: string;
     function GetBPLDirectory: string;
     function GetDCPDirectory: string;
@@ -49,6 +50,7 @@ type
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
     function GetInstalledVersion(const APackage: IDNPackage): string;
+    function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
   public
@@ -147,14 +149,18 @@ begin
   FOverView.Align := alClient;
   FOverView.Parent := tsAvailable;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
+  FOverView.OnCheckHasPackageUpdate := GetUpdateVersion;
   FOverView.OnInstallPackage :=  InstallPackage;
   FOverView.OnUninstallPackage := UninstallPackage;
+  FOverView.OnUpdatePackage := UpdatePackage;
   FOverView.OnInfoPackage := ShowDetail;
   FInstalledOverview := TPackageOverView.Create(Self);
   FInstalledOverview.Align := alClient;
   FInstalledOverview.Parent := tsInstalled;
   FInstalledOverview.OnCheckIsPackageInstalled := GetInstalledVersion;
+  FInstalledOverview.OnCheckHasPackageUpdate := GetUpdateVersion;
   FInstalledOverview.OnUninstallPackage := UnInstallPackage;
+  FInstalledOverview.OnUpdatePackage := UpdatePackage;
   FInstalledOverview.OnInfoPackage := ShowDetail;
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
@@ -229,6 +235,19 @@ begin
   end;
 end;
 
+function TDelphinusDialog.GetUpdateVersion(const APackage: IDNPackage): string;
+var
+  LVersion: string;
+begin
+  Result := '';
+  LVersion := GetInstalledVersion(APackage);
+  if LVersion <> '' then
+  begin
+    if (Length(APackage.Versions) > 0) and (APackage.Versions[0] <> LVersion) then
+      Result := APackage.Versions[0];
+  end;
+end;
+
 procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
@@ -291,6 +310,31 @@ begin
     try
       LUninstaller := TDNIDEUninstaller.Create();
       LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), APackage.Name), LUninstaller);
+    finally
+      LDialog.Free;
+    end;
+    RefreshInstalledPackages();
+  end;
+end;
+
+procedure TDelphinusDialog.UpdatePackage(const APackage: IDNPackage);
+var
+  LDialog: TSetupDialog;
+  LCompiler: IDNCompiler;
+  LInstaller: IDNInstaller;
+  LUninstaller: IDNUninstaller;
+begin
+  if Assigned(APackage) then
+  begin
+    LDialog := TSetupDialog.Create(nil);
+    try
+      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+      LCompiler.BPLOutput := GetBPLDirectory();
+      LCompiler.DCPOutput := GetDCPDirectory();
+      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
+      LUninstaller := TDNIDEUninstaller.Create();
+      LDialog.ExecuteUpdate(APackage, FPackageProvider, LInstaller, LUninstaller,
+        GetComponentDirectory(), TPath.Combine(GetComponentDirectory(), APackage.Name));
     finally
       LDialog.Free;
     end;

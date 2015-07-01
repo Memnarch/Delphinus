@@ -20,7 +20,7 @@ type
     constructor Create();
     destructor Destroy(); override;
     function Reload(): Boolean; virtual;
-    function Download(const APackage: IDNPackage; const AFolder: string; out AContentFolder: string): Boolean; virtual;
+    function Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean; virtual;
     property Packages: TList<IDNPackage> read GetPackages;
   end;
 
@@ -40,7 +40,7 @@ begin
   inherited;
 end;
 
-function TDNPackageProvider.Download(const APackage: IDNPackage;
+function TDNPackageProvider.Download(const APackage: IDNPackage; const AVersion: string;
   const AFolder: string; out AContentFolder: string): Boolean;
 begin
   Result := False;
