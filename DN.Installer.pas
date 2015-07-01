@@ -12,8 +12,6 @@ uses
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
   DN.JSonFile.Installation,
-  JSon,
-  DBXJSon,
   DN.JSonFile.Uninstallation;
 
 type
@@ -60,7 +58,8 @@ uses
   DN.ProjectInfo,
   DN.ProjectGroupInfo,
   DN.ProjectGroupInfo.Intf,
-  DN.Uninstaller.Intf;
+  DN.Uninstaller.Intf,
+  DN.JSonFile.Info;
 
 const
   CLibDir = 'lib';
@@ -134,9 +133,7 @@ function TDNInstaller.CopyMetaData(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
   LSourceInfo, LTargetInfo, LSourcePic, LTargetPic: string;
-  LData: TStringStream;
-  LInfo: TJSONObject;
-  LValue: TJSONValue;
+  LInfo: TInfoFile;
 begin
   Result := True;
   LSourceInfo := TPath.Combine(ASourceDirectory, 'info.json');
@@ -144,30 +141,24 @@ begin
   if TFile.Exists(LSourceInfo) then
   begin
     TFile.Copy(LSourceInfo, LTargetInfo);
-    LData := TStringStream.Create();
+
+    LInfo := TInfoFile.Create();
     try
-      LData.LoadFromFile(LSourceInfo);
-      LInfo := TJSonObject.ParseJSONValue(LData.DataString) as TJSONObject;
-      if Assigned(LInfo) then
+      if LInfo.LoadFromFile(LSourceInfo) then
       begin
-        try
-          LValue := LInfo.GetValue('picture');
-          if Assigned(LValue) then
+        if LInfo.Picture <> '' then
+        begin
+          LSourcePic := TPath.Combine(ASourceDirectory, LInfo.Picture);
+          LTargetPic := TPath.Combine(ATargetDirectory, LInfo.Picture);
+          if TFile.Exists(LSourcePic) then
           begin
-            LSourcePic := TPath.Combine(ASourceDirectory, LValue.Value);
-            LTargetPic := TPath.Combine(ATargetDirectory, LValue.Value);
-            if TFile.Exists(LSourcePic) then
-            begin
-              ForceDirectories(ExtractFilePath(LTargetPic));
-              TFile.Copy(LSourcePic, LTargetPic);
-            end;
+            ForceDirectories(ExtractFilePath(LTargetPic));
+            TFile.Copy(LSourcePic, LTargetPic);
           end;
-        finally
-          LInfo.Free;
         end;
       end;
     finally
-      LData.Free;
+      LInfo.Free;
     end;
   end;
 end;

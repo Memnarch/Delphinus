@@ -23,10 +23,9 @@ implementation
 
 uses
   IOUtils,
-  DBXJSon,
-  JSon,
   DN.Package,
   DN.Uninstaller.Intf,
+  DN.JSonFile.InstalledInfo,
   JPeg;
 
 { TDNInstalledPackageProvider }
@@ -43,44 +42,40 @@ procedure TDNInstalledPackageProvider.LoadDetails(const APackage: IDNPackage;
 var
   LJPG: TJPEGImage;
   LImageFile: string;
-  LInfo: TJSONObject;
-  LValue: TJSONValue;
-  LData: TStringStream;
+  LInfo: TInstalledInfoFile;
+  LVersions: TStringDynArray;
 begin
   if TFile.Exists(AInfoFile) then
   begin
-    LData := TStringStream.Create();
+    LInfo := TInstalledInfoFile.Create();
     try
-      LData.LoadFromFile(AInfoFile);
-      LInfo := TJSONObject.ParseJSONValue(LData.DataString) as TJSONObject;
-      if Assigned(LInfo) then
+      if LInfo.LoadFromFile(AInfoFile) then
       begin
-        try
-          LValue := LInfo.GetValue('author');
-          if Assigned(LValue) then
-            APackage.Author := LValue.Value;
-
-          LValue := LInfo.GetValue('picture');
-          if Assigned(LValue) then
+        APackage.Author := LInfo.Author;
+        APackage.Description := LInfo.Description;
+        SetLength(LVersions, 1);
+        if LInfo.Version <> '' then
+          LVersions[0] := LInfo.Version
+        else
+          LVersions[0] := 'unknown';
+        APackage.Versions := LVersions;
+        if LInfo.Picture <> '' then
+        begin
+          LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LInfo.Picture);
+          if TFile.Exists(LImageFile) then
           begin
-            LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LValue.Value);
-            if TFile.Exists(LImageFile) then
-            begin
-              LJPG := TJPEGImage.Create();
-              try
-                LJPG.LoadFromFile(LImageFile);
-                APackage.Picture.Graphic := LJPG;
-              finally
-                LJPG.Free;
-              end;
+            LJPG := TJPEGImage.Create();
+            try
+              LJPG.LoadFromFile(LImageFile);
+              APackage.Picture.Graphic := LJPG;
+            finally
+              LJPG.Free;
             end;
           end;
-        finally
-          LInfo.Free;
         end;
       end;
     finally
-      LData.Free();
+      LInfo.Free;
     end;
   end;
 end;

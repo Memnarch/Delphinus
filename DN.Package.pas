@@ -29,6 +29,7 @@ type
     function GetLastUpdated: string;
     procedure SetLastUpdated(const Value: string);
     function GetVersions: TStringDynArray;
+    procedure SetVersions(const Value: TStringDynArray);
   public
     constructor Create();
     destructor Destroy(); override;
@@ -38,7 +39,7 @@ type
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
-    property Versions: TStringDynArray read GetVersions;
+    property Versions: TStringDynArray read GetVersions write SetVersions;
   end;
 
 implementation
@@ -115,6 +116,11 @@ end;
 procedure TDNPackage.SetName(const Value: string);
 begin
   FName := Value;
+end;
+
+procedure TDNPackage.SetVersions(const Value: TStringDynArray);
+begin
+  FVersions := Value;
 end;
 
 end.

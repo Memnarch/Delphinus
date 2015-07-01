@@ -8,8 +8,6 @@ uses
   SysUtils,
   DN.Types,
   DN.Uninstaller.Intf,
-  DBXJSon,
-  JSon,
   DN.JSonFile.Uninstallation;
 
 type

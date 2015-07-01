@@ -49,7 +49,8 @@ var
 implementation
 
 uses
-  IOUtils;
+  IOUtils,
+  DN.JSonFile.InstalledInfo;
 
 {$R *.dfm}
 
@@ -111,8 +112,9 @@ end;
 
 procedure TSetupDialog.Install;
 var
-  LTempDir, LContentDir, LPackageName: string;
+  LTempDir, LContentDir, LPackageName, LComponentDir, LInfoFile: string;
   LError: Boolean;
+  LInstalledInfo: TInstalledInfoFile;
 begin
   mLog.Clear;
   LError := False;
@@ -142,7 +144,27 @@ begin
     else
       LPackageName := ExtractFileName(ExcludeTrailingPathDelimiter(LContentDir));
 
-    if not FInstaller.Install(LContentDir, TPath.Combine(FComponentDirectory, LPackageName)) then
+    LComponentDir := TPath.Combine(FComponentDirectory, LPackageName);
+    if  FInstaller.Install(LContentDir, LComponentDir) then
+    begin
+      if FMode = sdmInstall then
+      begin
+        LInfoFile := TPath.Combine(LComponentDir, 'Info.json');
+        if TFile.Exists(LInfoFile) then
+        begin
+          LInstalledInfo := TInstalledInfoFile.Create();
+          try
+            LInstalledInfo.LoadFromFile(LInfoFile);
+            LInstalledInfo.Author := FPackage.Author;
+            LInstalledInfo.Description := FPackage.Description;
+            LInstalledInfo.SaveToFile(LInfoFile);
+          finally
+            LInstalledInfo.Free;
+          end;
+        end;
+      end;
+    end
+    else
     begin
       Log('installation failed');
       LError := True;
