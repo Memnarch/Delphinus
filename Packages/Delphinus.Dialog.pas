@@ -49,6 +49,7 @@ type
     procedure RefreshInstalledPackages;
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
+    function GetOverviewPackage(const APackage: IDNPackage): IDNPackage;
     function GetInstalledVersion(const APackage: IDNPackage): string;
     function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
@@ -235,6 +236,22 @@ begin
   end;
 end;
 
+function TDelphinusDialog.GetOverviewPackage(
+  const APackage: IDNPackage): IDNPackage;
+var
+  LPackage: IDNPackage;
+begin
+  Result := nil;
+  if Assigned(APackage) then
+  begin
+    for LPackage in FPackages do
+    begin
+      if LPackage.Name = APackage.Name then
+        Exit(LPackage);
+    end;
+  end
+end;
+
 function TDelphinusDialog.GetUpdateVersion(const APackage: IDNPackage): string;
 var
   LVersion: string;
@@ -278,13 +295,22 @@ begin
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
+var
+  LInstalledPackage, LAvailablePackage: IDNPackage;
 begin
   if FInstalledPackageProvider.Reload() then
   begin
     FInstalledPackages.Clear;
     FInstalledPackages.AddRange(FInstalledPackageProvider.Packages);
     FInstalledOverview.Clear;
-    FInstalledOverview.Packages.AddRange(FInstalledPackages);
+    for LInstalledPackage in FInstalledPackages do
+    begin
+      LAvailablePackage := GetOverviewPackage(LInstalledPackage);
+      if Assigned(LAvailablePackage) then
+        FInstalledOverview.Packages.Add(LAvailablePackage)
+      else
+        FInstalledOverview.Packages.Add(LInstalledPackage);
+    end;
     tsInstalled.Caption := 'Installed (' + IntToStr(FInstalledPackages.Count) + ')';
     FOverView.Refresh();
   end;
