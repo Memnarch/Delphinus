@@ -218,6 +218,7 @@ begin
     FButton.Left := 0;
     FButton.Width := Width;
   end;
+  InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
 end;
 
 procedure TPreview.SetInstalledVersion(const Value: string);
@@ -233,6 +234,7 @@ begin
     FButton.Caption := 'Install';
     FButton.HoverColor := FInstallColor //clGreen;
   end;
+  InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
 end;
 
 procedure TPreview.SetPackage(const Value: IDNPackage);
