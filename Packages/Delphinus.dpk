@@ -78,8 +78,7 @@ contains
   DN.JSonFile.InstalledInfo in '..\DN.JSonFile.InstalledInfo.pas',
   DN.Package.Github in '..\DN.Package.Github.pas',
   DN.ToolsApi.Extension in '..\DN.ToolsApi.Extension.pas',
-  DN.ToolsApi.Extension.Intf in '..\DN.ToolsApi.Extension.Intf.pas',
-  DN.Utils in 'DN.Utils.pas';
+  DN.ToolsApi.Extension.Intf in '..\DN.ToolsApi.Extension.Intf.pas';
 
 end.
 
