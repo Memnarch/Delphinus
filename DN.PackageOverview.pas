@@ -198,6 +198,7 @@ begin
   begin
     if FPreviews[i].Package = APackage then
     begin
+      FPreviews[i].Parent := nil;
       FPreviews[i].Package := nil;
       FUnusedPreviews.Add(FPreviews.Extract(FPreviews[i]));
       Break;
