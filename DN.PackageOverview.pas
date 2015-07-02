@@ -19,6 +19,7 @@ type
   TPackageOverView = class(TScrollBox)
   private
     FPreviews: TObjectList<TPreview>;
+    FUnusedPreviews: TObjectList<TPreview>;
     FPackages: TList<IDNPackage>;
     FSelectedPackage: IDNPackage;
     FOnSelectedPackageChanged: TNotifyEvent;
@@ -68,7 +69,10 @@ procedure TPackageOverView.AddPreview(const APackage: IDNPackage);
 var
   LPreview: TPreview;
 begin
-  LPreview := TPreview.Create(nil);
+  if FUnusedPreviews.Count > 0 then
+    LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
+  else
+    LPreview := TPreview.Create(nil);
   LPreview.Package := APackage;
   LPreview.Parent := Self;
   LPreview.Top := (FPreviews.Count div CColumns) * (LPreview.Height + CSpace);
@@ -85,7 +89,6 @@ end;
 
 procedure TPackageOverView.Clear;
 begin
-  FPreviews.Clear();
   FPackages.Clear();
 end;
 
@@ -93,6 +96,7 @@ constructor TPackageOverView.Create(AOwner: TComponent);
 begin
   inherited;
   FPreviews := TObjectList<TPreview>.Create(True);
+  FUnusedPreviews := TObjectList<TPreview>.Create(True);
   FPackages := TList<IDNPackage>.Create();
   FPackages.OnNotify := HandlePackagesChanged;
   BorderStyle := bsNone;
@@ -102,8 +106,9 @@ end;
 
 destructor TPackageOverView.Destroy;
 begin
-  FPreviews.Clear();
-  FPackages.Clear;
+  FPreviews.Free();
+  FUnusedPreviews.Free;
+  FPackages.Free();
   inherited;
 end;
 
@@ -193,7 +198,8 @@ begin
   begin
     if FPreviews[i].Package = APackage then
     begin
-      FPreviews.Delete(i);
+      FPreviews[i].Package := nil;
+      FUnusedPreviews.Add(FPreviews.Extract(FPreviews[i]));
       Break;
     end;
   end;
