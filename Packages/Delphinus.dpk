@@ -76,7 +76,10 @@ contains
   DN.PackageDetailView in '..\DN.PackageDetailView.pas' {PackageDetailView: TFrame},
   DN.JSonFile.Uninstallation in '..\DN.JSonFile.Uninstallation.pas',
   DN.JSonFile.InstalledInfo in '..\DN.JSonFile.InstalledInfo.pas',
-  DN.Package.Github in '..\DN.Package.Github.pas';
+  DN.Package.Github in '..\DN.Package.Github.pas',
+  DN.ToolsApi.Extension in '..\DN.ToolsApi.Extension.pas',
+  DN.ToolsApi.Extension.Intf in '..\DN.ToolsApi.Extension.Intf.pas',
+  DN.Utils in 'DN.Utils.pas';
 
 end.
 

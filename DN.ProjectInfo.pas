@@ -7,7 +7,8 @@ uses
   Types,
   SysUtils,
   XML.XMLIntf,
-  DN.ProjectInfo.Intf;
+  DN.ProjectInfo.Intf,
+  DN.Compiler.Intf;
 
 type
   TDNProjectInfo = class(TInterfacedObject, IDNProjectInfo)
@@ -17,6 +18,7 @@ type
     FFileName: string;
     FIsPackage: Boolean;
     FIsRuntimeOnlyPackage: Boolean;
+    FSupportedPlatforms: TDNCompilerPlatforms;
     function GetBinaryName: string;
     function GetDCPName: string;
     function GetIsPackage: Boolean;
@@ -24,6 +26,7 @@ type
     function GetPropertyGroupOfConfig(const AProject: IXMLNode; const AConfig: string): IXMLNode;
     function GetIsRuntimeOnlyPackage: Boolean;
     function GetFileName: string;
+    function GetSupportedPlatforms: TDNCompilerPlatforms;
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
@@ -31,6 +34,7 @@ type
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
     property FileName: string read GetFileName;
+    property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
   end;
 
 implementation
@@ -109,12 +113,18 @@ begin
   end;
 end;
 
+function TDNProjectInfo.GetSupportedPlatforms: TDNCompilerPlatforms;
+begin
+  Result := FSupportedPlatforms;
+end;
+
 function TDNProjectInfo.LoadFromFile(const AProjectFile: string): Boolean;
 var
   LXML: IXMLDocument;
   LBaseName, LCoreFile, LAppType, LExtension: string;
   LPrefix, LSuffix, LVersion: string;
   LProject, LPropertyGroup, LBase: IXMLNode;
+  LProjectExtension, LBorlandProject, LPlatforms, LPlatform: IXMLNode;
 begin
   Result := False;
   if TFile.Exists(AProjectFile) then
@@ -157,6 +167,36 @@ begin
           LExtension := GetDefaultExtension(LAppType);
 
         FBinaryName := LPrefix + LBaseName + LSuffix + LVersion + LExtension;
+        //detect supported platforms
+        FSupportedPlatforms := [];
+        LProjectExtension := LProject.ChildNodes.FindNode('ProjectExtensions');
+        if Assigned(LProjectExtension) then
+        begin
+          LBorlandProject := LProjectExtension.ChildNodes.FindNode('BorlandProject');
+          if Assigned(LBorlandProject) then
+          begin
+            LPlatforms := LBorlandProject.ChildNodes.FindNode('Platforms');
+            LPlatform := LPlatforms.ChildNodes.First;
+            while Assigned(LPlatform) do
+            begin
+              if SameText(LPlatform.Text, 'True') then
+              begin
+                if LPlatform.HasAttribute('value') then
+                begin
+                  if SameText(LPlatform.Attributes['value'], 'Win32') then
+                    FSupportedPlatforms := FSupportedPlatforms + [cpWin32]
+                  else if SameText(LPlatform.Attributes['value'], 'Win64') then
+                    FSupportedPlatforms := FSupportedPlatforms + [cpWin64]
+                  else if SameText(LPlatform.Attributes['value'], 'OSX32') then
+                    FSupportedPlatforms := FSupportedPlatforms + [cpOSX32]
+                end;
+              end;
+              LPlatform := LPlatform.NextSibling;
+            end;
+          end;
+        end;
+        if FSupportedPlatforms = [] then
+          FSupportedPlatforms := [cpWin32];
         Result := True;
       end;
     end;

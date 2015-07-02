@@ -32,12 +32,11 @@ type
     function GetLog: TStrings;
     function GetPlatform: TDNCompilerPlatform;
     procedure SetPlatform(const Value: TDNCompilerPlatform);
-  protected
-    function ResolveVars(const APath: string): string;
   public
     constructor Create();
     destructor Destroy(); override;
     function Compile(const AProjectFile: string): Boolean; virtual; abstract;
+    function ResolveVars(const APath: string): string;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
     property EXEOutput: string read GetEXEOutput write SetEXEOutput;
@@ -51,6 +50,7 @@ type
 implementation
 
 uses
+  SysUtils,
   StrUtils;
 
 { TDNCompiler }
@@ -113,7 +113,8 @@ end;
 function TDNCompiler.ResolveVars(const APath: string): string;
 begin
   Result := ReplaceText(APath, '$(Platform)', TDNCompilerPlatformName[Platform]);
-  Result := ReplaceText(Result, '$(Config)', TDNCompilerConfigName[Config])
+  Result := ReplaceText(Result, '$(Config)', TDNCompilerConfigName[Config]);
+  Result := ReplaceText(Result, '$(BDSCOMMONDIR)', GetEnvironmentVariable('BDSCommonDir'));
 end;
 
 procedure TDNCompiler.SetEXEOutput(const Value: string);

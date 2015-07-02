@@ -25,55 +25,52 @@ uses
   Windows,
   ToolsApi,
   DN.Types,
-  DN.ToolsApi;
+  DN.ToolsApi.Extension.Intf,
+  DN.Compiler.Intf;
 
 { TDNIDEUninstaller }
 
 function TDNIDEUninstaller.RemoveSearchPath(const ASearchPath: string): Boolean;
 var
-  LService: IOTAServices;
-  LRegistryKey: string;
+  LService: IDNEnvironmentOptionsService;
+  LOption: IDNEnvironmentOptions;
+  LPlatform: TDNCompilerPlatform;
   LPathes: TStringDynArray;
   LPath: string;
   LPathStr: string;
-  LReg: TRegistry;
-const
-  CKey = '\Library\Win32';
-  CSearchPath = 'Search Path';
 begin
   inherited;
   Result := False;
-  LService := BorlandIDEservices as IOTAServices;
-  LRegistryKey := LService.GetBaseRegistryKey();
-  LReg := TRegistry.Create();
-  try
-    LReg.RootKey := HKEY_CURRENT_USER;
-    LReg.Access := LReg.Access or KEY_WOW64_64KEY;
-    if LReg.OpenKey(LRegistryKey + CKey, False) then
+  LService := GDelphinusIDEservices as IDNEnvironmentOptionsService;
+  for LPlatform in LService.SupportedPlatforms do
+  begin
+    LOption := LService.Options[LPlatform];
+    LPathes := SplitString(LOption.SearchPath, ';');
+    LPathStr := '';
+    for LPath in LPathes do
     begin
-      LPathes := SplitString (LReg.ReadString(CSearchPath), ';');
-      LPathStr := '';
-      for LPath in LPathes do
-      begin
-        if LPath <> ASearchPath then
-          if LPathStr <> '' then
-            LPathStr := LPathStr + ';' + LPath
-          else
-            LPathStr := LPath;
-      end;
-      LReg.WriteString(CSearchPath, LPathStr);
-      Result := True;
+      if LPath <> ASearchPath then
+        if LPathStr <> '' then
+          LPathStr := LPathStr + ';' + LPath
+        else
+          LPathStr := LPath;
     end;
-  finally
-    LReg.Free;
+    LOption.SearchPath := LPathStr;
+    Result := True;
   end;
 end;
 
 function TDNIDEUninstaller.Uninstall(const ADirectory: string): Boolean;
+var
+  LService: IDNEnvironmentOptionsService;
 begin
-  Result := inherited;
-  if not ReloadEnvironmentOptions() then
-    DoMessage(mtWarning, 'Could not refresh Environmentoptions. An IDE restart might be required for all changes to take effect');
+  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
+  LService.BeginUpdate();
+  try
+    Result := inherited;
+  finally
+    LService.EndUpdate;
+  end;
 end;
 
 function TDNIDEUninstaller.UninstallPackage(const ABPLFile: string): Boolean;

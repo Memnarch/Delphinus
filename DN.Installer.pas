@@ -37,7 +37,7 @@ type
     procedure SetOnMessage(const Value: TMessageEvent);
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
-    procedure AddSearchPath(const ASearchPath: string); virtual;
+    procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     function InstallProject(const AProject: IDNProjectInfo): Boolean; virtual;
@@ -59,7 +59,8 @@ uses
   DN.ProjectGroupInfo,
   DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
-  DN.JSonFile.Info;
+  DN.JSonFile.Info,
+  DN.ToolsApi.Extension.Intf;
 
 const
   CLibDir = 'lib';
@@ -70,7 +71,7 @@ const
 
 { TDNInstaller }
 
-procedure TDNInstaller.AddSearchPath(const ASearchPath: string);
+procedure TDNInstaller.AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms);
 begin
   if FSearchPathes = '' then
     FSearchPathes := ASearchPath
@@ -255,25 +256,47 @@ end;
 function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
 var
   LCompiledPackage: TPackage;
+  LPlatform: TDNCompilerPlatform;
+  LService: IDNEnvironmentOptionsService;
+  LOptions: IDNEnvironmentOptions;
 begin
+  Result := False;
+  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
   BeforeCompile(AProject.FileName);
-  Result := FCompiler.Compile(AProject.FileName);
-  AfterCompile(AProject.FileName, FCompiler.Log, Result);
-  if AProject.IsPackage then
+  for LPlatform in AProject.SupportedPlatforms do
   begin
-    if not AProject.IsRuntimeOnlyPackage then
+    if LPlatform in LService.SupportedPlatforms then
     begin
-      Result := InstallProject(AProject);
-      if Result then
-        DoMessage(mtNotification, 'installed')
-      else
-        DoMessage(mtError, 'failed to install');
+      DoMessage(mtNotification, TDNCompilerPlatformName[LPlatform]);
+      LOptions := LService.Options[LPlatform];
+      FCompiler.BPLOutput := LOptions.BPLOutput;
+      FCompiler.DCPOutput := LOptions.DCPOutput;
+      FCompiler.Platform := LPlatform;
+      Result := FCompiler.Compile(AProject.FileName);
+      if Result and AProject.IsPackage then
+      begin
+        if (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32) then
+        begin
+          Result := InstallProject(AProject);
+          if Result then
+            DoMessage(mtNotification, 'installed')
+          else
+            DoMessage(mtError, 'failed to install');
+        end;
+        LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), AProject.BinaryName);
+        LCompiledPackage.DCPFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.DCPOutput), AProject.DCPName);
+        LCompiledPackage.Installed := (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32);
+        FPackages.Add(LCompiledPackage);
+      end;
+      if not Result then
+        Break;
+    end
+    else
+    begin
+      DoMessage(mtWarning, 'Platform ' + TDNCompilerPlatformName[LPlatform] + ' not supported, skipping');
     end;
-    LCompiledPackage.BPLFile := TPath.Combine(FCompiler.BPLOutput, AProject.BinaryName);
-    LCompiledPackage.DCPFile := TPath.Combine(FCompiler.DCPOutput, AProject.DCPName);
-    LCompiledPackage.Installed := not AProject.IsRuntimeOnlyPackage;
-    FPackages.Add(LCompiledPackage);
   end;
+  AfterCompile(AProject.FileName, FCompiler.Log, Result);
 end;
 
 function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
@@ -352,11 +375,11 @@ begin
           DoMessage(mtNotification, LRelPath);
           if ExtractFileName(ExcludeTrailingPathDelimiter(LRelPath)) <> '.' then
           begin
-            AddSearchPath(TPath.Combine(LBasePath, LRelPath));
+            AddSearchPath(TPath.Combine(LBasePath, LRelPath), LPath.Platforms);
           end
           else
           begin
-            AddSearchPath(TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath))));
+            AddSearchPath(TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath))), LPath.Platforms);
           end;
         end;
       end;

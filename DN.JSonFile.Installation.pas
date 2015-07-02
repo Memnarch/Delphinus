@@ -6,13 +6,15 @@ uses
   Types,
   JSOn,
   DBXJSon,
-  DN.JSOnFile;
+  DN.JSOnFile,
+  DN.Compiler.Intf;
 
 type
   TSearchPath = record
     Path: string;
     CompilerMin: Integer;
     CompilerMax: Integer;
+    Platforms: TDNCompilerPlatforms;
   end;
 
   TFolder = record
@@ -37,6 +39,7 @@ type
     FProjects: TArray<TProject>;
   protected
     procedure Load(const ARoot: TJSONObject); override;
+    function GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
   public
     property SearchPathes: TArray<TSearchPath> read FSearchPath;
     property SourceFolders: TArray<TFolder> read FSourceFolders;
@@ -45,7 +48,37 @@ type
 
 implementation
 
+uses
+  SysUtils,
+  StrUtils;
+
 { TInstallationFile }
+
+function TInstallationFile.GetPlatforms(
+  const APlatforms: string): TDNCompilerPlatforms;
+var
+  LPlatforms: TStringDynArray;
+  LPlatform: string;
+begin
+  LPlatforms := SplitString(APlatforms, ';');
+  if Length(LPlatforms) > 0 then
+  begin
+    Result := [];
+    for LPlatform in LPlatforms do
+    begin
+      if SameText(LPlatform, 'Win32') then
+        Result := Result + [cpWin32]
+      else if SameText(LPlatform, 'Win64') then
+        Result := Result + [cpWin64]
+      else if SameText(LPlatform, 'OSX32') then
+        Result := Result + [cpOSX32]
+    end;
+  end
+  else
+  begin
+    Result := [cpWin32];
+  end;
+end;
 
 procedure TInstallationFile.Load(const ARoot: TJSONObject);
 var
@@ -73,6 +106,7 @@ begin
         FSearchPath[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
         FSearchPath[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
       end;
+      FSearchPath[i].Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
     end;
   end;
 

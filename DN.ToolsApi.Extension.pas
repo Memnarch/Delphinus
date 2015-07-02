@@ -17,6 +17,7 @@ type
     FRegstryKey: string;
     FRegistry: TRegistry;
     FUpdateLevel: Integer;
+    FOnChanged: TNotifyEvent;
     function GetPlatform: TDNCompilerPlatform;
     function Open(): Boolean;
     procedure Close();
@@ -41,19 +42,25 @@ type
     property SearchPath: string read GetSearchPath write SetSearchPath;
     property BPLOutput: string read GetBPLOutput write SetBPLOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
+    property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
   end;
 
   TDNEnvironmentOptionsService = class(TInterfacedObject, IDNEnvironmentOptionsService)
   private
     FSupportedPlatforms: TDNCompilerPlatforms;
     FOptions: TList<IDNEnvironmentOptions>;
+    FUpdateLevel: Integer;
+    FChanges: Integer;
     function GetOptions(
       const APlatform: TDNCompilerPlatform): IDNEnvironmentOptions;
     function GetSupportedPlatforms: TDNCompilerPlatforms;
     procedure LoadPlatforms();
+    procedure HandleChanged(Sender: TObject);
   public
     constructor Create();
     destructor Destroy(); override;
+    procedure BeginUpdate();
+    procedure EndUpdate();
     property Options[const APlatform: TDNCompilerPlatform]: IDNEnvironmentOptions read GetOptions;
     property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
   end;
@@ -72,6 +79,11 @@ const
 
 { TDNEnvironmentOptionsService }
 
+procedure TDNEnvironmentOptionsService.BeginUpdate;
+begin
+  Inc(FUpdateLevel);
+end;
+
 constructor TDNEnvironmentOptionsService.Create;
 begin
   inherited;
@@ -83,6 +95,19 @@ destructor TDNEnvironmentOptionsService.Destroy;
 begin
   FOptions.Free;
   inherited;
+end;
+
+procedure TDNEnvironmentOptionsService.EndUpdate;
+begin
+  if FUpdateLevel > 0 then
+  begin
+    Dec(FUpdateLevel);
+    if (FUpdateLevel = 0) and (FChanges > 0) then
+    begin
+      FChanges := 0;
+      ReloadEnvironmentOptions();
+    end;
+  end;
 end;
 
 function TDNEnvironmentOptionsService.GetOptions(
@@ -103,12 +128,21 @@ begin
   Result := FSupportedPlatforms;
 end;
 
+procedure TDNEnvironmentOptionsService.HandleChanged(Sender: TObject);
+begin
+  if FUpdateLevel  = 0 then
+    ReloadEnvironmentOptions()
+  else
+    Inc(FChanges);
+end;
+
 procedure TDNEnvironmentOptionsService.LoadPlatforms;
 var
   LService: IOTAServices;
   LReg: TRegistry;
   LBase, LLibraryKey, LPlatformKey: string;
   LNames: TStringList;
+  LOptions: TDNEnvironmentOptions;
 begin
   LService := BorlandIDEservices as IOTAServices;
   LBase := LService.GetBaseRegistryKey();
@@ -123,7 +157,9 @@ begin
       //we are on a Win32-Only Delphi
       if LNames.Count > 0 then
       begin
-        FOptions.Add(TDNEnvironmentOptions.Create(cpWin32, LLibraryKey) as IDNEnvironmentOptions);
+        LOptions := TDNEnvironmentOptions.Create(cpWin32, LLibraryKey);
+        LOptions.OnChanged := HandleChanged;
+        FOptions.Add(LOptions);
         FSupportedPlatforms := [cpWin32];
       end
       else
@@ -133,13 +169,17 @@ begin
         if LReg.KeyExists(CWin32Key) then
         begin
           LPlatformKey := TPath.Combine(LLibraryKey, CWin32Key);
-          FOptions.Add(TDNEnvironmentOptions.Create(cpWin32, LPlatformKey) as IDNEnvironmentOptions);
+          LOptions := TDNEnvironmentOptions.Create(cpWin32, LPlatformKey);
+          LOptions.OnChanged := HandleChanged;
+          FOptions.Add(LOptions);
           FSupportedPlatforms := FSupportedPlatforms + [cpWin32];
         end;
         if LReg.KeyExists(CWin64Key) then
         begin
           LPlatformKey := TPath.Combine(LLibraryKey, CWin64Key);
-          FOptions.Add(TDNEnvironmentOptions.Create(cpWin64, LPlatformKey) as IDNEnvironmentOptions);
+          LOptions := TDNEnvironmentOptions.Create(cpWin64, LPlatformKey);
+          LOptions.OnChanged := HandleChanged;
+          FOptions.Add(LOptions);
           FSupportedPlatforms := FSupportedPlatforms + [cpWin64];
         end;
       end;
@@ -159,7 +199,8 @@ end;
 
 procedure TDNEnvironmentOptions.Changed;
 begin
-  ReloadEnvironmentOptions();
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
 end;
 
 procedure TDNEnvironmentOptions.Close;

@@ -31,6 +31,8 @@ type
     function GetOptions(
       const APlatform: TDNCompilerPlatform): IDNEnvironmentOptions;
     function GetSupportedPlatforms: TDNCompilerPlatforms;
+    procedure BeginUpdate();
+    procedure EndUpdate();
     property Options[const APlatform: TDNCompilerPlatform]: IDNEnvironmentOptions read GetOptions;
     property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
   end;

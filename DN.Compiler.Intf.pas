@@ -9,6 +9,7 @@ type
   TDNCompilerTarget = (ctBuild, ctCompile);
   TDNCompilerConfig = (ccRelease, ccDebug);
   TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32);
+  TDNCompilerPlatforms = set of TDNCompilerPlatform;
 
   IDNCompiler = interface
   ['{AA41BA34-BBD7-454D-A3AA-0730590077A4}']
@@ -28,6 +29,7 @@ type
     procedure SetBPLOutput(const Value: string);
     function GetLog: TStrings;
     function Compile(const AProjectFile: string): Boolean;
+    function ResolveVars(const APath: string): string;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
     property ExeOutput: string read GetExeOutput write SetExeOutput;
