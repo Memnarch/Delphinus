@@ -6,6 +6,7 @@ uses
   Classes,
   Windows,
   Registry,
+  IniFiles,
   Generics.Collections,
   DN.Compiler.Intf,
   DN.ToolsApi.Extension.Intf;
@@ -15,12 +16,11 @@ type
   private
     FPlatform: TDNCompilerPlatform;
     FRegstryKey: string;
-    FRegistry: TRegistry;
+    FRegistryOptions: TObject;
+    FRegistry: TMemIniFile;
     FUpdateLevel: Integer;
     FOnChanged: TNotifyEvent;
     function GetPlatform: TDNCompilerPlatform;
-    function Open(): Boolean;
-    procedure Close();
     function ReadString(const AName: string): string;
     procedure WriteString(const AName, AValue: string);
     function GetBPLOutput: string;
@@ -34,7 +34,6 @@ type
     procedure Changed();
   public
     constructor Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string);
-    destructor Detsroy();
     procedure BeginUpdate();
     procedure EndUpdate();
     property Platform: TDNCompilerPlatform read GetPlatform;
@@ -70,7 +69,8 @@ implementation
 uses
   IOUtils,
   ToolsApi,
-  DN.ToolsApi;
+  DN.ToolsApi,
+  RTTI;
 
 const
   CLibraryKey = 'Library';
@@ -104,7 +104,6 @@ begin
     if (FUpdateLevel = 0) and (FChanges > 0) then
     begin
       FChanges := 0;
-      ReloadEnvironmentOptions();
     end;
   end;
 end;
@@ -129,10 +128,7 @@ end;
 
 procedure TDNEnvironmentOptionsService.HandleChanged(Sender: TObject);
 begin
-  if FUpdateLevel  = 0 then
-    ReloadEnvironmentOptions()
-  else
-    Inc(FChanges);
+  Inc(FChanges);
 end;
 
 procedure TDNEnvironmentOptionsService.LoadPlatforms;
@@ -193,14 +189,14 @@ begin
 end;
 
 procedure TDNEnvironmentOptions.Changed;
+var
+  LContext: TRttiContext;
+  LType: TRttiType;
 begin
+  LType := LContext.GetType(FRegistryOptions.ClassType);
+  LType.GetMethod('SavePropValues').Invoke(FRegistryOptions, []);
   if Assigned(FOnChanged) then
     FOnChanged(Self);
-end;
-
-procedure TDNEnvironmentOptions.Close;
-begin
-  FRegistry.CloseKey();
 end;
 
 constructor TDNEnvironmentOptions.Create(APlatform: TDNCompilerPlatform;
@@ -209,14 +205,8 @@ begin
   inherited Create();
   FPlatform := APlatform;
   FRegstryKey := ARegistryKey;
-  FRegistry := TRegistry.Create();
-  FRegistry.RootKey := HKEY_CURRENT_USER;
-end;
-
-destructor TDNEnvironmentOptions.Detsroy;
-begin
-  FRegistry.Free;
-  inherited;
+  FRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), ARegistryKey);
+  FRegistry := GetRegistryOptionsMemIni(FRegistryOptions);
 end;
 
 procedure TDNEnvironmentOptions.EndUpdate;
@@ -254,23 +244,9 @@ begin
   Result := ReadString('Search Path');
 end;
 
-function TDNEnvironmentOptions.Open: Boolean;
-begin
-  Result := FRegistry.OpenKey(FRegstryKey, False);
-end;
-
 function TDNEnvironmentOptions.ReadString(const AName: string): string;
 begin
-  if Open then
-  begin
-    try
-      Result := FRegistry.ReadString(AName);
-    finally
-      Close();
-    end;
-  end
-  else
-    Result := '';
+  Result := FRegistry.ReadString(FRegstryKey, AName, '');
 end;
 
 procedure TDNEnvironmentOptions.SetBPLOutput(const Value: string);
@@ -295,16 +271,9 @@ end;
 
 procedure TDNEnvironmentOptions.WriteString(const AName, AValue: string);
 begin
-  if Open() then
-  begin
-    try
-      FRegistry.WriteString(AName, AValue);
-    finally
-      Close();
-    end;
-    if FUpdateLevel = 0 then
-      Changed();
-  end;
+  FRegistry.WriteString(FRegstryKey, AName, AValue);
+  if FUpdateLevel = 0 then
+    Changed();
 end;
 
 initialization
