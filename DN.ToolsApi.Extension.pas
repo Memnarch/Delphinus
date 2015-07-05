@@ -74,8 +74,7 @@ uses
 
 const
   CLibraryKey = 'Library';
-  CWin32Key = 'Win32';
-  CWin64Key = 'Win64';
+  CPlatformKeys: array[cpWin32..cpOSX32] of string = ('Win32', 'Win64', 'OSX32');
 
 { TDNEnvironmentOptionsService }
 
@@ -143,6 +142,7 @@ var
   LBase, LLibraryKey, LPlatformKey: string;
   LNames: TStringList;
   LOptions: TDNEnvironmentOptions;
+  LPlatform: TDNCompilerPlatform;
 begin
   LService := BorlandIDEservices as IOTAServices;
   LBase := LService.GetBaseRegistryKey();
@@ -166,21 +166,16 @@ begin
       begin
         //we are on a multiplatform Delphi
         FSupportedPlatforms := [];
-        if LReg.KeyExists(CWin32Key) then
+        for LPlatform := Low(CPlatformKeys) to High(CPlatformKeys) do
         begin
-          LPlatformKey := TPath.Combine(LLibraryKey, CWin32Key);
-          LOptions := TDNEnvironmentOptions.Create(cpWin32, LPlatformKey);
-          LOptions.OnChanged := HandleChanged;
-          FOptions.Add(LOptions);
-          FSupportedPlatforms := FSupportedPlatforms + [cpWin32];
-        end;
-        if LReg.KeyExists(CWin64Key) then
-        begin
-          LPlatformKey := TPath.Combine(LLibraryKey, CWin64Key);
-          LOptions := TDNEnvironmentOptions.Create(cpWin64, LPlatformKey);
-          LOptions.OnChanged := HandleChanged;
-          FOptions.Add(LOptions);
-          FSupportedPlatforms := FSupportedPlatforms + [cpWin64];
+          if LReg.KeyExists(CPlatformKeys[LPlatform]) then
+          begin
+            LPlatformKey := TPath.Combine(LLibraryKey, CPlatformKeys[LPlatform]);
+            LOptions := TDNEnvironmentOptions.Create(LPlatform, LPlatformKey);
+            LOptions.OnChanged := HandleChanged;
+            FOptions.Add(LOptions);
+            FSupportedPlatforms := FSupportedPlatforms + [LPlatform];
+          end;
         end;
       end;
     end;
