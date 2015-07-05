@@ -88,6 +88,7 @@ begin
   end
   else
   begin
+    DoMessage(mtNotification, ALog.Text);
     DoMessage(mtError, 'Failed');
   end;
 end;
