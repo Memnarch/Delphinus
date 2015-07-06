@@ -10,6 +10,9 @@ uses
 type
   TDNPackage = class(TInterfacedObject, IDNPackage)
   private
+    FID: TGUID;
+    FCompilerMin: Integer;
+    FCompilerMax: Integer;
     FName: string;
     FAuthor: string;
     FDescription: string;
@@ -18,6 +21,12 @@ type
     FLastUpdated: string;
     FVersions: TStringDynArray;
   protected
+    function GetID: TGUID; virtual;
+    procedure SetID(const Value: TGUID); virtual;
+    function GetCompilerMax: Integer; virtual;
+    function GetCompilerMin: Integer; virtual;
+    procedure SetCompilerMax(const Value: Integer); virtual;
+    procedure SetCompilerMin(const Value: Integer); virtual;
     function GetDownloadLocation: string; virtual;
     procedure SetDownloadLocation(const Value: string); virtual;
     function GetAuthor: string; virtual;
@@ -34,6 +43,9 @@ type
   public
     constructor Create();
     destructor Destroy(); override;
+    property ID: TGUID read GetID write SetID;
+    property CompilerMin: Integer read GetCompilerMin write SetCompilerMin;
+    property CompilerMax: Integer read GetCompilerMax write SetCompilerMax;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;
@@ -64,6 +76,16 @@ begin
   Result := FAuthor;
 end;
 
+function TDNPackage.GetCompilerMax: Integer;
+begin
+  Result := FCompilerMax;
+end;
+
+function TDNPackage.GetCompilerMin: Integer;
+begin
+  Result := FCompilerMin;
+end;
+
 function TDNPackage.GetDescription: string;
 begin
   Result := FDescription;
@@ -72,6 +94,11 @@ end;
 function TDNPackage.GetDownloadLocation: string;
 begin
   Result := FDownloadLocation;
+end;
+
+function TDNPackage.GetID: TGUID;
+begin
+  Result := FID;
 end;
 
 function TDNPackage.GetLastUpdated: string;
@@ -99,6 +126,16 @@ begin
   FAuthor := Value;
 end;
 
+procedure TDNPackage.SetCompilerMax(const Value: Integer);
+begin
+  FCompilerMax := Value;
+end;
+
+procedure TDNPackage.SetCompilerMin(const Value: Integer);
+begin
+  FCompilerMin := Value;
+end;
+
 procedure TDNPackage.SetDescription(const Value: string);
 begin
   FDescription := Value;
@@ -107,6 +144,11 @@ end;
 procedure TDNPackage.SetDownloadLocation(const Value: string);
 begin
   FDownloadLocation := Value;
+end;
+
+procedure TDNPackage.SetID(const Value: TGUID);
+begin
+  FID := Value;
 end;
 
 procedure TDNPackage.SetLastUpdated(const Value: string);

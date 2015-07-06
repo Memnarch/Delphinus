@@ -214,7 +214,7 @@ begin
   begin
     for LPackage in FInstalledPackages do
     begin
-      if LPackage.Name = APackage.Name then
+      if LPackage.ID = APackage.ID then
         Exit(LPackage);
     end;
   end
@@ -246,7 +246,7 @@ begin
   begin
     for LPackage in FPackages do
     begin
-      if LPackage.Name = APackage.Name then
+      if LPackage.ID = APackage.ID then
         Exit(LPackage);
     end;
   end

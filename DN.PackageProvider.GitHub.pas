@@ -115,6 +115,9 @@ begin
   LPicture := TMemoryStream.Create();
   try
     LInfo.LoadFromString(AData.DataString);
+    APackage.ID := LInfo.ID;
+    APackage.CompilerMin := LInfo.CompilerMin;
+    APackage.CompilerMax := LInfo.CompilerMax;
     if (LInfo.Picture <> '') and ExecuteRequest(LPicture, CGithubRaw + APackage.Author + '/' + APackage.Name + '/' + ABranch + '/' + LInfo.Picture) then
     begin
       LJPG := TJPEGImage.Create();
@@ -197,7 +200,8 @@ begin
               LoadPackageInfo(LPackage, LItem.GetValue('default_branch').Value, LInfoData);
             end;
           finally
-            Packages.Add(LPackage);
+            if LPackage.ID <> TGUID.Empty then
+              Packages.Add(LPackage);
             LInfoData.Free;
           end;
         end;

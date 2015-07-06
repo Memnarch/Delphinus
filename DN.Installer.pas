@@ -67,6 +67,7 @@ const
   CBinDir = 'bin';
   CSourceDir = 'source';
   CInstallFile = 'install.json';
+  CInfoFile = 'info.json';
 
 
 { TDNInstaller }
@@ -210,32 +211,56 @@ end;
 function TDNInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
-  LInfo: TInstallationFile;
-  LInstallerFile: string;
+  LInstallInfo: TInstallationFile;
+  LInfo: TInfoFile;
+  LInstallerFile, LInfoFile: string;
 begin
   Result := False;
   Reset();
   ForceDirectories(ATargetDirectory);
-  LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
-  if TFile.Exists(LInstallerFile) then
-  begin
-    LInfo := TInstallationFile.Create();
-    try
-      LInfo.LoadFromFile(LInstallerFile);
-      ProcessSearchPathes(LInfo.SearchPathes, ATargetDirectory);
-      ProcessSourceFolders(LInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
-      Result := ProcessProjects(LInfo.Projects, ASourceDirectory, ATargetDirectory);
-      if Result then
-        CopyMetaData(ASourceDirectory, ATargetDirectory);
-    finally
-      LInfo.Free;
+  try
+    LInfoFile := TPath.Combine(ASourceDirectory, CInfoFile);
+    if TFile.Exists(LInfoFile) then
+    begin
+      LInfo := TInfoFile.Create();
+      try
+        LInfo.LoadFromFile(LInfoFile);
+        if LInfo.ID = TGuid.Empty then
+        begin
+          DoMessage(mtError, 'no ID provided');
+          Exit(False);
+        end;
+      finally
+        LInfo.Free;
+      end;
+    end
+    else
+    begin
+      DoMessage(mtError, 'no info-file provided');
+      Exit(False);
     end;
-  end
-  else
-  begin
-    DoMessage(mtError, 'No installation file');
+    LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
+    if TFile.Exists(LInstallerFile) then
+    begin
+      LInstallInfo := TInstallationFile.Create();
+      try
+        LInstallInfo.LoadFromFile(LInstallerFile);
+        ProcessSearchPathes(LInstallInfo.SearchPathes, ATargetDirectory);
+        ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
+        Result := ProcessProjects(LInstallInfo.Projects, ASourceDirectory, ATargetDirectory);
+        if Result then
+          CopyMetaData(ASourceDirectory, ATargetDirectory);
+      finally
+        LInstallInfo.Free;
+      end;
+    end
+    else
+    begin
+      DoMessage(mtError, 'No installation file');
+    end;
+  finally
+    SaveUninstall(ATargetDirectory);
   end;
-  SaveUninstall(ATargetDirectory);
 end;
 
 function TDNInstaller.InstallProject(const AProject: IDNProjectInfo): Boolean;

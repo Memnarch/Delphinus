@@ -50,9 +50,10 @@ object PackageDetailView: TPackageDetailView
       AlignWithMargins = True
       Left = 134
       Top = 0
-      Width = 334
+      Width = 459
       Height = 39
       Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
       Caption = 'Name of the Repository'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -82,9 +83,8 @@ object PackageDetailView: TPackageDetailView
     object Label1: TLabel
       Left = 0
       Top = 0
-      Width = 154
+      Width = 128
       Height = 33
-      Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author:'
       Font.Charset = DEFAULT_CHARSET
@@ -97,6 +97,64 @@ object PackageDetailView: TPackageDetailView
     object lbAuthor: TLabel
       Left = 134
       Top = 0
+      Width = 464
+      Height = 33
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'Author'#39's Name'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label2: TLabel
+      Left = 0
+      Top = 24
+      Width = 128
+      Height = 33
+      AutoSize = False
+      Caption = 'Supports:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbSupports: TLabel
+      Left = 134
+      Top = 24
+      Width = 464
+      Height = 33
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'Author'#39's Name'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbInstalledCaption: TLabel
+      Left = 0
+      Top = 48
+      Width = 128
+      Height = 33
+      AutoSize = False
+      Caption = 'Installed:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbInstalled: TLabel
+      Left = 134
+      Top = 48
       Width = 464
       Height = 33
       Anchors = [akLeft, akTop, akRight]

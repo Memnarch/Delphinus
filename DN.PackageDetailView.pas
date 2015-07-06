@@ -18,6 +18,10 @@ type
     Label1: TLabel;
     pnlHeader: TPanel;
     pnlDetail: TPanel;
+    Label2: TLabel;
+    lbSupports: TLabel;
+    lbInstalledCaption: TLabel;
+    lbInstalled: TLabel;
     procedure Button1Click(Sender: TObject);
   private
     FCanvas: TControlCanvas;
@@ -128,15 +132,24 @@ begin
     lbTitle.Caption := FPackage.Name;
     lbAuthor.Caption := FPackage.Author;
     lbDescription.Caption := FPackage.Description;
+    lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     imgRepo.Picture := FPackage.Picture;
+    if Length(FPackage.Versions) > 0 then
+    begin
+      lbInstalled.Caption := FPackage.Versions[0];
+    end;
   end
   else
   begin
     lbTitle.Caption := '';
     lbAuthor.Caption := '';
     lbDescription.Caption := '';
+    lbSupports.Caption := '';
+    lbInstalled.Caption := '';
     imgRepo.Picture := nil;
   end;
+  lbInstalledCaption.Visible := lbInstalled.Caption <> '';
+  lbInstalled.Visible := lbInstalled.Caption <> '';
 end;
 
 end.

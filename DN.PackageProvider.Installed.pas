@@ -53,6 +53,9 @@ begin
       begin
         APackage.Author := LInfo.Author;
         APackage.Description := LInfo.Description;
+        APackage.ID := LInfo.ID;
+        APackage.CompilerMin := LInfo.CompilerMin;
+        Apackage.CompilerMax := LInfo.CompilerMax;
         SetLength(LVersions, 1);
         if LInfo.Version <> '' then
           LVersions[0] := LInfo.Version
