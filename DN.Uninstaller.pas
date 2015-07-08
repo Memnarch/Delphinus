@@ -17,12 +17,13 @@ type
     function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
     function DeleteFiles(const ADirectory: string): Boolean;
     function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean;
-    function RemoveSearchPathes(const ASearchPathes: string): Boolean;
+    function RemovePathes(const ASearchPathes: string; APathType: TPathType): Boolean;
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
   protected
     function UninstallPackage(const ABPLFile: string): Boolean; virtual;
     function RemoveSearchPath(const ASearchPath: string): Boolean; virtual;
+    function RemoveBrowsingPath(const ABrowsingPath: string): Boolean; virtual;
     procedure DoMessage(AType: TMessageType; const AMessage: string);
   public
     function Uninstall(const ADirectory: string): Boolean; virtual;
@@ -106,12 +107,18 @@ begin
   end;
 end;
 
+function TDNUninstaller.RemoveBrowsingPath(
+  const ABrowsingPath: string): Boolean;
+begin
+  Result := True;
+end;
+
 function TDNUninstaller.RemoveSearchPath(const ASearchPath: string): Boolean;
 begin
   Result := True;
 end;
 
-function TDNUninstaller.RemoveSearchPathes(const ASearchPathes: string): Boolean;
+function TDNUninstaller.RemovePathes(const ASearchPathes: string;APathType: TPathType): Boolean;
 var
   LPathArray: TStringDynArray;
   LPath: string;
@@ -120,11 +127,22 @@ begin
   LPathArray := SplitString(ASearchPathes, ';');
   if Length(LPathArray) > 0 then
   begin
-    DoMessage(mtNotification, 'Removing Searchpathes:');
+    case APathType of
+      tpSearchPath:  DoMessage(mtNotification, 'Removing Searchpathes:');
+      tpBrowsingPath:  DoMessage(mtNotification, 'Removing Browsingpathes:');
+    else
+      DoMessage(mtError, 'Unknown pathtype');
+      Exit(False);
+    end;
     for LPath in LPathArray do
     begin
       DoMessage(mtNotification, LPath);
-      Result := RemoveSearchPath(LPath);
+      case APathType of
+        tpSearchPath: Result := RemoveSearchPath(LPath);
+        tpBrowsingPath: Result := RemoveBrowsingPath(LPath);
+      else
+        Result := False;
+      end;
       if not Result then
       begin
         DoMessage(mtError, 'Failed');
@@ -155,7 +173,8 @@ begin
         //remove searchpathes first, because it's less criticall
         //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
         //them manually from disk, than removing individual searchpathes manually from IDE
-        Result :=  RemoveSearchPathes(LUninstall.SearchPathes)
+        Result :=  RemovePathes(LUninstall.SearchPathes, tpSearchPath)
+          and RemovePathes(LUninstall.BrowsingPathes, tpBrowsingPath)
           and ProcessPackages(LUninstall.Packages)
           and DeleteFiles(ADirectory);
       end

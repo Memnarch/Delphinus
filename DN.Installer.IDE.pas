@@ -13,6 +13,7 @@ type
   TDNIDEInstaller = class(TDNInstaller)
   protected
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); override;
+    procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); override;
     function InstallProject(const AProject: IDNProjectInfo): Boolean; override;
   public
     function Install(const ASourceDirectory: string;
@@ -30,6 +31,30 @@ uses
   DN.ToolsApi.Extension.Intf;
 
 { TDNIDEInstaller }
+
+procedure TDNIDEInstaller.AddBrowsingPath(const ABrowsingPath: string;
+  const APlatforms: TDNCompilerPlatforms);
+var
+  LService: IDNEnvironmentOptionsService;
+  LPlatform: TDNCompilerPlatform;
+  LPathes: string;
+begin
+  inherited;
+  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
+  for LPlatform in APlatforms do
+  begin
+    if LPlatform in LService.SupportedPlatforms then
+    begin
+      LPathes := LService.Options[LPlatform].BrowingPath;
+      if LPathes <> '' then
+        LPathes := LPathes + ';' + ABrowsingPath
+      else
+        LPathes := ABrowsingPath;
+
+      LService.Options[LPlatform].BrowingPath := LPathes;
+    end;
+  end;
+end;
 
 procedure TDNIDEInstaller.AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms);
 var

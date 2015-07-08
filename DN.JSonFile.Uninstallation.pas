@@ -19,11 +19,13 @@ type
   private
     FPackages: TArray<TPackage>;
     FSearchPathes: string;
+    FBrowsingPathes: string;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
   public
     property SearchPathes: string read FSearchPathes write FSearchPathes;
+    property BrowsingPathes: string read FBrowsingPathes write FBrowsingPathes;
     property Packages: TArray<TPackage> read FPackages write FPackages;
   end;
 
@@ -42,6 +44,7 @@ var
 begin
   inherited;
   FSearchPathes := ReadString(ARoot, 'search_pathes');
+  FBrowsingPathes := ReadString(ARoot, 'browsing_pathes');
   if ReadArray(ARoot, 'packages', LPackages) then
   begin
     SetLength(FPackages, LPackages.Count);
@@ -63,6 +66,7 @@ var
 begin
   inherited;
   WriteString(ARoot, 'search_pathes', StringReplace(FSearchPathes, '\', '\\', [rfReplaceAll]));
+  WriteString(ARoot, 'browsing_pathes', StringReplace(FBrowsingPathes, '\', '\\', [rfReplaceAll]));
   LPackages := WriteArray(ARoot, 'packages');
   for LPackage in FPackages do
   begin

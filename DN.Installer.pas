@@ -15,16 +15,16 @@ uses
   DN.JSonFile.Uninstallation;
 
 type
-
   TDNInstaller = class(TInterfacedObject, IDNInstaller)
   private
     FCompiler: IDNCompiler;
     FCompilerVersion: Integer;
     FSearchPathes: string;
+    FBrowsingPathes: string;
     FPackages: TList<TPackage>;
     FOnMessage: TMessageEvent;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
-    procedure ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
+    procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
     function ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
@@ -38,6 +38,7 @@ type
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
+    procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     function InstallProject(const AProject: IDNProjectInfo): Boolean; virtual;
@@ -71,6 +72,15 @@ const
 
 
 { TDNInstaller }
+
+procedure TDNInstaller.AddBrowsingPath(const ABrowsingPath: string;
+  const APlatforms: TDNCompilerPlatforms);
+begin
+  if FBrowsingPathes = '' then
+    FBrowsingPathes := ABrowsingPath
+  else
+    FBrowsingPathes := FBrowsingPathes + ';' + ABrowsingPath;
+end;
 
 procedure TDNInstaller.AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms);
 begin
@@ -248,7 +258,8 @@ begin
         Result := ProcessProjects(LInstallInfo.Projects, ASourceDirectory, ATargetDirectory);
         if Result then
         begin
-          ProcessSearchPathes(LInstallInfo.SearchPathes, ATargetDirectory);
+          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
           ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
         end;
@@ -406,15 +417,21 @@ begin
 
 end;
 
-procedure TDNInstaller.ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
+procedure TDNInstaller.ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
 var
   LPathes: TStringDynArray;
   LPath: TSearchPath;
-  LRelPath, LBasePath: string;
+  LRelPath, LBasePath, LFullPath: string;
 begin
   if Length(APathes) > 0 then
   begin
-    DoMessage(mtNotification, 'Adding Searchpathes:');
+    case APathType of
+      tpSearchPath: DoMessage(mtNotification, 'Adding Searchpathes:');
+      tpBrowsingPath: DoMessage(mtNotification, 'Adding Browsingpathes:');
+    else
+      DoMessage(mtError, 'Unknown PathType');
+      Exit;
+    end;
     LBasePath := TPath.Combine(ARootDirectory, CSourceDir);
     for LPath in APathes do
     begin
@@ -426,12 +443,17 @@ begin
           DoMessage(mtNotification, LRelPath);
           if ExtractFileName(ExcludeTrailingPathDelimiter(LRelPath)) <> '.' then
           begin
-            AddSearchPath(TPath.Combine(LBasePath, LRelPath), LPath.Platforms);
+            LFullPath := TPath.Combine(LBasePath, LRelPath);
           end
           else
           begin
-            AddSearchPath(TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath))), LPath.Platforms);
+            LFullPath := TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath)));
           end;
+          case APathType of
+            tpSearchPath: AddSearchPath(LFullPath, LPath.Platforms);
+            tpBrowsingPath: AddBrowsingPath(LFullPath, LPath.Platforms);
+          end;
+
         end;
       end;
     end;
@@ -490,6 +512,7 @@ begin
   LUninstall := TUninstallationFile.Create();
   try
     LUninstall.SearchPathes := FSearchPathes;
+    LUninstall.BrowsingPathes := FBrowsingPathes;
     LUninstall.Packages := FPackages.ToArray;
     LUninstall.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
   finally

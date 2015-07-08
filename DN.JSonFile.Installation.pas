@@ -37,11 +37,14 @@ type
     FSourceFolders: TArray<TFolder>;
     FSearchPath: TArray<TSearchPath>;
     FProjects: TArray<TProject>;
+    FBrowsingPathes: TArray<TSearchPath>;
   protected
+    procedure LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TArray<TSearchPath>);
     procedure Load(const ARoot: TJSONObject); override;
     function GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
   public
     property SearchPathes: TArray<TSearchPath> read FSearchPath;
+    property BrowsingPathes: TArray<TSearchPath> read FBrowsingPathes;
     property SourceFolders: TArray<TFolder> read FSourceFolders;
     property Projects: TArray<TProject> read FProjects;
   end;
@@ -88,27 +91,8 @@ var
   LCompiler: Integer;
 begin
   inherited;
-  if ReadArray(ARoot, 'search_pathes', LArray) then
-  begin
-    SetLength(FSearchPath, LArray.Count);
-    for i := 0 to Pred(LArray.Count) do
-    begin
-      LItem := LArray.Items[i] as TJSONObject;
-      FSearchPath[i].Path := ReadString(LItem, 'pathes');
-      LCompiler := ReadInteger(LItem, 'compiler');
-      if LCompiler > 0 then
-      begin
-        FSearchPath[i].CompilerMin := LCompiler;
-        FSearchPath[i].CompilerMax := LCompiler;
-      end
-      else
-      begin
-        FSearchPath[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-        FSearchPath[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
-      end;
-      FSearchPath[i].Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
-    end;
-  end;
+  LoadPathes(ARoot, 'search_pathes', FSearchPath);
+  LoadPathes(ARoot, 'browsing_pathes', FBrowsingPathes);
 
   if ReadArray(ARoot, 'source_folders', LArray) then
   begin
@@ -152,6 +136,37 @@ begin
         FProjects[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
         FProjects[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
       end;
+    end;
+  end;
+end;
+
+procedure TInstallationFile.LoadPathes(const ARoot: TJSONObject;
+  const AName: string; out APathes: TArray<TSearchPath>);
+var
+  LArray: TJSonArray;
+  LItem: TJSONObject;
+  i: Integer;
+  LCompiler: Integer;
+begin
+  if ReadArray(ARoot, AName, LArray) then
+  begin
+    SetLength(APathes, LArray.Count);
+    for i := 0 to Pred(LArray.Count) do
+    begin
+      LItem := LArray.Items[i] as TJSONObject;
+      APathes[i].Path := ReadString(LItem, 'pathes');
+      LCompiler := ReadInteger(LItem, 'compiler');
+      if LCompiler > 0 then
+      begin
+        APathes[i].CompilerMin := LCompiler;
+        APathes[i].CompilerMax := LCompiler;
+      end
+      else
+      begin
+        APathes[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
+        APathes[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+      end;
+      APathes[i].Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
     end;
   end;
 end;

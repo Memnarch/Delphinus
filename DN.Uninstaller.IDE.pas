@@ -11,6 +11,7 @@ type
   TDNIDEUninstaller = class(TDNUninstaller)
   protected
     function RemoveSearchPath(const ASearchPath: string): Boolean; override;
+    function RemoveBrowsingPath(const ABrowsingPath: string): Boolean; override;
     function UninstallPackage(const ABPLFile: string): Boolean; override;
   public
     function Uninstall(const ADirectory: string): Boolean; override;
@@ -29,6 +30,37 @@ uses
   DN.Compiler.Intf;
 
 { TDNIDEUninstaller }
+
+function TDNIDEUninstaller.RemoveBrowsingPath(
+  const ABrowsingPath: string): Boolean;
+var
+  LService: IDNEnvironmentOptionsService;
+  LOption: IDNEnvironmentOptions;
+  LPlatform: TDNCompilerPlatform;
+  LPathes: TStringDynArray;
+  LPath: string;
+  LPathStr: string;
+begin
+  inherited;
+  Result := False;
+  LService := GDelphinusIDEservices as IDNEnvironmentOptionsService;
+  for LPlatform in LService.SupportedPlatforms do
+  begin
+    LOption := LService.Options[LPlatform];
+    LPathes := SplitString(LOption.BrowingPath, ';');
+    LPathStr := '';
+    for LPath in LPathes do
+    begin
+      if LPath <> ABrowsingPath then
+        if LPathStr <> '' then
+          LPathStr := LPathStr + ';' + LPath
+        else
+          LPathStr := LPath;
+    end;
+    LOption.BrowingPath := LPathStr;
+    Result := True;
+  end;
+end;
 
 function TDNIDEUninstaller.RemoveSearchPath(const ASearchPath: string): Boolean;
 var
