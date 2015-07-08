@@ -8,6 +8,8 @@ type
 
 const
   CSourceSubDir = 'Source';
+  CMacPackageExtension = '.dylib';
+  CMacPackagePrefix = 'bpl';
 
 implementation
 

@@ -309,7 +309,17 @@ begin
           else
             DoMessage(mtError, 'failed to install');
         end;
-        LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), AProject.BinaryName);
+
+        if LPlatform = cpOSX32 then
+        begin
+          LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), CMacPackagePrefix + AProject.BinaryName);
+          LCompiledPackage.BPLFile := ChangeFileExt(LCompiledPackage.BPLFile, CMacPackageExtension);
+        end
+        else
+        begin
+          LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), AProject.BinaryName);
+        end;
+
         LCompiledPackage.DCPFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.DCPOutput), AProject.DCPName);
         LCompiledPackage.Installed := (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32);
         FPackages.Add(LCompiledPackage);

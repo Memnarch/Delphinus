@@ -16,6 +16,7 @@ type
     FOnMessage: TMessageEvent;
     function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
     function DeleteFiles(const ADirectory: string): Boolean;
+    function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean;
     function RemoveSearchPathes(const ASearchPathes: string): Boolean;
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
@@ -35,6 +36,23 @@ uses
   StrUtils;
 
 { TDNUninstaller }
+
+function TDNUninstaller.DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean): Boolean;
+begin
+  Result := True;
+  if TFile.Exists(AFile) then
+  begin
+    DoMessage(mtNotification, 'deleting ' + ExtractFileName(AFile));
+    Result := DeleteFile(AFile);
+    if TFile.Exists(AFile) then
+      DoMessage(mtError, 'failed to delete');
+  end
+  else
+  begin
+    if AWarningWhenMissing then
+      DoMessage(mtWarning, 'file did not exist ' + AFile);
+  end;
+end;
 
 function TDNUninstaller.DeleteFiles(const ADirectory: string): Boolean;
 begin
@@ -64,8 +82,16 @@ begin
   Result := Length(APackages) = 0;
   for LPackage in APackages do
   begin
-    LBPI := ChangeFileExt(LPackage.DCPFile, '.bpi');
-    LLib := ChangeFileExt(LPackage.DCPFile, '.lib');
+    if SameText(ExtractFileExt(LPackage.BPLFile), CMacPackageExtension) then
+    begin
+      LBPI := TPath.Combine(ExtractFilePath(LPackage.BPLFile), ChangeFileExt(ExtractFileName(LPackage.DCPFile), '.info.plist'));
+      LLib := TPath.Combine(ExtractFilePath(LPackage.BPLFile), ChangeFileExt(ExtractFileName(LPackage.DCPFile), '.entitlements'));
+    end
+    else
+    begin
+      LBPI := ChangeFileExt(LPackage.DCPFile, '.bpi');
+      LLib := ChangeFileExt(LPackage.DCPFile, '.lib');
+    end;
     if LPackage.Installed then
     begin
       DoMessage(mtNotification, 'uninstalling package ' + LPackage.BPLFile);
@@ -73,46 +99,10 @@ begin
         break;
     end;
 
-    Result := True;
-    if TFile.Exists(LPackage.BPLFile) then
-    begin
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LPackage.BPLFile));
-      Result := DeleteFile(LPackage.BPLFile);
-      if TFile.Exists(LPackage.BPLFile) then
-        DoMessage(mtError, 'failed to delete');
-    end
-    else
-    begin
-      DoMessage(mtWarning, 'file did not exist ' + LPackage.BPLFile);
-    end;
-
-    if TFile.Exists(LPackage.DCPFile) then
-    begin
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LPackage.DCPFile));
-      Result := DeleteFile(LPackage.DCPFile) and Result;
-      if TFile.Exists(LPackage.DCPFile) then
-        DoMessage(mtError, 'failed to delete');
-    end
-    else
-    begin
-      DoMessage(mtWarning, 'file did not exist ' + LPackage.DCPFile);
-    end;
-
-    if TFile.Exists(LBPI) then
-    begin
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LBPI));
-      Result := DeleteFile(LBPI) and Result;
-      if TFile.Exists(LBPI) then
-        DoMessage(mtError, 'failed to delete');
-    end;
-
-    if TFile.Exists(LLib) then
-    begin
-      DoMessage(mtNotification, 'deleting ' + ExtractFileName(LLib));
-      Result := DeleteFile(LLib) and Result;
-      if TFile.Exists(LLib) then
-        DoMessage(mtError, 'failed to delete');
-    end;
+    Result := DeleteComponentFile(LPackage.BPLFile);
+    Result := DeleteComponentFile(LPackage.DCPFile) and Result;
+    Result := DeleteComponentFile(LBPI, False) and Result;
+    Result := DeleteComponentFile(LLib, False) and Result;
   end;
 end;
 
