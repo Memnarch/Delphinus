@@ -27,7 +27,7 @@ type
     procedure ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
-    function ProcessProject(const AProject: IDNProjectInfo): Boolean;
+    function ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
     function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
 
@@ -245,11 +245,13 @@ begin
       LInstallInfo := TInstallationFile.Create();
       try
         LInstallInfo.LoadFromFile(LInstallerFile);
-        ProcessSearchPathes(LInstallInfo.SearchPathes, ATargetDirectory);
-        ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
         Result := ProcessProjects(LInstallInfo.Projects, ASourceDirectory, ATargetDirectory);
         if Result then
+        begin
+          ProcessSearchPathes(LInstallInfo.SearchPathes, ATargetDirectory);
+          ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
+        end;
       finally
         LInstallInfo.Free;
       end;
@@ -279,7 +281,7 @@ begin
     Result := Result and (FCompilerVersion <= ACompiler_Max);
 end;
 
-function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
+function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
 var
   LCompiledPackage: TPackage;
   LPlatform: TDNCompilerPlatform;
@@ -298,6 +300,7 @@ begin
       FCompiler.BPLOutput := LOptions.BPLOutput;
       FCompiler.DCPOutput := LOptions.DCPOutput;
       FCompiler.Platform := LPlatform;
+      AProcessedPlatforms := AProcessedPlatforms + [LPlatform];
       Result := FCompiler.Compile(AProject.FileName);
       if Result and AProject.IsPackage then
       begin
@@ -338,17 +341,21 @@ end;
 function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
 var
   LProject: TProject;
-  LProjectFile, LFileExt: string;
+  LProjectFile, LFileExt, LLibBaseDir: string;
   LInfo: IDNProjectInfo;
   LGroupInfo: IDNProjectGroupInfo;
+  LProcessedPlatforms: TDNCompilerPlatforms;
+  LPlatform: TDNCompilerPlatform;
 const
   CGroup = '.groupproj';
   CProject = '.dproj';
 begin
   Result := True;
   LInfo := TDNProjectInfo.Create();
-  FCompiler.DCUOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CLibDir), '$(Platform)\$(Config)');
+  LLibBaseDir := TPath.Combine(ATargetDirectory, CLibDir);
+  FCompiler.DCUOutput := TPath.Combine(LLibBaseDir, '$(Platform)\$(Config)');
   FCompiler.ExeOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CBinDir), '$(Platform)\$(Config)');
+  LProcessedPlatforms := [];
   if Length(AProjects) > 0 then
   begin
     for LProject in AProjects do
@@ -365,7 +372,7 @@ begin
           begin
             for LInfo in LGroupInfo.Projects do
             begin
-              Result := ProcessProject(LInfo);
+              Result := ProcessProject(LInfo, LProcessedPlatforms);
               if not Result then
                 Break;
             end;
@@ -376,7 +383,7 @@ begin
           LInfo := TDNProjectInfo.Create();
           Result := LInfo.LoadFromFile(LProjectFile);
           if Result then
-            ProcessProject(LInfo);
+            ProcessProject(LInfo, LProcessedPlatforms);
         end
         else
         begin
@@ -389,6 +396,14 @@ begin
       end;
     end;
   end;
+  if Result then
+  begin
+    for LPlatform in LProcessedPlatforms do
+    begin
+      AddSearchPath(TPath.Combine(LLibBaseDir, TDNCompilerPlatformName[LPlatform] + '\' + TDNCompilerConfigName[FCompiler.Config]), [LPlatform]);
+    end;
+  end;
+
 end;
 
 procedure TDNInstaller.ProcessSearchPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string);
