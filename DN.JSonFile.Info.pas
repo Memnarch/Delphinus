@@ -42,9 +42,15 @@ begin
 end;
 
 function TInfoFile.ReadID(const AObject: TJSONObject): TGUID;
+var
+  LID: string;
 begin
+  LID := ReadString(AObject, 'id');
   try
-    Result := StringToGUID(ReadString(AObject, 'id'));
+    if LID <> '' then
+      Result := StringToGUID(LID)
+    else
+      Result := TGUID.Empty;
   except
     Result := TGUID.Empty;
   end;
