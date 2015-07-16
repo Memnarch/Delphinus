@@ -185,8 +185,6 @@ begin
     FRequest.Get(FRequest.Response.Location, ATarget);
   end;
   Result := FRequest.ResponseCode = 200;//ok
-  if (AETag <> '') and (FRequest.ResponseCode <> 304) then
-    raise Exception.Create('Error Message');
   FLastContentDisposition := FRequest.Response.ContentDisposition;
   FLastEtag := FRequest.Response.ETag;
 end;
