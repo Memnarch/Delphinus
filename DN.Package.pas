@@ -5,7 +5,9 @@ interface
 uses
   Types,
   Graphics,
-  DN.Package.Intf;
+  Generics.Collections,
+  DN.Package.Intf,
+  DN.Package.Version.Intf;
 
 type
   TDNPackage = class(TInterfacedObject, IDNPackage)
@@ -19,7 +21,7 @@ type
     FPicture: TPicture;
     FDownloadLocation: string;
     FLastUpdated: string;
-    FVersions: TStringDynArray;
+    FVersions: TList<IDNPackageVersion>;
   protected
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
@@ -38,8 +40,7 @@ type
     procedure SetName(const Value: string); virtual;
     function GetLastUpdated: string; virtual;
     procedure SetLastUpdated(const Value: string); virtual;
-    function GetVersions: TStringDynArray; virtual;
-    procedure SetVersions(const Value: TStringDynArray); virtual;
+    function GetVersions: TList<IDNPackageVersion>; virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -52,7 +53,7 @@ type
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
-    property Versions: TStringDynArray read GetVersions write SetVersions;
+    property Versions: TList<IDNPackageVersion> read GetVersions;
   end;
 
 implementation
@@ -63,10 +64,12 @@ constructor TDNPackage.Create;
 begin
   inherited;
   FPicture := TPicture.Create();
+  FVersions := TList<IDNPackageVersion>.Create();
 end;
 
 destructor TDNPackage.Destroy;
 begin
+  FVersions.Free;
   FPicture.Free;
   inherited;
 end;
@@ -116,7 +119,7 @@ begin
   Result := FPicture;
 end;
 
-function TDNPackage.GetVersions: TStringDynArray;
+function TDNPackage.GetVersions: TList<IDNPackageVersion>;
 begin
   Result := FVersions;
 end;
@@ -159,11 +162,6 @@ end;
 procedure TDNPackage.SetName(const Value: string);
 begin
   FName := Value;
-end;
-
-procedure TDNPackage.SetVersions(const Value: TStringDynArray);
-begin
-  FVersions := Value;
 end;
 
 end.

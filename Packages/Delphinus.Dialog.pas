@@ -229,8 +229,8 @@ begin
   LPackage := GetInstalledPackage(APackage);
   if Assigned(LPackage) then
   begin
-    if Length(LPackage.Versions) > 0 then
-      Result := LPackage.Versions[0]
+    if LPackage.Versions.Count > 0 then
+      Result := LPackage.Versions[0].Name
     else
       Result := 'none';
   end;
@@ -260,8 +260,8 @@ begin
   LVersion := GetInstalledVersion(APackage);
   if LVersion <> '' then
   begin
-    if (Length(APackage.Versions) > 0) and (APackage.Versions[0] <> LVersion) then
-      Result := APackage.Versions[0];
+    if (APackage.Versions.Count > 0) and (APackage.Versions[0].Name <> LVersion) then
+      Result := APackage.Versions[0].Name;
   end;
 end;
 

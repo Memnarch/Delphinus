@@ -44,7 +44,9 @@ uses
   JSon,
   JPeg,
   DN.Zip,
-  DN.JSOnFile.Info;
+  DN.JSOnFile.Info,
+  DN.Package.Version,
+  DN.Package.Version.Intf;
 
 const
   CGithubRaw = 'https://raw.githubusercontent.com/';
@@ -204,11 +206,10 @@ function TDNGitHubPackageProvider.LoadPackageFromDirectory(const ADirectory,
   AAutor: string; out APackage: IDNPackage): Boolean;
 var
   LPackage: TDNGitHubPackage;
-  LVersionDirs, LVersions: TStringDynArray;
   LCache: TCacheInfo;
   LInfo: TInfoFile;
   LVersionName, LPicture, LInfoFile: string;
-  i: Integer;
+  LVersion: IDNPackageVersion;
 begin
   LPackage := TDNGitHubPackage.Create();
   LPackage.Name := ExtractFileName(ExcludeTrailingPathDelimiter(ADirectory));
@@ -229,14 +230,27 @@ begin
         LPackage.CompilerMax := LInfo.CompilerMax;
       end;
     end;
-    LVersionDirs := TDirectory.GetDirectories(ADirectory);
-    SetLength(LVersions, Length(LVersionDirs));
-    for i := 0 to Length(LVersionDirs) - 1 do
+    for LVersionName in LCache.Versions do
     begin
-      LVersionName := ExtractFileName(ExcludeTrailingPathDelimiter(LVersionDirs[i]));
-      LVersions[i] := LVersionName;
+      LInfoFile := TPath.Combine(TPath.Combine(ADirectory, LVersionName), 'info.json');
+      if TFile.Exists(LInfoFile) then
+      begin
+        LInfo.LoadFromFile(LInfoFile);
+        LVersion := TDNPackageVersion.Create();
+        LVersion.Name := LVersionName;
+        LVersion.CompilerMin := LInfo.CompilerMin;
+        LVersion.CompilerMax := LInfo.CompilerMax;
+        //the package itself always shows the lowest and highes compiler-version to indicate if there
+        //is any version that matches the required one
+        if (LPackage.CompilerMin = 0) or (LVersion.CompilerMin < LPackage.CompilerMin) then
+          LPackage.CompilerMin := LVersion.CompilerMin;
+
+        if (LPackage.CompilerMax = 0) or (LVersion.CompilerMax > LPackage.CompilerMax) then
+          LPackage.CompilerMax := LVersion.CompilerMax;
+
+        LPackage.Versions.Add(LVersion);
+      end;
     end;
-    LPackage.Versions := LVersions;
     LPicture := TPath.Combine(ADirectory, 'logo.jpg');
     if TFile.Exists(LPicture) then
     begin

@@ -4,7 +4,9 @@ interface
 
 uses
   Types,
-  Graphics;
+  Graphics,
+  Generics.Collections,
+  DN.Package.Version.Intf;
 
 type
   IDNPackage = interface
@@ -26,8 +28,7 @@ type
     procedure SetName(const Value: string);
     function GetLastUpdated: string;
     procedure SetLastUpdated(const Value: string);
-    function GetVersions: TStringDynArray;
-    procedure SetVersions(const Value: TStringDynArray);
+    function GetVersions: TList<IDNPackageVersion>;
     property ID: TGUID read GetID write SetID;
     property CompilerMin: Integer read GetCompilerMin write SetCompilerMin;
     property CompilerMax: Integer read GetCompilerMax write SetCompilerMax;
@@ -37,7 +38,7 @@ type
     property Picture: TPicture read GetPicture;
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
-    property Versions: TStringDynArray read GetVersions write SetVersions;
+    property Versions: TList<IDNPackageVersion> read GetVersions;
   end;
 
 implementation
