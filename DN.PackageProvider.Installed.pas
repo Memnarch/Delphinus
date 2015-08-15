@@ -26,6 +26,8 @@ uses
   DN.Package,
   DN.Uninstaller.Intf,
   DN.JSonFile.InstalledInfo,
+  DN.Package.Version,
+  DN.Package.Version.Intf,
   JPeg;
 
 { TDNInstalledPackageProvider }
@@ -43,7 +45,7 @@ var
   LJPG: TJPEGImage;
   LImageFile: string;
   LInfo: TInstalledInfoFile;
-  LVersions: TStringDynArray;
+  LVersion: IDNPackageVersion;
 begin
   if TFile.Exists(AInfoFile) then
   begin
@@ -56,12 +58,15 @@ begin
         APackage.ID := LInfo.ID;
         APackage.CompilerMin := LInfo.CompilerMin;
         Apackage.CompilerMax := LInfo.CompilerMax;
-        SetLength(LVersions, 1);
+        LVersion := TDNPackageVersion.Create();
         if LInfo.Version <> '' then
-          LVersions[0] := LInfo.Version
+          LVersion.Name := LInfo.Version
         else
-          LVersions[0] := 'unknown';
-        APackage.Versions := LVersions;
+          LVersion.Name := 'unknown';
+
+        LVersion.CompilerMin := LInfo.CompilerMin;
+        LVersion.CompilerMax := LInfo.CompilerMax;
+        APackage.Versions.Add(LVersion);
         if LInfo.Picture <> '' then
         begin
           LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LInfo.Picture);

@@ -145,8 +145,8 @@ begin
     Log('Downloading ' + FPackage.Name);
     LTempDir := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
     ForceDirectories(LTempDir);
-    if Length(FPackage.Versions) > 0 then
-      LVersion := FPackage.Versions[0]
+    if FPackage.Versions.Count > 0 then
+      LVersion := FPackage.Versions[0].Name
     else
       LVersion := '';
 

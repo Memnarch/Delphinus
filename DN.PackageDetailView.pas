@@ -134,9 +134,9 @@ begin
     lbDescription.Caption := FPackage.Description;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     imgRepo.Picture := FPackage.Picture;
-    if Length(FPackage.Versions) > 0 then
+    if FPackage.Versions.Count > 0 then
     begin
-      lbInstalled.Caption := FPackage.Versions[0];
+      lbInstalled.Caption := FPackage.Versions[0].Name;
     end;
   end
   else

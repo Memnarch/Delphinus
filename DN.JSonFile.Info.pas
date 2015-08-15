@@ -17,6 +17,9 @@ type
     FPicture: string;
     FCompilerMax: Integer;
     FID: TGUID;
+    FFirstRelease: string;
+    FPackageCompilerMax: Integer;
+    FPackageCompilerMin: Integer;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
@@ -24,6 +27,9 @@ type
   public
     property Picture: string read FPicture;
     property ID: TGUID read FID write FID;
+    property FirstRelease: string read FFirstRelease;
+    property PackageCompilerMin: Integer read FPackageCompilerMin;
+    property PackageCompilerMax: Integer read FPackageCompilerMax;
     property CompilerMin: Integer read FCompilerMin;
     property CompilerMax: Integer read FCompilerMax;
   end;
@@ -37,14 +43,23 @@ begin
   inherited;
   FPicture := ReadString(ARoot, 'picture');
   FID := ReadID(ARoot);
+  FFirstRelease := ReadString(ARoot, 'first_release');
+  FPackageCompilerMax := ReadInteger(ARoot, 'package_compiler_max');
+  FPackageCompilerMin := ReadInteger(ARoot, 'package_compiler_min');
   FCompilerMin := ReadInteger(ARoot, 'compiler_min');
   FCompilerMax := ReadInteger(ARoot, 'compiler_max');
 end;
 
 function TInfoFile.ReadID(const AObject: TJSONObject): TGUID;
+var
+  LID: string;
 begin
+  LID := ReadString(AObject, 'id');
   try
-    Result := StringToGUID(ReadString(AObject, 'id'));
+    if LID <> '' then
+      Result := StringToGUID(LID)
+    else
+      Result := TGUID.Empty;
   except
     Result := TGUID.Empty;
   end;
@@ -55,6 +70,9 @@ begin
   inherited;
   WriteString(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
+  WriteString(ARoot, 'first_release', FFirstRelease);
+  WriteInteger(ARoot, 'package_compiler_max', FPackageCompilerMax);
+  WriteInteger(ARoot, 'package_compiler_min', FPackageCompilerMin);
   WriteInteger(ARoot, 'compiler_min', FCompilerMin);
   WriteInteger(ARoot, 'compiler_max', FCompilerMax);
 end;
