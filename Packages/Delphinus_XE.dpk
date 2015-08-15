@@ -1,0 +1,88 @@
+package Delphinus_XE;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  DesignIDE,
+  vclimg,
+  dbrtl,
+  DbxCommonDriver,
+  IndySystem,
+  IndyProtocols,
+  IndyCore;
+
+contains
+  Main in 'Main.pas',
+  Delphinus.Controller in 'Delphinus.Controller.pas',
+  Delphinus.Dialog in 'Delphinus.Dialog.pas' {DelphinusDialog},
+  DN.Compiler.Intf in '..\DN.Compiler.Intf.pas',
+  DN.Compiler.MSBuild in '..\DN.Compiler.MSBuild.pas',
+  DN.Compiler in '..\DN.Compiler.pas',
+  DN.Installer.Intf in '..\DN.Installer.Intf.pas',
+  DN.Installer in '..\DN.Installer.pas',
+  DN.Package.Intf in '..\DN.Package.Intf.pas',
+  DN.Package in '..\DN.Package.pas',
+  DN.PackageOverview in '..\DN.PackageOverview.pas',
+  DN.PackageProvider.Intf in '..\DN.PackageProvider.Intf.pas',
+  DN.PackageProvider.GitHub in '..\DN.PackageProvider.GitHub.pas',
+  DN.Preview in '..\DN.Preview.pas',
+  DN.ProjectInfo.Intf in '..\DN.ProjectInfo.Intf.pas',
+  DN.ProjectInfo in '..\DN.ProjectInfo.pas',
+  DN.Types in '..\DN.Types.pas',
+  DN.Uninstaller.Intf in '..\DN.Uninstaller.Intf.pas',
+  DN.Uninstaller in '..\DN.Uninstaller.pas',
+  DN.Zip in '..\DN.Zip.pas',
+  Delphinus.SetupDialog in 'Delphinus.SetupDialog.pas' {SetupDialog},
+  DN.PackageProvider in '..\DN.PackageProvider.pas',
+  DN.PackageProvider.Installed in '..\DN.PackageProvider.Installed.pas',
+  DN.Installer.IDE in '..\DN.Installer.IDE.pas',
+  DN.ToolsApi in '..\DN.ToolsApi.pas',
+  DN.Uninstaller.IDE in '..\DN.Uninstaller.IDE.pas',
+  DN.ProjectGroupInfo in '..\DN.ProjectGroupInfo.pas',
+  DN.ProjectGroupInfo.Intf in '..\DN.ProjectGroupInfo.Intf.pas',
+  DN.JSonFile in '..\DN.JSonFile.pas',
+  DN.JSonFile.Info in '..\DN.JSonFile.Info.pas',
+  DN.JSonFile.Installation in '..\DN.JSonFile.Installation.pas',
+  DN.Controls.Button in '..\DN.Controls.Button.pas',
+  DN.Controls in '..\DN.Controls.pas',
+  DN.Graphics in '..\DN.Graphics.pas',
+  DN.PackageDetailView in '..\DN.PackageDetailView.pas' {PackageDetailView: TFrame},
+  DN.JSonFile.Uninstallation in '..\DN.JSonFile.Uninstallation.pas',
+  DN.JSonFile.InstalledInfo in '..\DN.JSonFile.InstalledInfo.pas',
+  DN.Package.Github in '..\DN.Package.Github.pas',
+  DN.ToolsApi.Extension in '..\DN.ToolsApi.Extension.pas',
+  DN.ToolsApi.Extension.Intf in '..\DN.ToolsApi.Extension.Intf.pas',
+  DN.JSonFile.CacheInfo in '..\DN.JSonFile.CacheInfo.pas',
+  DN.Package.Version.Intf in '..\DN.Package.Version.Intf.pas',
+  DN.Package.Version in '..\DN.Package.Version.pas';
+
+end.
+
+
