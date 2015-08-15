@@ -36,7 +36,7 @@ requires
   IndyCore;
 
 contains
-  Main in '..\Main.pas',
+  Delphinus.Main in '..\Delphinus.Main.pas',
   Delphinus.Controller in '..\Delphinus.Controller.pas',
   Delphinus.Dialog in '..\Delphinus.Dialog.pas' {DelphinusDialog},
   DN.Compiler.Intf in '..\..\DN.Compiler.Intf.pas',
