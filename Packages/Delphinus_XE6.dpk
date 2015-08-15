@@ -81,7 +81,9 @@ contains
   DN.ToolsApi.Extension.Intf in '..\DN.ToolsApi.Extension.Intf.pas',
   DN.JSonFile.CacheInfo in '..\DN.JSonFile.CacheInfo.pas',
   DN.Package.Version.Intf in '..\DN.Package.Version.Intf.pas',
-  DN.Package.Version in '..\DN.Package.Version.pas';
+  DN.Package.Version in '..\DN.Package.Version.pas',
+  Delphinus.UiTypes in 'Delphinus.UiTypes.pas',
+  DN.JSon in '..\DN.JSon.pas';
 
 end.
 

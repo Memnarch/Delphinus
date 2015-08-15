@@ -5,8 +5,7 @@ interface
 uses
   Types,
   DN.JSonFile,
-  DBXJSon,
-  JSOn;
+  DN.JSon;
 
 type
   TCacheInfo = class(TJSonFile)

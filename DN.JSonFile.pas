@@ -3,8 +3,7 @@ unit DN.JSonFile;
 interface
 
 uses
-  JSon,
-  DBXJSon;
+  DN.JSon;
 
 type
   TJSonFile = class

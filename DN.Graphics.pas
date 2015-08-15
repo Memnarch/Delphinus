@@ -4,13 +4,13 @@ interface
 
 uses
   Types,
-  System.UITypes,
+  Delphinus.UITypes,
   Graphics,
   Windows,
   Math;
 
-procedure GradientFillRectVertical(ACanvas: TCanvas; const AStartColor, AEndColor: TColor; const ARect: TRect); inline;
-function AlterColor(const AColor: TColor; const AAmount: SmallInt): TColor; inline;
+procedure GradientFillRectVertical(ACanvas: TCanvas; const AStartColor, AEndColor: TColor; const ARect: TRect);
+function AlterColor(const AColor: TColor; const AAmount: SmallInt): TColor;
 
 implementation
 

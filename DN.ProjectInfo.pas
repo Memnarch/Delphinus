@@ -6,7 +6,7 @@ uses
   Classes,
   Types,
   SysUtils,
-  XML.XMLIntf,
+  XMLIntf,
   DN.ProjectInfo.Intf,
   DN.Compiler.Intf;
 

@@ -4,7 +4,7 @@ interface
 
 uses
   Types,
-  UITypes,
+  Delphinus.UITypes,
   Windows,
   Graphics,
   Math,

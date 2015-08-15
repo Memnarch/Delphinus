@@ -26,6 +26,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_UnitSearchPath>..;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_Locale>1031</VerInfo_Locale>
@@ -122,6 +123,8 @@
 			<DCCReference Include="..\DN.JSonFile.CacheInfo.pas"/>
 			<DCCReference Include="..\DN.Package.Version.Intf.pas"/>
 			<DCCReference Include="..\DN.Package.Version.pas"/>
+			<DCCReference Include="Delphinus.UiTypes.pas"/>
+			<DCCReference Include="..\DN.JSon.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -177,6 +180,9 @@
 					</VersionInfoKeys>
 				</Delphi.Personality>
 				<Deployment/>
+				<Platforms>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>

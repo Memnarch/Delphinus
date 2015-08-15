@@ -31,7 +31,7 @@ uses
   IOUtils,
   DN.ProjectInfo,
   XMLDoc,
-  XML.XMLIntf;
+  XMLIntf;
 
 { TDNProjectGroupInfo }
 

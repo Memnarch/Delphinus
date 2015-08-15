@@ -40,8 +40,7 @@ uses
   DN.Package.Github,
   IdIOHandlerStack,
   IdSSLOpenSSl,
-  DBXJSon,
-  JSon,
+  DN.JSon,
   JPeg,
   DN.Zip,
   DN.JSOnFile.Info,
@@ -60,10 +59,12 @@ const
 constructor TDNGitHubPackageProvider.Create;
 begin
   inherited;
-  FCacheDir := TPath.Combine(TPath.GetCachePath(), 'Delphinus\Github');
+  FCacheDir := TPath.Combine(GetEnvironmentVariable('LocalAppData'), 'Delphinus\Github');
   ForceDirectories(FCacheDir);
   FRequest := TIdHTTP.Create(nil);
+  {$If Declared(hoNoProtocolErrorException)}
   FRequest.HTTPOptions := FRequest.HTTPOptions + [hoNoProtocolErrorException];
+  {$IfEnd}
   FRequest.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(FRequest);
 end;
 

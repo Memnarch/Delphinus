@@ -3,10 +3,10 @@ unit Delphinus.Dialog;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  DN.PackageOverview, System.Actions, Vcl.ActnList, Vcl.ImgList, Vcl.ToolWin,
-  Vcl.ComCtrls,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics,
+  Controls, Forms, Dialogs,
+  DN.PackageOverview, ActnList, ImgList, ToolWin,
+  ComCtrls,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
   ContNrs,
