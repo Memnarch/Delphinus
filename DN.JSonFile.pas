@@ -132,7 +132,7 @@ begin
   else
     Result := ADefault;
 
-  {$if CompilerVersion < 27}
+  {$if CompilerVersion < 23}
   Result := UnescapeQuotes(Result);
   {$IfEnd}
 end;
@@ -211,7 +211,7 @@ end;
 procedure TJSonFile.WriteString(AParent: TJSONObject; const AProperty,
   AContent: string);
 begin
-  {$if CompilerVersion < 27}
+  {$if CompilerVersion < 23}
   AParent.AddPair(AProperty, EscapeQuotes(AContent));
   {$Else}
   AParent.AddPair(AProperty, AContent);
