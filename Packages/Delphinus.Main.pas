@@ -9,6 +9,8 @@ uses
 
 procedure Register;
 
+{$R DelphinusImages.res}
+
 implementation
 
 var

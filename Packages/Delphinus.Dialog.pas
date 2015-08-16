@@ -11,10 +11,11 @@ uses
   DN.Package.Intf,
   ContNrs,
   Generics.Collections,
-  DN.PackageDetailView;
+  DN.PackageDetailView,
+  Delphinus.Form;
 
 type
-  TDelphinusDialog = class(TForm)
+  TDelphinusDialog = class(TDelphinusForm)
     ToolBar1: TToolBar;
     imgMenu: TImageList;
     DialogActions: TActionList;

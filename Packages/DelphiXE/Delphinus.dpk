@@ -80,7 +80,9 @@ contains
   DN.Package.Version.Intf in '..\..\DN.Package.Version.Intf.pas',
   DN.Package.Version in '..\..\DN.Package.Version.pas',
   Delphinus.UiTypes in '..\Delphinus.UiTypes.pas',
-  DN.JSon in '..\..\DN.JSon.pas';
+  DN.JSon in '..\..\DN.JSon.pas',
+  Delphinus.Form in '..\Delphinus.Form.pas',
+  Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas';
 
 end.
 

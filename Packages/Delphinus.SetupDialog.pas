@@ -10,7 +10,8 @@ uses
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
   StdCtrls,
-  DN.Types;
+  DN.Types,
+  Delphinus.Form;
 
 const
   CStart = WM_USER + 1;
@@ -18,7 +19,7 @@ const
 type
   TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall, sdmUpdate);
 
-  TSetupDialog = class(TForm)
+  TSetupDialog = class(TDelphinusForm)
     mLog: TMemo;
     procedure FormShow(Sender: TObject);
   private

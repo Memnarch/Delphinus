@@ -6,6 +6,8 @@ uses
   Classes,
   Types,
   Menus,
+  Graphics,
+  ImgList,
   Dialogs,
   Delphinus.Dialog;
 
@@ -14,6 +16,7 @@ type
   private
     FMenuItem: TMenuItem;
     FDialog: TDelphinusDialog;
+    FIcon: TIcon;
     procedure HandleClickDelphinus(Sender: TObject);
     procedure InstallMenu();
     procedure UninstallMenu();
@@ -25,7 +28,8 @@ type
 implementation
 
 uses
-  ToolsApi;
+  ToolsApi,
+  Delphinus.ResourceNames;
 
 const
   CToolsMenu = 'ToolsMenu';
@@ -35,6 +39,8 @@ const
 constructor TDelphinusController.Create;
 begin
   inherited;
+  FIcon := TIcon.Create();
+  FIcon.LoadFromResourceName(HInstance, CIconDelphinus);
   InstallMenu();
   FDialog := TDelphinusDialog.Create(nil);
 end;
@@ -43,6 +49,7 @@ destructor TDelphinusController.Destroy;
 begin
   UninstallMenu();
   FDialog.Free;
+  FIcon.Free;
   inherited;
 end;
 
@@ -56,6 +63,7 @@ var
   LItem: TMenuItem;
   LService: INTAServices;
   i: Integer;
+  LImageList: TCustomImageList;
 begin
   LService := BorlandIDEServices as INTAServices;
   for i := LService.MainMenu.Items.Count - 1 downto 0 do
@@ -68,6 +76,11 @@ begin
       FMenuItem.Name := 'DelphinusMenu';
       FMenuItem.OnClick := HandleClickDelphinus;
       LItem.Insert(LItem.Count - 1, FMenuItem);
+      LImageList := LItem.GetImageList;
+      if Assigned(LImageList) then
+      begin
+        FMenuItem.ImageIndex := LImageList.AddIcon(FIcon);
+      end;
       Break;
     end;
   end;
