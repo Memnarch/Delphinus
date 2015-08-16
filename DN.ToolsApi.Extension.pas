@@ -8,6 +8,7 @@ uses
   Registry,
   IniFiles,
   Generics.Collections,
+  ToolsApi,
   DN.Compiler.Intf,
   DN.ToolsApi.Extension.Intf;
 
@@ -15,14 +16,9 @@ type
   TDNEnvironmentOptions = class(TInterfacedObject, IDNEnvironmentOptions)
   private
     FPlatform: TDNCompilerPlatform;
-    FRegstryKey: string;
-    FRegistryOptions: TObject;
-    FRegistry: TMemIniFile;
     FUpdateLevel: Integer;
     FOnChanged: TNotifyEvent;
     function GetPlatform: TDNCompilerPlatform;
-    function ReadString(const AName: string): string;
-    procedure WriteString(const AName, AValue: string);
     function GetBPLOutput: string;
     function GetBrowsingPath: string;
     function GetDCPOutput: string;
@@ -31,9 +27,16 @@ type
     procedure SetBrowsingPath(const Value: string);
     procedure SetDCPOutput(const Value: string);
     procedure SetSearchPath(const Value: string);
-    procedure Changed();
+  protected
+    FBrowsingPathName: string;
+    FSearchPathName: string;
+    FBPLOutputName: string;
+    FDCPOutputName: string;
+    function ReadString(const AName: string): string; virtual; abstract;
+    procedure WriteString(const AName, AValue: string); virtual; abstract;
+    procedure Changed(); virtual;
   public
-    constructor Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string);
+    constructor Create(APlatform: TDNCompilerPlatform);
     procedure BeginUpdate();
     procedure EndUpdate();
     property Platform: TDNCompilerPlatform read GetPlatform;
@@ -42,6 +45,29 @@ type
     property BPLOutput: string read GetBPLOutput write SetBPLOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
+  end;
+
+  TDNRegistryEnvironmentOptions = class(TDNEnvironmentOptions)
+  private
+    FRegstryKey: string;
+    FRegistryOptions: TObject;
+    FRegistry: TMemIniFile;
+  protected
+    function ReadString(const AName: string): string; override;
+    procedure WriteString(const AName, AValue: string); override;
+    procedure Changed; override;
+  public
+    constructor Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string);
+  end;
+
+  TDNOTAEnvironmentOptions = class(TDNEnvironmentOptions)
+  private
+    FOptions: IOTAOptions;
+  protected
+    function ReadString(const AName: string): string; override;
+    procedure WriteString(const AName: string; const AValue: string); override;
+  public
+    constructor Create(APlatform: TDNCompilerPlatform);
   end;
 
   TDNEnvironmentOptionsService = class(TInterfacedObject, IDNEnvironmentOptionsService)
@@ -68,7 +94,6 @@ implementation
 
 uses
   IOUtils,
-  ToolsApi,
   DN.ToolsApi,
   RTTI;
 
@@ -153,7 +178,7 @@ begin
       //we are on a Win32-Only Delphi
       if LNames.Count > 0 then
       begin
-        LOptions := TDNEnvironmentOptions.Create(cpWin32, LLibraryKey);
+        LOptions := TDNOTAEnvironmentOptions.Create(cpWin32);
         LOptions.OnChanged := HandleChanged;
         FOptions.Add(LOptions);
         FSupportedPlatforms := [cpWin32];
@@ -167,7 +192,7 @@ begin
           if LReg.KeyExists(CPlatformKeys[LPlatform]) then
           begin
             LPlatformKey := TPath.Combine(LLibraryKey, CPlatformKeys[LPlatform]);
-            LOptions := TDNEnvironmentOptions.Create(LPlatform, LPlatformKey);
+            LOptions := TDNRegistryEnvironmentOptions.Create(LPlatform, LPlatformKey);
             LOptions.OnChanged := HandleChanged;
             FOptions.Add(LOptions);
             FSupportedPlatforms := FSupportedPlatforms + [LPlatform];
@@ -188,25 +213,39 @@ begin
   Inc(FUpdateLevel);
 end;
 
-procedure TDNEnvironmentOptions.Changed;
+procedure TDNRegistryEnvironmentOptions.Changed;
 var
   LContext: TRttiContext;
   LType: TRttiType;
 begin
   LType := LContext.GetType(FRegistryOptions.ClassType);
   LType.GetMethod('SavePropValues').Invoke(FRegistryOptions, []);
+  inherited;
+end;
+
+constructor TDNRegistryEnvironmentOptions.Create(APlatform: TDNCompilerPlatform;
+  const ARegistryKey: string);
+begin
+  inherited Create(APlatform);
+  FSearchPathName := 'Search Path';
+  FBPLOutputName := 'Package DPL Output';
+  FBrowsingPathName := 'Browsing Path';
+  FDCPOutputName := 'Package DCP Output';
+  FRegstryKey := ARegistryKey;
+  FRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), ARegistryKey);
+  FRegistry := GetRegistryOptionsMemIni(FRegistryOptions);
+end;
+
+procedure TDNEnvironmentOptions.Changed;
+begin
   if Assigned(FOnChanged) then
     FOnChanged(Self);
 end;
 
-constructor TDNEnvironmentOptions.Create(APlatform: TDNCompilerPlatform;
-  const ARegistryKey: string);
+constructor TDNEnvironmentOptions.Create(APlatform: TDNCompilerPlatform);
 begin
   inherited Create();
   FPlatform := APlatform;
-  FRegstryKey := ARegistryKey;
-  FRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), ARegistryKey);
-  FRegistry := GetRegistryOptionsMemIni(FRegistryOptions);
 end;
 
 procedure TDNEnvironmentOptions.EndUpdate;
@@ -221,17 +260,17 @@ end;
 
 function TDNEnvironmentOptions.GetBPLOutput: string;
 begin
-  Result := ReadString('Package DPL Output');
+  Result := ReadString(FBPLOutputName);
 end;
 
 function TDNEnvironmentOptions.GetBrowsingPath: string;
 begin
-  Result := ReadString('Browsing Path');
+  Result := ReadString(FBrowsingPathName);
 end;
 
 function TDNEnvironmentOptions.GetDCPOutput: string;
 begin
-  Result := ReadString('Package DCP Output');
+  Result := ReadString(FDCPOutputName);
 end;
 
 function TDNEnvironmentOptions.GetPlatform: TDNCompilerPlatform;
@@ -241,39 +280,61 @@ end;
 
 function TDNEnvironmentOptions.GetSearchPath: string;
 begin
-  Result := ReadString('Search Path');
+  Result := ReadString(FSearchPathName);
 end;
 
-function TDNEnvironmentOptions.ReadString(const AName: string): string;
+function TDNRegistryEnvironmentOptions.ReadString(const AName: string): string;
 begin
   Result := FRegistry.ReadString(FRegstryKey, AName, '');
 end;
 
 procedure TDNEnvironmentOptions.SetBPLOutput(const Value: string);
 begin
-  WriteString('Package DPL Output', Value);
+  WriteString(FBPLOutputName, Value);
 end;
 
 procedure TDNEnvironmentOptions.SetBrowsingPath(const Value: string);
 begin
-  WriteString('Browsing Path', Value);
+  WriteString(FBrowsingPathName, Value);
 end;
 
 procedure TDNEnvironmentOptions.SetDCPOutput(const Value: string);
 begin
-  WriteString('Package DCP Output', Value);
+  WriteString(FDCPOutputName, Value);
 end;
 
 procedure TDNEnvironmentOptions.SetSearchPath(const Value: string);
 begin
-  WriteString('Search Path', Value);
+  WriteString(FSearchPathName, Value);
 end;
 
-procedure TDNEnvironmentOptions.WriteString(const AName, AValue: string);
+procedure TDNRegistryEnvironmentOptions.WriteString(const AName, AValue: string);
 begin
   FRegistry.WriteString(FRegstryKey, AName, AValue);
   if FUpdateLevel = 0 then
     Changed();
+end;
+
+{ TDNOTAEnvironmentOptions }
+
+constructor TDNOTAEnvironmentOptions.Create(APlatform: TDNCompilerPlatform);
+begin
+  inherited;
+  FSearchPathName := 'LibraryPath';
+  FBPLOutputName := 'PackageDPLOutput';
+  FBrowsingPathName := 'BrowsingPath';
+  FDCPOutputName := 'PackageDCPOutput';
+  FOptions := (BorlandIDEServices as IOTAServices).GetEnvironmentOptions;
+end;
+
+function TDNOTAEnvironmentOptions.ReadString(const AName: string): string;
+begin
+  Result := FOptions.Values[AName];
+end;
+
+procedure TDNOTAEnvironmentOptions.WriteString(const AName, AValue: string);
+begin
+  FOptions.Values[AName] := AValue;
 end;
 
 initialization

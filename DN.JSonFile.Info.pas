@@ -6,8 +6,7 @@ uses
   Classes,
   Types,
   SysUtils,
-  JSon,
-  DBXJSon,
+  DN.JSon,
   DN.JSonFile;
 
 type

@@ -3,8 +3,7 @@ unit DN.JSonFile.Uninstallation;
 interface
 
 uses
-  JSon,
-  DBXJSon,
+  DN.JSon,
   DN.JSonFile;
 
 type

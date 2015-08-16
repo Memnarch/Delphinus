@@ -4,8 +4,7 @@ interface
 
 uses
   Types,
-  JSOn,
-  DBXJSon,
+  DN.JSon,
   DN.JSOnFile,
   DN.Compiler.Intf;
 

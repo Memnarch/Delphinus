@@ -3,8 +3,7 @@ unit DN.JSonFile.InstalledInfo;
 interface
 
 uses
-  JSOn,
-  DBXJSon,
+  DN.JSon,
   DN.JSonFile.Info;
 
 type

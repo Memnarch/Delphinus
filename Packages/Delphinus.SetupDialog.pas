@@ -3,13 +3,13 @@ unit Delphinus.SetupDialog;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics,
+  Controls, Forms, Dialogs,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
-  Vcl.StdCtrls,
+  StdCtrls,
   DN.Types;
 
 const

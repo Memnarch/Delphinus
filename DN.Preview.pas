@@ -7,7 +7,7 @@ uses
   Types,
   Windows,
   Messages,
-  System.UITypes,
+  Delphinus.UITypes,
   Controls,
   Graphics,
   Math,

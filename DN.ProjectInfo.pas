@@ -6,7 +6,7 @@ uses
   Classes,
   Types,
   SysUtils,
-  XML.XMLIntf,
+  XMLIntf,
   DN.ProjectInfo.Intf,
   DN.Compiler.Intf;
 
@@ -176,22 +176,25 @@ begin
           if Assigned(LBorlandProject) then
           begin
             LPlatforms := LBorlandProject.ChildNodes.FindNode('Platforms');
-            LPlatform := LPlatforms.ChildNodes.First;
-            while Assigned(LPlatform) do
+            if Assigned(LPlatforms) then
             begin
-              if SameText(LPlatform.Text, 'True') then
+            LPlatform := LPlatforms.ChildNodes.First;
+              while Assigned(LPlatform) do
               begin
-                if LPlatform.HasAttribute('value') then
+                if SameText(LPlatform.Text, 'True') then
                 begin
-                  if SameText(LPlatform.Attributes['value'], 'Win32') then
-                    FSupportedPlatforms := FSupportedPlatforms + [cpWin32]
-                  else if SameText(LPlatform.Attributes['value'], 'Win64') then
-                    FSupportedPlatforms := FSupportedPlatforms + [cpWin64]
-                  else if SameText(LPlatform.Attributes['value'], 'OSX32') then
-                    FSupportedPlatforms := FSupportedPlatforms + [cpOSX32]
+                  if LPlatform.HasAttribute('value') then
+                  begin
+                    if SameText(LPlatform.Attributes['value'], 'Win32') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpWin32]
+                    else if SameText(LPlatform.Attributes['value'], 'Win64') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpWin64]
+                    else if SameText(LPlatform.Attributes['value'], 'OSX32') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpOSX32]
+                  end;
                 end;
+                LPlatform := LPlatform.NextSibling;
               end;
-              LPlatform := LPlatform.NextSibling;
             end;
           end;
         end;

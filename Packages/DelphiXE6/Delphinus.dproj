@@ -107,59 +107,61 @@
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="Main.pas"/>
-        <DCCReference Include="Delphinus.Controller.pas"/>
-        <DCCReference Include="Delphinus.Dialog.pas">
+        <DCCReference Include="..\Delphinus.Main.pas"/>
+        <DCCReference Include="..\Delphinus.Controller.pas"/>
+        <DCCReference Include="..\Delphinus.Dialog.pas">
             <Form>DelphinusDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\DN.Compiler.Intf.pas"/>
-        <DCCReference Include="..\DN.Compiler.MSBuild.pas"/>
-        <DCCReference Include="..\DN.Compiler.pas"/>
-        <DCCReference Include="..\DN.Installer.Intf.pas"/>
-        <DCCReference Include="..\DN.Installer.pas"/>
-        <DCCReference Include="..\DN.Package.Intf.pas"/>
-        <DCCReference Include="..\DN.Package.pas"/>
-        <DCCReference Include="..\DN.PackageOverview.pas"/>
-        <DCCReference Include="..\DN.PackageProvider.Intf.pas"/>
-        <DCCReference Include="..\DN.PackageProvider.GitHub.pas"/>
-        <DCCReference Include="..\DN.Preview.pas"/>
-        <DCCReference Include="..\DN.ProjectInfo.Intf.pas"/>
-        <DCCReference Include="..\DN.ProjectInfo.pas"/>
-        <DCCReference Include="..\DN.Types.pas"/>
-        <DCCReference Include="..\DN.Uninstaller.Intf.pas"/>
-        <DCCReference Include="..\DN.Uninstaller.pas"/>
-        <DCCReference Include="..\DN.Zip.pas"/>
-        <DCCReference Include="Delphinus.SetupDialog.pas">
+        <DCCReference Include="..\..\DN.Compiler.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Compiler.MSBuild.pas"/>
+        <DCCReference Include="..\..\DN.Compiler.pas"/>
+        <DCCReference Include="..\..\DN.Installer.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Installer.pas"/>
+        <DCCReference Include="..\..\DN.Package.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Package.pas"/>
+        <DCCReference Include="..\..\DN.PackageOverview.pas"/>
+        <DCCReference Include="..\..\DN.PackageProvider.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageProvider.GitHub.pas"/>
+        <DCCReference Include="..\..\DN.Preview.pas"/>
+        <DCCReference Include="..\..\DN.ProjectInfo.Intf.pas"/>
+        <DCCReference Include="..\..\DN.ProjectInfo.pas"/>
+        <DCCReference Include="..\..\DN.Types.pas"/>
+        <DCCReference Include="..\..\DN.Uninstaller.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Uninstaller.pas"/>
+        <DCCReference Include="..\..\DN.Zip.pas"/>
+        <DCCReference Include="..\Delphinus.SetupDialog.pas">
             <Form>SetupDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\DN.PackageProvider.pas"/>
-        <DCCReference Include="..\DN.PackageProvider.Installed.pas"/>
-        <DCCReference Include="..\DN.Installer.IDE.pas"/>
-        <DCCReference Include="..\DN.ToolsApi.pas"/>
-        <DCCReference Include="..\DN.Uninstaller.IDE.pas"/>
-        <DCCReference Include="..\DN.ProjectGroupInfo.pas"/>
-        <DCCReference Include="..\DN.ProjectGroupInfo.Intf.pas"/>
-        <DCCReference Include="..\DN.JSonFile.pas"/>
-        <DCCReference Include="..\DN.JSonFile.Info.pas"/>
-        <DCCReference Include="..\DN.JSonFile.Installation.pas"/>
-        <DCCReference Include="..\DN.Controls.Button.pas"/>
-        <DCCReference Include="..\DN.Controls.pas"/>
-        <DCCReference Include="..\DN.Graphics.pas"/>
-        <DCCReference Include="..\DN.PackageDetailView.pas">
+        <DCCReference Include="..\..\DN.PackageProvider.pas"/>
+        <DCCReference Include="..\..\DN.PackageProvider.Installed.pas"/>
+        <DCCReference Include="..\..\DN.Installer.IDE.pas"/>
+        <DCCReference Include="..\..\DN.ToolsApi.pas"/>
+        <DCCReference Include="..\..\DN.Uninstaller.IDE.pas"/>
+        <DCCReference Include="..\..\DN.ProjectGroupInfo.pas"/>
+        <DCCReference Include="..\..\DN.ProjectGroupInfo.Intf.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.Info.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.Installation.pas"/>
+        <DCCReference Include="..\..\DN.Controls.Button.pas"/>
+        <DCCReference Include="..\..\DN.Controls.pas"/>
+        <DCCReference Include="..\..\DN.Graphics.pas"/>
+        <DCCReference Include="..\..\DN.PackageDetailView.pas">
             <Form>PackageDetailView</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="..\DN.JSonFile.Uninstallation.pas"/>
-        <DCCReference Include="..\DN.JSonFile.InstalledInfo.pas"/>
-        <DCCReference Include="..\DN.Package.Github.pas"/>
-        <DCCReference Include="..\DN.ToolsApi.Extension.pas"/>
-        <DCCReference Include="..\DN.ToolsApi.Extension.Intf.pas"/>
-        <DCCReference Include="..\DN.JSonFile.CacheInfo.pas"/>
-        <DCCReference Include="..\DN.Package.Version.Intf.pas"/>
-        <DCCReference Include="..\DN.Package.Version.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.Uninstallation.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.InstalledInfo.pas"/>
+        <DCCReference Include="..\..\DN.Package.Github.pas"/>
+        <DCCReference Include="..\..\DN.ToolsApi.Extension.pas"/>
+        <DCCReference Include="..\..\DN.ToolsApi.Extension.Intf.pas"/>
+        <DCCReference Include="..\..\DN.JSonFile.CacheInfo.pas"/>
+        <DCCReference Include="..\..\DN.Package.Version.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Package.Version.pas"/>
+        <DCCReference Include="..\Delphinus.UiTypes.pas"/>
+        <DCCReference Include="..\..\DN.JSon.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
