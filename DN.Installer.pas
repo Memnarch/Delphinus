@@ -475,7 +475,7 @@ begin
       begin
         if not TPath.IsRelativePath(LFolder.Folder) then
         begin
-          DoMessage(mtError, 'Path is not relative ' + LFolder.Folder);
+          DoMessage(mtWarning, 'Path is not relative ' + LFolder.Folder);
         end;
         LRelTargetPath := LFolder.Folder;
         if LFolder.Base <> '' then

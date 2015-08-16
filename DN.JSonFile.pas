@@ -22,6 +22,8 @@ type
     function ReadObject(AParent: TJSONObject; const AProperty: string; var AObject: TJSonObject): Boolean;
     function ReadArray(AParent: TJSonObject; const AProperty: string; var AArray: TJSONArray): Boolean;
     function ReadJSOnValue(AParent: TJSOnObject; const AProperty: string; var AValue: TJSonValue): Boolean;
+    function EscapeQuotes(const AString: string): string;
+    function UnescapeQuotes(const AString: string): string;
   public
     function LoadFromFile(const AFileName: string): Boolean;
     procedure SaveToFile(const AFileName: string);
@@ -36,6 +38,11 @@ uses
   SysUtils;
 
 { TJSonFile }
+
+function TJSonFile.EscapeQuotes(const AString: string): string;
+begin
+  Result := StringReplace(AString, '"', '\"', [rfReplaceAll]);
+end;
 
 procedure TJSonFile.Load(const ARoot: TJSONObject);
 begin
@@ -124,6 +131,10 @@ begin
     Result := LValue.Value
   else
     Result := ADefault;
+
+  {$if CompilerVersion < 27}
+  Result := UnescapeQuotes(Result);
+  {$IfEnd}
 end;
 
 procedure TJSonFile.Save(const ARoot: TJSONObject);
@@ -155,6 +166,11 @@ begin
   finally
     LRoot.Free;
   end;
+end;
+
+function TJSonFile.UnescapeQuotes(const AString: string): string;
+begin
+  Result := StringReplace(AString, '\"', '"', [rfReplaceAll]);
 end;
 
 function TJSonFile.WriteArray(AParent: TJSONObject;
@@ -195,7 +211,11 @@ end;
 procedure TJSonFile.WriteString(AParent: TJSONObject; const AProperty,
   AContent: string);
 begin
+  {$if CompilerVersion < 27}
+  AParent.AddPair(AProperty, EscapeQuotes(AContent));
+  {$Else}
   AParent.AddPair(AProperty, AContent);
+  {$IfEnd}
 end;
 
 end.

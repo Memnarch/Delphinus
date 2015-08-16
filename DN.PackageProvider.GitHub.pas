@@ -54,6 +54,10 @@ const
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
 //  CGitRepoSearch = 'https://api.github.com/search/repositories?q=tetris&per_page=30';
 
+{$If Declared(hoNoProtocolErrorException)}
+  {$Define SupportsErrorCodes}
+{$IfEnd}
+
 { TDCPMPackageProvider }
 
 constructor TDNGitHubPackageProvider.Create;
@@ -62,10 +66,11 @@ begin
   FCacheDir := TPath.Combine(GetEnvironmentVariable('LocalAppData'), 'Delphinus\Github');
   ForceDirectories(FCacheDir);
   FRequest := TIdHTTP.Create(nil);
-  {$If Declared(hoNoProtocolErrorException)}
+  {$IFDEF SupportsErrorCodes}
   FRequest.HTTPOptions := FRequest.HTTPOptions + [hoNoProtocolErrorException];
-  {$IfEnd}
+  {$EndIf}
   FRequest.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(FRequest);
+  FRequest.HandleRedirects := True;
 end;
 
 destructor TDNGitHubPackageProvider.Destroy;
@@ -182,11 +187,15 @@ begin
   begin
     FRequest.Request.CustomHeaders.Values['If-None-Match'] := AETag;
   end;
+  {$IFDEF SupportsErrorCodes}
   FRequest.Get(ARequest, ATarget);
-  while FRequest.ResponseCode = 302 do//redirect
-  begin
-    FRequest.Get(FRequest.Response.Location, ATarget);
+  {$Else}
+  try
+    FRequest.Get(ARequest, ATarget);
+  except
+
   end;
+  {$EndIf}
   Result := FRequest.ResponseCode = 200;//ok
   FLastContentDisposition := FRequest.Response.ContentDisposition;
   FLastEtag := FRequest.Response.ETag;
