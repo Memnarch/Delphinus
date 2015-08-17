@@ -164,6 +164,12 @@
         <DCCReference Include="..\..\DN.JSon.pas"/>
         <DCCReference Include="..\Delphinus.Form.pas"/>
         <DCCReference Include="..\Delphinus.ResourceNames.pas"/>
+        <DCCReference Include="..\..\DN.PackageProvider.GitHub.Authentication.pas"/>
+        <DCCReference Include="..\Delphinus.OptionsDialog.pas">
+            <Form>DelphinusOptionsDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\Delphinus.Settings.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

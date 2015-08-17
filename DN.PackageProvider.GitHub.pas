@@ -7,6 +7,8 @@ uses
   Types,
   SysUtils,
   IdHttp,
+  IdAuthentication,
+  IdHeaderList,
   Generics.Collections,
   DN.Package.Intf,
   DN.PackageProvider,
@@ -19,13 +21,14 @@ type
     FLastContentDisposition: string;
     FCacheDir: string;
     FLastEtag: string;
+    FSecurityToken: string;
     function RevalidateCache(): Boolean;
     function ExecuteRequest(const ATarget: TStream; const ARequest: string; const AETag: string = ''): Boolean;
     function LoadCacheInfo(const AInfo: TCacheInfo; const AAuthor, AName, ACache: string): Boolean;
     function DownloadVersionMeta(const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName, ADefaultBranch: string): Boolean;
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
   public
-    constructor Create();
+    constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
     function Reload(): Boolean; override;
     function Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean; override;
@@ -45,7 +48,8 @@ uses
   DN.Zip,
   DN.JSOnFile.Info,
   DN.Package.Version,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.PackageProvider.GitHub.Authentication;
 
 const
   CGithubRaw = 'https://raw.githubusercontent.com/';
@@ -62,7 +66,8 @@ const
 
 constructor TDNGitHubPackageProvider.Create;
 begin
-  inherited;
+  inherited Create();
+  FSecurityToken := ASecurityToken;
   FCacheDir := TPath.Combine(GetEnvironmentVariable('LocalAppData'), 'Delphinus\Github');
   ForceDirectories(FCacheDir);
   FRequest := TIdHTTP.Create(nil);
@@ -187,6 +192,9 @@ begin
   begin
     FRequest.Request.CustomHeaders.Values['If-None-Match'] := AETag;
   end;
+  if not Assigned(FRequest.Request.Authentication) then
+    FRequest.Request.Authentication := TGithubAuthentication.Create();
+  FRequest.Request.Authentication.Password := FSecurityToken;
   {$IFDEF SupportsErrorCodes}
   FRequest.Get(ARequest, ATarget);
   {$Else}

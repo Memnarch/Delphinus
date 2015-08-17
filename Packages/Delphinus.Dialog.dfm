@@ -3,7 +3,7 @@ object DelphinusDialog: TDelphinusDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = 'DelphinusDialog'
+  Caption = 'Delphinus Packagemanager'
   ClientHeight = 460
   ClientWidth = 568
   Color = clBtnFace
@@ -35,9 +35,7 @@ object DelphinusDialog: TDelphinusDialog
     object ToolButton2: TToolButton
       Left = 31
       Top = 0
-      Caption = 'ToolButton2'
-      Enabled = False
-      ImageIndex = 1
+      Action = actOptions
     end
     object btnInstallFolder: TToolButton
       Left = 62
@@ -68,10 +66,6 @@ object DelphinusDialog: TDelphinusDialog
     object tsInstalled: TTabSheet
       Caption = 'Installed'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 556
-      ExplicitHeight = 0
     end
   end
   object imgMenu: TImageList
@@ -81,7 +75,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800BC0018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800E40018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -689,6 +683,11 @@ object DelphinusDialog: TDelphinusDialog
       Caption = 'Refresh'
       ImageIndex = 0
       OnExecute = actRefreshExecute
+    end
+    object actOptions: TAction
+      Caption = 'Options'
+      ImageIndex = 1
+      OnExecute = actOptionsExecute
     end
   end
   object dlgSelectInstallFile: TOpenDialog

@@ -12,7 +12,8 @@ uses
   ContNrs,
   Generics.Collections,
   DN.PackageDetailView,
-  Delphinus.Form;
+  Delphinus.Form,
+  Delphinus.Settings;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -29,9 +30,11 @@ type
     PageControl: TPageControl;
     tsAvailable: TTabSheet;
     tsInstalled: TTabSheet;
+    actOptions: TAction;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
+    procedure actOptionsExecute(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -41,6 +44,7 @@ type
     FPackages: TList<IDNPackage>;
     FInstalledPackages: TList<IDNPackage>;
     FDetailView: TPackageDetailView;
+    FSettings: TDelphinusSettings;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -55,6 +59,9 @@ type
     function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
+    procedure LoadSettings(out ASettings: TDelphinusSettings);
+    procedure SaveSettings(const ASettings: TDelphinusSettings);
+    procedure RecreatePackageProvider();
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -71,6 +78,7 @@ uses
   IOUtils,
   RTTI,
   Types,
+  Registry,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   Delphinus.SetupDialog,
@@ -79,11 +87,34 @@ uses
   DN.Installer.Intf,
   DN.Installer.IDE,
   DN.Uninstaller.Intf,
-  DN.Uninstaller.IDE;
+  DN.Uninstaller.IDE,
+  Delphinus.OptionsDialog;
 
 {$R *.dfm}
 
+const
+  CDelphinusSubKey = 'Delphinus';
+  COAuthTokenKey = 'OAuthToken';
+
 { TDelphinusDialog }
+
+procedure TDelphinusDialog.actOptionsExecute(Sender: TObject);
+var
+  LDialog: TDelphinusOptionsDialog;
+begin
+  LDialog := TDelphinusOptionsDialog.Create(nil);
+  try
+    LDialog.Settings := FSettings;
+    if LDialog.ShowModal = mrOk then
+    begin
+      FSettings := LDialog.Settings;
+      SaveSettings(FSettings);
+      RecreatePackageProvider();
+    end;
+  finally
+    LDialog.Free;
+  end;
+end;
 
 procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
@@ -166,7 +197,8 @@ begin
   FInstalledOverview.OnInfoPackage := ShowDetail;
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
-  FPackageProvider := TDNGitHubPackageProvider.Create();
+  LoadSettings(FSettings);
+  RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
 end;
@@ -295,6 +327,29 @@ begin
   Result := Assigned(GetInstalledPackage(APackage));
 end;
 
+procedure TDelphinusDialog.LoadSettings(out ASettings: TDelphinusSettings);
+var
+  LRegistry: TRegistry;
+  LBase: string;
+begin
+  LRegistry := TRegistry.Create();
+  try
+    LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
+    LRegistry.RootKey := HKEY_CURRENT_USER;
+    if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), False) then
+    begin
+      FSettings.OAuthToken := LRegistry.ReadString(COAuthTokenKey);
+    end;
+  finally
+    LRegistry.Free;
+  end;
+end;
+
+procedure TDelphinusDialog.RecreatePackageProvider;
+begin
+  FPackageProvider := TDNGitHubPackageProvider.Create(FSettings.OAuthToken);
+end;
+
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
   LInstalledPackage, LAvailablePackage: IDNPackage;
@@ -316,6 +371,24 @@ begin
     FOverView.Refresh();
   end;
   FDetailView.Visible := False;
+end;
+
+procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
+var
+  LRegistry: TRegistry;
+  LBase: string;
+begin
+  LRegistry := TRegistry.Create();
+  try
+    LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
+    LRegistry.RootKey := HKEY_CURRENT_USER;
+    if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), True) then
+    begin
+      LRegistry.WriteString(COAuthTokenKey, FSettings.OAuthToken);
+    end;
+  finally
+    LRegistry.Free;
+  end;
 end;
 
 procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);

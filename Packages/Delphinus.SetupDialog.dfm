@@ -1,7 +1,7 @@
 object SetupDialog: TSetupDialog
   Left = 0
   Top = 0
-  Caption = 'SetupDialog'
+  Caption = 'Setup'
   ClientHeight = 290
   ClientWidth = 554
   Color = clBtnFace
