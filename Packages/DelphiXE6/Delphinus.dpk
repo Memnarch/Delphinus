@@ -88,7 +88,9 @@ contains
   Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
   DN.PackageProvider.GitHub.Authentication in '..\..\DN.PackageProvider.GitHub.Authentication.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
-  Delphinus.Settings in '..\Delphinus.Settings.pas';
+  Delphinus.Settings in '..\Delphinus.Settings.pas',
+  DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
+  DN.Setup in '..\..\DN.Setup.pas';
 
 end.
 

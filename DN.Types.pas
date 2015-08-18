@@ -4,7 +4,7 @@ interface
 
 type
   TMessageType = (mtNotification, mtWarning, mtError);
-  TMessageEvent = reference to procedure(AMessageType: TMessageType; const AMessage: string);
+  TMessageEvent = procedure(AMessageType: TMessageType; const AMessage: string) of object;
   TPathType = (tpSearchPath, tpBrowsingPath);
 
 const
