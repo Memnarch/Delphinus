@@ -170,11 +170,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Delphinus.Settings.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
-        <DCCReference Include="..\..\DN.Setup.Intf.pas"/>
-        <DCCReference Include="..\..\DN.Setup.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

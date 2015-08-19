@@ -3,13 +3,24 @@ unit DN.Setup.Intf;
 interface
 
 uses
-  DN.Types;
+  DN.Types,
+  DN.Package.Intf,
+  DN.Package.Version.Intf;
 
 type
-  TDNSetupMessageEvent = procedure(AType: TMessageType; const AMessage: string);
-
   IDNSetup = interface
     ['{F853423C-9D61-49DA-824B-F6AEE55D3F7B}']
+    function GetComponentDirectory: string;
+    procedure SetComponentDirectory(const Value: string);
+    function GetOnMessage: TMessageEvent;
+    procedure SetOnMessage(const Value: TMessageEvent);
+    function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
+    function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
+    function Uninstall(const APackage: IDNPackage): Boolean;
+    function InstallDirectory(const ADirectory: string): Boolean;
+    function UninstallDirectory(const ADirectory: string): Boolean;
+    property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
+    property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
 implementation

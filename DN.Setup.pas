@@ -15,12 +15,14 @@ type
   TDNSetup = class(TInterfacedObject, IDNSetup)
   private
     FComponentDirectory: string;
-    FOnMessage: TDNSetupMessageEvent;
+    FOnMessage: TMessageEvent;
     FProvider: IDNPackageProvider;
     FInstaller: IDNInstaller;
     FUninstaller: IDNUninstaller;
     function GetComponentDirectory: string;
     procedure SetComponentDirectory(const Value: string);
+    function GetOnMessage: TMessageEvent;
+    procedure SetOnMessage(const Value: TMessageEvent);
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
     procedure ReportInfo(const AInfo: string);
@@ -38,7 +40,7 @@ type
     function InstallDirectory(const ADirectory: string): Boolean;
     function UninstallDirectory(const ADirectory: string): Boolean;
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
-    property OnMessage: TDNSetupMessageEvent read FOnMessage write FOnMessage;
+    property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
 implementation
@@ -131,6 +133,11 @@ begin
   Result := TPath.Combine(FComponentDirectory, APackage.Name);
 end;
 
+function TDNSetup.GetOnMessage: TMessageEvent;
+begin
+  Result := FOnMessage;
+end;
+
 function TDNSetup.Install(const APackage: IDNPackage;
   const AVersion: IDNPackageVersion): Boolean;
 var
@@ -149,7 +156,7 @@ begin
   ReportInfo('deleting tempfiles');
   if TDirectory.Exists(LContentDirectory) then
   begin
-    TDirectory.Delete(LContentDirectory);
+    TDirectory.Delete(LContentDirectory, True);
   end;
 
   if Result then
@@ -189,6 +196,11 @@ end;
 procedure TDNSetup.SetComponentDirectory(const Value: string);
 begin
   FComponentDirectory := Value;
+end;
+
+procedure TDNSetup.SetOnMessage(const Value: TMessageEvent);
+begin
+  FOnMessage := Value;
 end;
 
 function TDNSetup.Uninstall(const APackage: IDNPackage): Boolean;
