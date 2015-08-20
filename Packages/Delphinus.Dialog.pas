@@ -14,7 +14,7 @@ uses
   DN.PackageDetailView,
   Delphinus.Form,
   Delphinus.Settings,
-  DN.Setup.Intf, System.Actions;
+  DN.Setup.Intf;
 
 type
   TDelphinusDialog = class(TDelphinusForm)

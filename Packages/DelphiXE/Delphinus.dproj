@@ -132,6 +132,8 @@
 				<Form>DelphinusOptionsDialog</Form>
 			</DCCReference>
 			<DCCReference Include="..\Delphinus.Settings.pas"/>
+			<DCCReference Include="..\..\DN.Setup.Intf.pas"/>
+			<DCCReference Include="..\..\DN.Setup.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>
@@ -162,7 +164,7 @@
 						<Excluded_Packages Name="$(BDSBIN)\dclofficexp200.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 					<VersionInfo>
-						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
