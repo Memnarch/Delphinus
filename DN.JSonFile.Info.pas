@@ -16,7 +16,7 @@ type
     FPicture: string;
     FCompilerMax: Integer;
     FID: TGUID;
-    FFirstRelease: string;
+    FFirstVersion: string;
     FPackageCompilerMax: Integer;
     FPackageCompilerMin: Integer;
   protected
@@ -26,7 +26,7 @@ type
   public
     property Picture: string read FPicture;
     property ID: TGUID read FID write FID;
-    property FirstRelease: string read FFirstRelease;
+    property FirstVersion: string read FFirstVersion;
     property PackageCompilerMin: Integer read FPackageCompilerMin;
     property PackageCompilerMax: Integer read FPackageCompilerMax;
     property CompilerMin: Integer read FCompilerMin;
@@ -42,7 +42,7 @@ begin
   inherited;
   FPicture := ReadString(ARoot, 'picture');
   FID := ReadID(ARoot);
-  FFirstRelease := ReadString(ARoot, 'first_release');
+  FFirstVersion := ReadString(ARoot, 'first_version');
   FPackageCompilerMax := ReadInteger(ARoot, 'package_compiler_max');
   FPackageCompilerMin := ReadInteger(ARoot, 'package_compiler_min');
   FCompilerMin := ReadInteger(ARoot, 'compiler_min');
@@ -69,7 +69,7 @@ begin
   inherited;
   WriteString(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
-  WriteString(ARoot, 'first_release', FFirstRelease);
+  WriteString(ARoot, 'first_version', FFirstVersion);
   WriteInteger(ARoot, 'package_compiler_max', FPackageCompilerMax);
   WriteInteger(ARoot, 'package_compiler_min', FPackageCompilerMin);
   WriteInteger(ARoot, 'compiler_min', FCompilerMin);
