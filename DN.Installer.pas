@@ -26,7 +26,7 @@ type
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
-    function ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
+    function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
     function ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
     function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
@@ -35,6 +35,7 @@ type
     procedure Reset();
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
+    function GetSourceFolder(const ADirectory: string): string;
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
@@ -146,11 +147,12 @@ function TDNInstaller.CopyMetaData(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
   LSourceInfo, LTargetInfo, LSourcePic, LTargetPic: string;
+  LSourceInstall, LTargetInstall: string;
   LInfo: TInfoFile;
 begin
   Result := True;
-  LSourceInfo := TPath.Combine(ASourceDirectory, 'info.json');
-  LTargetInfo := TPath.Combine(ATargetDirectory, 'info.json');
+  LSourceInfo := TPath.Combine(ASourceDirectory, CInfoFile);
+  LTargetInfo := TPath.Combine(ATargetDirectory, CInfoFile);
   if TFile.Exists(LSourceInfo) then
   begin
     TFile.Copy(LSourceInfo, LTargetInfo);
@@ -174,6 +176,9 @@ begin
       LInfo.Free;
     end;
   end;
+  LSourceInstall := TPath.Combine(ASourceDirectory, CInstallFile);
+  LTargetInstall := TPath.Combine(ATargetDirectory, CInstallFile);
+  TFile.Copy(LSourceInstall, LTargetInstall, True);
 end;
 
 constructor TDNInstaller.Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
@@ -218,6 +223,11 @@ begin
   Result := FOnMessage;
 end;
 
+function TDNInstaller.GetSourceFolder(const ADirectory: string): string;
+begin
+  Result := TPath.Combine(ADirectory, CSourceDir);
+end;
+
 function TDNInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
@@ -255,14 +265,13 @@ begin
       LInstallInfo := TInstallationFile.Create();
       try
         LInstallInfo.LoadFromFile(LInstallerFile);
-        Result := ProcessProjects(LInstallInfo.Projects, ASourceDirectory, ATargetDirectory);
-        if Result then
-        begin
-          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
-          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
-          ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, TPath.Combine(ATargetDirectory, CSourceDir));
-          CopyMetaData(ASourceDirectory, ATargetDirectory);
-        end;
+
+
+        ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+        ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+        ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
+        CopyMetaData(ASourceDirectory, ATargetDirectory);
+        Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
       finally
         LInstallInfo.Free;
       end;
@@ -349,7 +358,7 @@ begin
   AfterCompile(AProject.FileName, FCompiler.Log, Result);
 end;
 
-function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ASourceDirectory, ATargetDirectory: string): Boolean;
+function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
 var
   LProject: TProject;
   LProjectFile, LFileExt, LLibBaseDir: string;
@@ -373,7 +382,7 @@ begin
     begin
       if IsSupported(LProject.CompilerMin, LProject.CompilerMax) then
       begin
-        LProjectFile := TPath.Combine(ASourceDirectory, LProject.Project);
+        LProjectFile := TPath.Combine(GetSourceFolder(ATargetDirectory), LProject.Project);
         LFileExt := ExtractFileExt(LProjectFile);
         if SameText(LFileExt, CGroup) then
         begin
