@@ -13,7 +13,8 @@ uses
   Generics.Collections,
   DN.PackageDetailView,
   Delphinus.Form,
-  Delphinus.Settings;
+  Delphinus.Settings,
+  DN.Setup.Intf, System.Actions;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -62,6 +63,7 @@ type
     procedure LoadSettings(out ASettings: TDelphinusSettings);
     procedure SaveSettings(const ASettings: TDelphinusSettings);
     procedure RecreatePackageProvider();
+    function CreateSetup: IDNSetup;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -88,6 +90,7 @@ uses
   DN.Installer.IDE,
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
+  DN.Setup,
   Delphinus.OptionsDialog;
 
 {$R *.dfm}
@@ -132,19 +135,12 @@ end;
 procedure TDelphinusDialog.btnInstallFolderClick(Sender: TObject);
 var
   LDialog: TSetupDialog;
-  LCompiler: IDNCompiler;
-  LInstaller: IDNInstaller;
 begin
   if dlgSelectInstallFile.Execute() then
   begin
-    LDialog := TSetupDialog.Create(nil);
+    LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
-      LCompiler.BPLOutput := GetBPLDirectory();
-      LCompiler.DCPOutput := GetDCPDirectory();
-      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
-      LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName), LInstaller,
-        GetComponentDirectory());
+      LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName));
     finally
       LDialog.Free;
     end;
@@ -155,14 +151,12 @@ end;
 procedure TDelphinusDialog.btnUninstallClick(Sender: TObject);
 var
   LDialog: TSetupDialog;
-  LUninstaller: IDNUninstaller;
 begin
   if dlgSelectUninstallFile.Execute() then
   begin
-    LDialog := TSetupDialog.Create(nil);
+    LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LUninstaller := TDNIDEUninstaller.Create();
-      LDialog.ExecuteUninstallation(ExtractFilePath(dlgSelectUninstallFile.FileName), LUninstaller);
+      LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName));
     finally
       LDialog.Free;
     end;
@@ -201,6 +195,21 @@ begin
   RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
+end;
+
+function TDelphinusDialog.CreateSetup: IDNSetup;
+var
+  LCompiler: IDNCompiler;
+  LInstaller: IDNInstaller;
+  LUninstaller: IDNUninstaller;
+begin
+  LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+  LCompiler.BPLOutput := GetBPLDirectory();
+  LCompiler.DCPOutput := GetDCPDirectory();
+  LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
+  LUninstaller := TDNIDEUninstaller.Create();
+  Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
+  Result.ComponentDirectory := GetComponentDirectory();
 end;
 
 destructor TDelphinusDialog.Destroy;
@@ -301,19 +310,12 @@ end;
 procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
-  LCompiler: IDNCompiler;
-  LInstaller: IDNInstaller;
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(nil);
+    LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
-      LCompiler.BPLOutput := GetBPLDirectory();
-      LCompiler.DCPOutput := GetDCPDirectory();
-      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
-      LDialog.ExecuteInstallation(APackage, FPackageProvider, LInstaller,
-        GetComponentDirectory());
+      LDialog.ExecuteInstallation(APackage);
     finally
       LDialog.Free;
     end;
@@ -402,14 +404,12 @@ end;
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
-  LUninstaller: IDNUninstaller;
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(nil);
+    LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LUninstaller := TDNIDEUninstaller.Create();
-      LDialog.ExecuteUninstallation(TPath.Combine(GetComponentDirectory(), APackage.Name), LUninstaller);
+      LDialog.ExecuteUninstallation(APackage);
     finally
       LDialog.Free;
     end;
@@ -420,21 +420,12 @@ end;
 procedure TDelphinusDialog.UpdatePackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
-  LCompiler: IDNCompiler;
-  LInstaller: IDNInstaller;
-  LUninstaller: IDNUninstaller;
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(nil);
+    LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
-      LCompiler.BPLOutput := GetBPLDirectory();
-      LCompiler.DCPOutput := GetDCPDirectory();
-      LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
-      LUninstaller := TDNIDEUninstaller.Create();
-      LDialog.ExecuteUpdate(APackage, FPackageProvider, LInstaller, LUninstaller,
-        GetComponentDirectory(), TPath.Combine(GetComponentDirectory(), APackage.Name));
+      LDialog.ExecuteUpdate(APackage);
     finally
       LDialog.Free;
     end;

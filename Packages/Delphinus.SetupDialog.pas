@@ -7,17 +7,19 @@ uses
   Controls, Forms, Dialogs,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
+  DN.Package.Version.Intf,
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
   StdCtrls,
   DN.Types,
+  DN.Setup.Intf,
   Delphinus.Form;
 
 const
   CStart = WM_USER + 1;
 
 type
-  TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall, sdmUpdate);
+  TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall, sdmUninstallDirectory, sdmUpdate);
 
   TSetupDialog = class(TDelphinusForm)
     mLog: TMemo;
@@ -26,24 +28,21 @@ type
     { Private declarations }
     FMode: TSetupDialogMode;
     FPackage: IDNPackage;
-    FProvider: IDNPackageProvider;
-    FInstaller: IDNInstaller;
-    FUninstaller: IDNUninstaller;
-    FComponentDirectory: string;
+    FVersion: IDNPackageVersion;
     FInstalledComponentDirectory: string;
     FDirectoryToInstall: string;
+    FSetup: IDNSetup;
     procedure HandleCustomMessage(var AMSG: TMessage); message CStart;
-    function Install: Boolean;
-    function Uninstall: Boolean;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
   public
     { Public declarations }
-    procedure ExecuteInstallation(const APackage: IDNPackage; AProvider: IDNPackageProvider; AInstaller: IDNInstaller; const AComponentDirectory: string);
-    procedure ExecuteInstallationFromDirectory(const ADirectory: string; AInstaller: IDNInstaller; const AComponentDirectory: string);
-    procedure ExecuteUninstallation(const ATargetDirectory: string; const AUninstaller: IDNUninstaller);
-    procedure ExecuteUpdate(const APackage: IDNPackage; AProvider: IDNPackageProvider; const AInstaller: IDNInstaller;
-      const AUninstaller: IDNUninstaller; const AComponentDirectory, AInstalledComponentDirectory: string);
+    constructor Create(const ASetup: IDNSetup); reintroduce;
+    procedure ExecuteInstallation(const APackage: IDNPackage);
+    procedure ExecuteInstallationFromDirectory(const ADirectory: string);
+    procedure ExecuteUninstallation(const APackage: IDNPackage);
+    procedure ExecuteUninstallationFromDirectory(const ADirectory: string);
+    procedure ExecuteUpdate(const APackage: IDNPackage);
   end;
 
 var
@@ -59,47 +58,54 @@ uses
 
 { TSetupDialog }
 
-procedure TSetupDialog.ExecuteInstallation(const APackage: IDNPackage;
-  AProvider: IDNPackageProvider; AInstaller: IDNInstaller; const AComponentDirectory: string);
+constructor TSetupDialog.Create(const ASetup: IDNSetup);
+begin
+  inherited Create(nil);
+  FSetup := ASetup;
+  FSetup.OnMessage := HandleLogMessage;
+end;
+
+procedure TSetupDialog.ExecuteInstallation(const APackage: IDNPackage);
 begin
   FPackage := APackage;
-  FProvider := AProvider;
-  FInstaller := AInstaller;
-  FComponentDirectory := AComponentDirectory;
+  if FPackage.Versions.Count > 0 then
+    FVersion := FPackage.Versions[0]
+  else
+    FVersion := nil;
   FMode := sdmInstall;
   ShowModal();
 end;
 
 procedure TSetupDialog.ExecuteInstallationFromDirectory(
-  const ADirectory: string; AInstaller: IDNInstaller;
-  const AComponentDirectory: string);
+  const ADirectory: string);
 begin
   FDirectoryToInstall := ADirectory;
-  FInstaller := AInstaller;
-  FComponentDirectory := AComponentDirectory;
   FMode := sdmInstallDirectory;
   ShowModal();
 end;
 
-procedure TSetupDialog.ExecuteUninstallation(const ATargetDirectory: string;
-  const AUninstaller: IDNUninstaller);
+procedure TSetupDialog.ExecuteUninstallation(const APackage: IDNPackage);
 begin
-  FUninstaller := AUninstaller;
-  FInstalledComponentDirectory := ATargetDirectory;
+  FPackage := APackage;
   FMode := sdmUninstall;
   ShowModal();
 end;
 
-procedure TSetupDialog.ExecuteUpdate(const APackage: IDNPackage;
-  AProvider: IDNPackageProvider; const AInstaller: IDNInstaller;
-  const AUninstaller: IDNUninstaller; const AComponentDirectory, AInstalledComponentDirectory: string);
+procedure TSetupDialog.ExecuteUninstallationFromDirectory(
+  const ADirectory: string);
+begin
+  FInstalledComponentDirectory := ADirectory;
+  FMode := sdmUninstallDirectory;
+  ShowModal();
+end;
+
+procedure TSetupDialog.ExecuteUpdate(const APackage: IDNPackage);
 begin
   FPackage := APackage;
-  FProvider := AProvider;
-  FInstaller := AInstaller;
-  FUninstaller := AUninstaller;
-  FInstalledComponentDirectory := AInstalledComponentDirectory;
-  FComponentDirectory := AComponentDirectory;
+  if FPackage.Versions.Count > 0 then
+    FVersion := FPackage.Versions[0]
+  else
+    FVersion := nil;
   FMode := sdmUpdate;
   ShowModal();
 end;
@@ -113,13 +119,11 @@ procedure TSetupDialog.HandleCustomMessage(var AMSG: TMessage);
 begin
   mLog.Clear;
   case FMode of
-    sdmInstall, sdmInstallDirectory: Install;
-    sdmUninstall: Uninstall;
-    sdmUpdate:
-    begin
-      if Uninstall then
-        Install();
-    end;
+    sdmInstall: FSetup.Install(FPackage, FVersion);
+    sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
+    sdmUninstall: FSetup.Uninstall(FPackage);
+    sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
+    sdmUpdate: FSetup.Update(FPackage, FVersion);
   end;
 end;
 
@@ -133,104 +137,9 @@ begin
   end;
 end;
 
-function TSetupDialog.Install: Boolean;
-var
-  LTempDir, LContentDir, LPackageName, LComponentDir, LInfoFile: string;
-  LError: Boolean;
-  LInstalledInfo: TInstalledInfoFile;
-  LVersion: string;
-begin
-  LError := False;
-  if FMode in [sdmInstall, sdmUpdate] then
-  begin
-    Log('Downloading ' + FPackage.Name);
-    LTempDir := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
-    ForceDirectories(LTempDir);
-    if FPackage.Versions.Count > 0 then
-      LVersion := FPackage.Versions[0].Name
-    else
-      LVersion := '';
-
-    Log('Version: ' + LVersion);
-    if not FProvider.Download(FPackage, LVersion, LTempDir, LContentDir) then
-    begin
-      Log('failed to download');
-      LError := True;
-    end;
-  end
-  else
-  begin
-    //else we are installing from directory
-    LContentDir := FDirectoryToInstall;
-  end;
-
-  if not LError then
-  begin
-    Log('installing...');
-    FInstaller.OnMessage := HandleLogMessage;
-    if FMode in [sdmInstall, sdmUpdate] then
-      LPackageName := FPackage.Name
-    else
-      LPackageName := ExtractFileName(ExcludeTrailingPathDelimiter(LContentDir));
-
-    LComponentDir := TPath.Combine(FComponentDirectory, LPackageName);
-    if  FInstaller.Install(LContentDir, LComponentDir) then
-    begin
-      if FMode in [sdmInstall, sdmUpdate] then
-      begin
-        LInfoFile := TPath.Combine(LComponentDir, 'Info.json');
-        if TFile.Exists(LInfoFile) then
-        begin
-          LInstalledInfo := TInstalledInfoFile.Create();
-          try
-            LInstalledInfo.LoadFromFile(LInfoFile);
-            LInstalledInfo.Author := FPackage.Author;
-            LInstalledInfo.Description := FPackage.Description;
-            LInstalledInfo.Version := LVersion;
-            LInstalledInfo.SaveToFile(LInfoFile);
-          finally
-            LInstalledInfo.Free;
-          end;
-        end;
-      end;
-    end
-    else
-    begin
-      Log('installation failed');
-      LError := True;
-    end;
-  end;
-
-  if FMode = sdmInstall then
-  begin
-    Log('cleaning tempfiles');
-    TDirectory.Delete(LTempDir, True);
-  end;
-
-  if LError then
-    Log('Installation aborted')
-  else
-    Log('Installation finished');
-  Result := not LError;
-end;
-
 procedure TSetupDialog.Log(const AMessage: string);
 begin
   mLog.Lines.Add(AMessage);
-end;
-
-function TSetupDialog.Uninstall: Boolean;
-begin
-  Result := False;
-  FUninstaller.OnMessage := HandleLogMessage;
-  Log('uninstalling...');
-  if FUninstaller.Uninstall(FInstalledComponentDirectory) then
-  begin
-    Log('success');
-    Result := True;
-  end
-  else
-    Log('failed');
 end;
 
 end.
