@@ -13,7 +13,7 @@ uses
   StdCtrls,
   DN.Types,
   DN.Setup.Intf,
-  Delphinus.Form;
+  Delphinus.Form, ComCtrls, ExtCtrls;
 
 const
   CStart = WM_USER + 1;
@@ -23,18 +23,34 @@ type
 
   TSetupDialog = class(TDelphinusForm)
     mLog: TMemo;
+    pcSteps: TPageControl;
+    tsMainPage: TTabSheet;
+    tsLog: TTabSheet;
+    btnOK: TButton;
+    btnCancel: TButton;
+    Image1: TImage;
+    lbActionInstallUpdate: TLabel;
+    lbNameInstallUpdate: TLabel;
+    Shape1: TShape;
+    Shape2: TShape;
+    lbDescriptionInstallUpdate: TLabel;
+    cbVersion: TComboBox;
+    Label1: TLabel;
+    procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
     { Private declarations }
     FMode: TSetupDialogMode;
     FPackage: IDNPackage;
-    FVersion: IDNPackageVersion;
     FInstalledComponentDirectory: string;
     FDirectoryToInstall: string;
     FSetup: IDNSetup;
-    procedure HandleCustomMessage(var AMSG: TMessage); message CStart;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
+    procedure InitMainPage();
+    procedure InitVersionSelection();
+    procedure Execute();
+    function GetSelectedVersion: IDNPackageVersion;
   public
     { Public declarations }
     constructor Create(const ASetup: IDNSetup); reintroduce;
@@ -65,13 +81,22 @@ begin
   FSetup.OnMessage := HandleLogMessage;
 end;
 
+procedure TSetupDialog.Execute;
+begin
+  mLog.Clear;
+  pcSteps.ActivePage := tsLog;
+  case FMode of
+    sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
+    sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
+    sdmUninstall: FSetup.Uninstall(FPackage);
+    sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
+    sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
+  end;
+end;
+
 procedure TSetupDialog.ExecuteInstallation(const APackage: IDNPackage);
 begin
   FPackage := APackage;
-  if FPackage.Versions.Count > 0 then
-    FVersion := FPackage.Versions[0]
-  else
-    FVersion := nil;
   FMode := sdmInstall;
   ShowModal();
 end;
@@ -102,29 +127,21 @@ end;
 procedure TSetupDialog.ExecuteUpdate(const APackage: IDNPackage);
 begin
   FPackage := APackage;
-  if FPackage.Versions.Count > 0 then
-    FVersion := FPackage.Versions[0]
-  else
-    FVersion := nil;
   FMode := sdmUpdate;
   ShowModal();
 end;
 
 procedure TSetupDialog.FormShow(Sender: TObject);
 begin
-  PostMessage(Handle, CStart, 0, 0);
+  InitMainPage();
 end;
 
-procedure TSetupDialog.HandleCustomMessage(var AMSG: TMessage);
+function TSetupDialog.GetSelectedVersion: IDNPackageVersion;
 begin
-  mLog.Clear;
-  case FMode of
-    sdmInstall: FSetup.Install(FPackage, FVersion);
-    sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
-    sdmUninstall: FSetup.Uninstall(FPackage);
-    sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
-    sdmUpdate: FSetup.Update(FPackage, FVersion);
-  end;
+  if Assigned(FPackage) and (cbVersion.ItemIndex > -1) then
+    Result := FPackage.Versions[cbVersion.ItemIndex]
+  else
+    Result := nil;
 end;
 
 procedure TSetupDialog.HandleLogMessage(AType: TMessageType;
@@ -135,6 +152,60 @@ begin
     mtWarning: Log('Warning: ' + AMessage);
     mtError: Log('Error: ' + AMessage);
   end;
+end;
+
+procedure TSetupDialog.HandleOK(Sender: TObject);
+begin
+  Execute();
+end;
+
+procedure TSetupDialog.InitMainPage;
+begin
+  pcSteps.ActivePage := tsMainPage;
+  case FMode of
+    sdmInstall:
+    begin
+      lbActionInstallUpdate.Caption := 'Install';
+      lbNameInstallUpdate.Caption := FPackage.Name;
+      lbDescriptionInstallUpdate.Caption := FPackage.Description;
+      if Assigned(FPackage.Picture) then
+        Image1.Picture.Assign(FPackage.Picture);
+      InitVersionSelection();
+    end;
+//    sdmInstallDirectory: ;
+    sdmUninstall:
+    begin
+      lbActionInstallUpdate.Caption := 'Uninstall';
+      lbNameInstallUpdate.Caption := FPackage.Name;
+      lbDescriptionInstallUpdate.Caption := FPackage.Description;
+      if Assigned(FPackage.Picture) then
+        Image1.Picture.Assign(FPackage.Picture);
+      Label1.Visible := False;
+      cbVersion.Visible := False;
+    end;
+//    sdmUninstallDirectory: ;
+    sdmUpdate:
+    begin
+      lbActionInstallUpdate.Caption := 'Update';
+      lbNameInstallUpdate.Caption := FPackage.Name;
+      lbDescriptionInstallUpdate.Caption := FPackage.Description;
+      if Assigned(FPackage.Picture) then
+        Image1.Picture.Assign(FPackage.Picture);
+      InitVersionSelection();
+    end;
+  end;
+end;
+
+procedure TSetupDialog.InitVersionSelection;
+var
+  i: Integer;
+begin
+  cbVersion.Enabled := FPackage.Versions.Count > 0;
+  for i := 0 to FPackage.Versions.Count - 1 do
+  begin
+    cbVersion.Items.Add(FPackage.Versions[i].Name);
+  end;
+  cbVersion.ItemIndex := 0;
 end;
 
 procedure TSetupDialog.Log(const AMessage: string);
