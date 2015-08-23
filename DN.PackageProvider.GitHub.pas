@@ -192,9 +192,11 @@ begin
   begin
     FRequest.Request.CustomHeaders.Values['If-None-Match'] := AETag;
   end;
-  if not Assigned(FRequest.Request.Authentication) then
+  if (not Assigned(FRequest.Request.Authentication)) and (FSecurityToken <> '') then
+  begin
     FRequest.Request.Authentication := TGithubAuthentication.Create();
-  FRequest.Request.Authentication.Password := FSecurityToken;
+    FRequest.Request.Authentication.Password := FSecurityToken;
+  end;
   {$IFDEF SupportsErrorCodes}
   FRequest.Get(ARequest, ATarget);
   {$Else}
