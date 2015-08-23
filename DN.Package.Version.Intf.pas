@@ -1,3 +1,10 @@
+{
+#########################################################
+# Copyright by Alexander Benikowski                     #
+# This unit is part of the Delphinus project hosted on  #
+# https://github.com/Memnarch/Delphinus                 #
+#########################################################
+}
 unit DN.Package.Version.Intf;
 
 interface
