@@ -26,6 +26,8 @@ object DelphinusDialog: TDelphinusDialog
     ButtonWidth = 31
     Caption = 'ToolBar1'
     Images = imgMenu
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
     object ToolButton1: TToolButton
       Left = 0
@@ -40,6 +42,7 @@ object DelphinusDialog: TDelphinusDialog
     object btnInstallFolder: TToolButton
       Left = 62
       Top = 0
+      Hint = 'Install Folder'
       Caption = 'btnInstallFolder'
       ImageIndex = 2
       OnClick = btnInstallFolderClick
@@ -47,6 +50,7 @@ object DelphinusDialog: TDelphinusDialog
     object btnUninstall: TToolButton
       Left = 93
       Top = 0
+      Hint = 'Uninstall Folder'
       Caption = 'btnUninstall'
       ImageIndex = 3
       OnClick = btnUninstallClick
@@ -681,11 +685,13 @@ object DelphinusDialog: TDelphinusDialog
     Top = 136
     object actRefresh: TAction
       Caption = 'Refresh'
+      Hint = 'Refresh'
       ImageIndex = 0
       OnExecute = actRefreshExecute
     end
     object actOptions: TAction
       Caption = 'Options'
+      Hint = 'Options'
       ImageIndex = 1
       OnExecute = actOptionsExecute
     end
