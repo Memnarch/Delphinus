@@ -122,7 +122,7 @@ var
   LValue: TJSonValue;
   i: Integer;
   LFile: TMemoryStream;
-  LVersionDir: string;
+  LVersionDir, LFirstVersion: string;
   LVersions: TStringDynArray;
   LInfo: TInfoFile;
 begin
@@ -138,6 +138,7 @@ begin
       if LInfo.LoadFromFile(TPath.Combine(LVersionDir, 'info.json')) then
       begin
         LFile.Clear();
+        LFirstVersion := LInfo.FirstVersion;
         if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
           LFile.SaveToFile(TPath.Combine(LVersionDir, 'Logo.jpg'));
       end;
@@ -172,6 +173,12 @@ begin
                 LFile.SaveToFile(TPath.Combine(LVersionDir, 'install.json'));
                 Result := True;
               end;
+            end;
+            //stop after first supported release, all others are not supported
+            if SameText(LValue.Value, LFirstVersion) then
+            begin
+              SetLength(LVersions, i+1);
+              Break;
             end;
           end;
         end;
