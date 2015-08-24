@@ -10,36 +10,37 @@ unit DN.Package.Version;
 interface
 
 uses
+  DN.Types,
   DN.Package.Version.Intf;
 
 type
   TDNPackageVersion = class(TInterfacedObject, IDNPackageVersion)
   private
     FVersion: string;
-    FCompilerMin: Integer;
-    FCompilerMax: Integer;
-    function GetCompilerMax: Integer;
-    function GetCompilerMin: Integer;
+    FCompilerMin: TCompilerVersion;
+    FCompilerMax: TCompilerVersion;
+    function GetCompilerMax: TCompilerVersion;
+    function GetCompilerMin: TCompilerVersion;
     function GetName: string;
-    procedure SetCompilerMax(const Value: Integer);
-    procedure SetCompilerMin(const Value: Integer);
+    procedure SetCompilerMax(const Value: TCompilerVersion);
+    procedure SetCompilerMin(const Value: TCompilerVersion);
     procedure SetName(const Value: string);
   public
     property Name: string read GetName write SetName;
-    property CompilerMin: Integer read GetCompilerMin write SetCompilerMin;
-    property CompilerMax: Integer read GetCompilerMax write SetCompilerMax;
+    property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
+    property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
   end;
 
 implementation
 
 { TDNPackageVersion }
 
-function TDNPackageVersion.GetCompilerMax: Integer;
+function TDNPackageVersion.GetCompilerMax: TCompilerVersion;
 begin
   Result := FCompilerMax;
 end;
 
-function TDNPackageVersion.GetCompilerMin: Integer;
+function TDNPackageVersion.GetCompilerMin: TCompilerVersion;
 begin
   Result := FCompilerMin;
 end;
@@ -49,12 +50,12 @@ begin
   Result := FVersion;
 end;
 
-procedure TDNPackageVersion.SetCompilerMax(const Value: Integer);
+procedure TDNPackageVersion.SetCompilerMax(const Value: TCompilerVersion);
 begin
   FCompilerMax := Value;
 end;
 
-procedure TDNPackageVersion.SetCompilerMin(const Value: Integer);
+procedure TDNPackageVersion.SetCompilerMin(const Value: TCompilerVersion);
 begin
   FCompilerMin := Value;
 end;

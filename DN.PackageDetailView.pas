@@ -12,6 +12,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes,
   Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
+  DN.Types,
   DN.Package.Intf,
   DN.Controls,
   DN.Controls.Button;
@@ -55,19 +56,22 @@ const
   CDelphiNames: array[22..29] of string =
   ('XE', 'XE2', 'XE3', 'XE4', 'XE5', 'XE6', 'XE7', 'XE8');
 
-  function GetDelphiName(const ACompilerVersion: Integer): string;
+  function GetDelphiName(const ACompilerVersion: TCompilerVersion): string;
+  var
+    LVersion: Integer;
   begin
-    if (ACompilerVersion >= Low(CDelphiNames)) and (ACompilerVersion <= High(CDelphiNames)) then
+    LVersion := Trunc(ACompilerVersion);
+    if (LVersion >= Low(CDelphiNames)) and (LVersion <= High(CDelphiNames)) then
     begin
-      Result := CDelphiNames[ACompilerVersion];
+      Result := CDelphiNames[LVersion];
     end
     else
     begin
-      Result := 'Compiler ' + IntToStr(ACompilerVersion);
+      Result := 'Compiler ' + IntToStr(LVersion);
     end;
   end;
 
-  function GenerateSupportsString(const AMin, AMax: Integer): string;
+  function GenerateSupportsString(const AMin, AMax: TCompilerVersion): string;
   begin
     if AMin > 0 then
     begin

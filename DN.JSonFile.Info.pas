@@ -13,19 +13,20 @@ uses
   Classes,
   Types,
   SysUtils,
+  DN.Types,
   DN.JSon,
   DN.JSonFile;
 
 type
   TInfoFile = class(TJSonFile)
   private
-    FCompilerMin: Integer;
-    FPicture: string;
-    FCompilerMax: Integer;
     FID: TGUID;
+    FPicture: string;
     FFirstVersion: string;
-    FPackageCompilerMax: Integer;
-    FPackageCompilerMin: Integer;
+    FPackageCompilerMax: TCompilerVersion;
+    FPackageCompilerMin: TCompilerVersion;
+    FCompilerMin: TCompilerVersion;
+    FCompilerMax: TCompilerVersion;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
@@ -34,10 +35,10 @@ type
     property Picture: string read FPicture;
     property ID: TGUID read FID write FID;
     property FirstVersion: string read FFirstVersion;
-    property PackageCompilerMin: Integer read FPackageCompilerMin;
-    property PackageCompilerMax: Integer read FPackageCompilerMax;
-    property CompilerMin: Integer read FCompilerMin;
-    property CompilerMax: Integer read FCompilerMax;
+    property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin;
+    property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax;
+    property CompilerMin: TCompilerVersion read FCompilerMin;
+    property CompilerMax: TCompilerVersion read FCompilerMax;
   end;
 
 implementation
@@ -50,10 +51,10 @@ begin
   FPicture := ReadString(ARoot, 'picture');
   FID := ReadID(ARoot);
   FFirstVersion := ReadString(ARoot, 'first_version');
-  FPackageCompilerMax := ReadInteger(ARoot, 'package_compiler_max');
-  FPackageCompilerMin := ReadInteger(ARoot, 'package_compiler_min');
-  FCompilerMin := ReadInteger(ARoot, 'compiler_min');
-  FCompilerMax := ReadInteger(ARoot, 'compiler_max');
+  FPackageCompilerMax := ReadFloat(ARoot, 'package_compiler_max');
+  FPackageCompilerMin := ReadFloat(ARoot, 'package_compiler_min');
+  FCompilerMin := ReadFloat(ARoot, 'compiler_min');
+  FCompilerMax := ReadFloat(ARoot, 'compiler_max');
 end;
 
 function TInfoFile.ReadID(const AObject: TJSONObject): TGUID;
@@ -77,10 +78,10 @@ begin
   WriteString(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
   WriteString(ARoot, 'first_version', FFirstVersion);
-  WriteInteger(ARoot, 'package_compiler_max', FPackageCompilerMax);
-  WriteInteger(ARoot, 'package_compiler_min', FPackageCompilerMin);
-  WriteInteger(ARoot, 'compiler_min', FCompilerMin);
-  WriteInteger(ARoot, 'compiler_max', FCompilerMax);
+  WriteFloat(ARoot, 'package_compiler_max', FPackageCompilerMax);
+  WriteFloat(ARoot, 'package_compiler_min', FPackageCompilerMin);
+  WriteFloat(ARoot, 'compiler_min', FCompilerMin);
+  WriteFloat(ARoot, 'compiler_max', FCompilerMax);
 end;
 
 end.

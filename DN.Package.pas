@@ -13,6 +13,7 @@ uses
   Types,
   Graphics,
   Generics.Collections,
+  DN.Types,
   DN.Package.Intf,
   DN.Package.Version.Intf;
 
@@ -20,8 +21,8 @@ type
   TDNPackage = class(TInterfacedObject, IDNPackage)
   private
     FID: TGUID;
-    FCompilerMin: Integer;
-    FCompilerMax: Integer;
+    FCompilerMin: TCompilerVersion;
+    FCompilerMax: TCompilerVersion;
     FName: string;
     FAuthor: string;
     FDescription: string;
@@ -32,10 +33,10 @@ type
   protected
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
-    function GetCompilerMax: Integer; virtual;
-    function GetCompilerMin: Integer; virtual;
-    procedure SetCompilerMax(const Value: Integer); virtual;
-    procedure SetCompilerMin(const Value: Integer); virtual;
+    function GetCompilerMax: TCompilerVersion; virtual;
+    function GetCompilerMin: TCompilerVersion; virtual;
+    procedure SetCompilerMax(const Value: TCompilerVersion); virtual;
+    procedure SetCompilerMin(const Value: TCompilerVersion); virtual;
     function GetDownloadLocation: string; virtual;
     procedure SetDownloadLocation(const Value: string); virtual;
     function GetAuthor: string; virtual;
@@ -52,8 +53,8 @@ type
     constructor Create();
     destructor Destroy(); override;
     property ID: TGUID read GetID write SetID;
-    property CompilerMin: Integer read GetCompilerMin write SetCompilerMin;
-    property CompilerMax: Integer read GetCompilerMax write SetCompilerMax;
+    property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
+    property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;
@@ -86,12 +87,12 @@ begin
   Result := FAuthor;
 end;
 
-function TDNPackage.GetCompilerMax: Integer;
+function TDNPackage.GetCompilerMax: TCompilerVersion;
 begin
   Result := FCompilerMax;
 end;
 
-function TDNPackage.GetCompilerMin: Integer;
+function TDNPackage.GetCompilerMin: TCompilerVersion;
 begin
   Result := FCompilerMin;
 end;
@@ -136,12 +137,12 @@ begin
   FAuthor := Value;
 end;
 
-procedure TDNPackage.SetCompilerMax(const Value: Integer);
+procedure TDNPackage.SetCompilerMax(const Value: TCompilerVersion);
 begin
   FCompilerMax := Value;
 end;
 
-procedure TDNPackage.SetCompilerMin(const Value: Integer);
+procedure TDNPackage.SetCompilerMin(const Value: TCompilerVersion);
 begin
   FCompilerMin := Value;
 end;

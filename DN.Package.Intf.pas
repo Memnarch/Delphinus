@@ -13,6 +13,7 @@ uses
   Types,
   Graphics,
   Generics.Collections,
+  DN.Types,
   DN.Package.Version.Intf;
 
 type
@@ -20,10 +21,10 @@ type
   ['{A2BECB05-D5A2-4E59-A7F0-E16A6ACCC555}']
     function GetID: TGUID;
     procedure SetID(const Value: TGUID);
-    function GetCompilerMax: Integer;
-    function GetCompilerMin: Integer;
-    procedure SetCompilerMax(const Value: Integer);
-    procedure SetCompilerMin(const Value: Integer);
+    function GetCompilerMax: TCompilerVersion;
+    function GetCompilerMin: TCompilerVersion;
+    procedure SetCompilerMax(const Value: TCompilerVersion);
+    procedure SetCompilerMin(const Value: TCompilerVersion);
     function GetDownloadLocation: string;
     procedure SetDownloadLocation(const Value: string);
     function GetAuthor: string;
@@ -37,8 +38,8 @@ type
     procedure SetLastUpdated(const Value: string);
     function GetVersions: TList<IDNPackageVersion>;
     property ID: TGUID read GetID write SetID;
-    property CompilerMin: Integer read GetCompilerMin write SetCompilerMin;
-    property CompilerMax: Integer read GetCompilerMax write SetCompilerMax;
+    property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
+    property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;

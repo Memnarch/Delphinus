@@ -20,11 +20,13 @@ type
     procedure WriteString(AParent: TJSONObject; const AProperty, AContent: string);
     procedure WriteInteger(AParent: TJSONObject; const AProperty: string; AContent: Integer);
     procedure WriteBoolean(AParent: TJSONObject; const AProperty: string; AValue: Boolean);
+    procedure WriteFloat(AParent: TJSonObject; const AProperty: string; AValue: Single);
     function WriteArray(AParent: TJSONObject; const AArrayName: string): TJSONArray;
     function WriteObject(AParent: TJSONObject; const AObjectName: string): TJSONObject;
     function WriteArrayObject(AParent: TJSONArray): TJSONObject;
     function ReadString(AParent: TJSONObject; const AProperty: string; const ADefault: string = ''): string;
     function ReadInteger(AParent: TJSONObject; const AProperty: string; const ADefault: Integer = 0): Integer;
+    function ReadFloat(AParent: TJSonObject; const AProperty: string; const ADefault: Single = 0): Single;
     function ReadBoolean(AParent: TJSonObject; const AProperty: string; ADefault: Boolean = False): Boolean;
     function ReadObject(AParent: TJSONObject; const AProperty: string; var AObject: TJSonObject): Boolean;
     function ReadArray(AParent: TJSonObject; const AProperty: string; var AArray: TJSONArray): Boolean;
@@ -43,6 +45,9 @@ implementation
 uses
   Classes,
   SysUtils;
+
+var
+  GJSonFormatSettings: TFormatSettings;
 
 { TJSonFile }
 
@@ -105,6 +110,13 @@ begin
       Result := True
     else if LValue is TJSONFalse then
       Result := False;
+end;
+
+function TJSonFile.ReadFloat(AParent: TJSonObject; const AProperty: string;
+  const ADefault: Single): Single;
+begin
+  if not TryStrToFloat(ReadString(AParent, AProperty), Result, GJSonFormatSettings) then
+  Result := ADefault;
 end;
 
 function TJSonFile.ReadInteger(AParent: TJSONObject; const AProperty: string;
@@ -202,6 +214,12 @@ begin
     AParent.AddPair(AProperty, TJSONFalse.Create())
 end;
 
+procedure TJSonFile.WriteFloat(AParent: TJSonObject; const AProperty: string;
+  AValue: Single);
+begin
+  WriteString(AParent, AProperty, FloatToStr(AValue));
+end;
+
 procedure TJSonFile.WriteInteger(AParent: TJSONObject; const AProperty: string;
   AContent: Integer);
 begin
@@ -224,5 +242,9 @@ begin
   AParent.AddPair(AProperty, AContent);
   {$IfEnd}
 end;
+
+initialization
+  GJSonFormatSettings := TFormatSettings.Create();
+  GJSonFormatSettings.DecimalSeparator := '.';
 
 end.

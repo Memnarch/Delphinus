@@ -13,6 +13,7 @@ type
   TMessageType = (mtNotification, mtWarning, mtError);
   TMessageEvent = procedure(AMessageType: TMessageType; const AMessage: string) of object;
   TPathType = (tpSearchPath, tpBrowsingPath);
+  TCompilerVersion = Single;
 
 const
   CSourceSubDir = 'Source';
