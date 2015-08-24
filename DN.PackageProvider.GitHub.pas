@@ -36,6 +36,7 @@ type
     function DownloadVersionMeta(const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName, ADefaultBranch: string): Boolean;
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(const APackage: IDNPackage; const APictureFile: string);
+    function IsJPegImage(const AFileName: string): Boolean;
   public
     constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
@@ -149,7 +150,7 @@ begin
       begin
         LFile.Clear();
         LFirstVersion := LInfo.FirstVersion;
-        if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
+        if IsJPegImage(LInfo.Picture) and ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
           LFile.SaveToFile(TPath.Combine(LVersionDir, 'Logo.jpg'));
       end;
       LFile.Clear();
@@ -226,6 +227,14 @@ begin
   Result := FRequest.ResponseCode = 200;//ok
   FLastContentDisposition := FRequest.Response.ContentDisposition;
   FLastEtag := FRequest.Response.ETag;
+end;
+
+function TDNGitHubPackageProvider.IsJPegImage(const AFileName: string): Boolean;
+var
+  LExtension: string;
+begin
+  LExtension := ExtractFileExt(AFileName);
+  Result := SameText(LExtension, '.jpg') or SameText(LExtension, '.jpeg');
 end;
 
 function TDNGitHubPackageProvider.LoadCacheInfo(const AInfo: TCacheInfo;
