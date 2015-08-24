@@ -98,7 +98,7 @@ end;
 function TDNGitHubPackageProvider.Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean;
 var
   LArchive: TFileStream;
-  LArchiveFile, LFileName: string;
+  LArchiveFile, LFileName, LFolder: string;
   LDirs: TStringDynArray;
 const
   CNamePrefix = 'filename=';
@@ -111,13 +111,17 @@ begin
     LArchive.Free;
   end;
   LFileName := Copy(FLastContentDisposition, Pos(CNamePrefix, FLastContentDisposition) + Length(CNamePrefix), Length(FLastContentDisposition));
-//  AContentFolder := TPath.Combine(AFolder, ChangeFileExt(StringReplace(LFileName, AVersion, '', []), ''));
   if Result then
-    Result := ShellUnzip(LArchiveFile, AFolder);
+  begin
+    LFolder := TPath.Combine(AFolder, TGuid.NewGuid.ToString);
+    Result := ForceDirectories(LFolder);
+    if Result then
+      Result := ShellUnzip(LArchiveFile, LFolder);
+  end;
 
   if Result then
   begin
-    LDirs := TDirectory.GetDirectories(AFolder);
+    LDirs := TDirectory.GetDirectories(LFolder);
     Result := Length(LDirs) = 1;
     if Result then
       AContentFolder := LDirs[0];
