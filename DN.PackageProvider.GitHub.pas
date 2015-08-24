@@ -12,6 +12,7 @@ interface
 uses
   Classes,
   Types,
+  Graphics,
   SysUtils,
   IdHttp,
   IdAuthentication,
@@ -34,6 +35,7 @@ type
     function LoadCacheInfo(const AInfo: TCacheInfo; const AAuthor, AName, ACache: string): Boolean;
     function DownloadVersionMeta(const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName, ADefaultBranch: string): Boolean;
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
+    procedure LoadPicture(const APackage: IDNPackage; const APictureFile: string);
   public
     constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
@@ -64,6 +66,7 @@ const
   CGitRepoSearch = 'https://api.github.com/search/repositories?q="Delphinus-Support"+in:readme&per_page=100';
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
 //  CGitRepoSearch = 'https://api.github.com/search/repositories?q=tetris&per_page=30';
+  CJpg_Package = 'Jpg_Package';
 
 {$If Declared(hoNoProtocolErrorException)}
   {$Define SupportsErrorCodes}
@@ -286,15 +289,46 @@ begin
       end;
     end;
     LPicture := TPath.Combine(ADirectory, 'logo.jpg');
-    if TFile.Exists(LPicture) then
-    begin
-      LPackage.Picture.LoadFromFile(LPicture);
-    end;
+    LoadPicture(LPackage, LPicture);
     APackage := LPackage;
     Result := True;
   finally
     LCache.Free;
     LInfo.Free;
+  end;
+end;
+
+procedure TDNGitHubPackageProvider.LoadPicture(const APackage: IDNPackage;
+  const APictureFile: string);
+var
+  LJPG: TJPEGImage;
+  LResStream: TResourceStream;
+  LIsValid: Boolean;
+begin
+  LJPG := TJPEGImage.Create();
+  try
+    LIsValid := False;
+    if TFile.Exists(APictureFile) then
+    begin
+      try
+        LJPG.LoadFromFile(APictureFile);
+        LIsValid := True;
+      except
+        on E: EInvalidGraphic do//just catch
+      end;
+    end;
+    if not LIsValid then
+    begin
+      LResStream := TResourceStream.Create(HInstance, CJpg_Package, RT_RCDATA);
+      try
+        LJPG.LoadFromStream(LResStream);
+      finally
+        LResStream.Free;
+      end;
+    end;
+    APackage.Picture.Assign(LJPG);
+  finally
+    LJPG.Free;
   end;
 end;
 
