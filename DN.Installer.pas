@@ -49,7 +49,7 @@ type
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
-    function InstallProject(const AProject: IDNProjectInfo): Boolean; virtual;
+    function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
@@ -304,7 +304,7 @@ begin
   end;
 end;
 
-function TDNInstaller.InstallProject(const AProject: IDNProjectInfo): Boolean;
+function TDNInstaller.InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean;
 begin
   Result := True;
 end;
@@ -345,7 +345,7 @@ begin
       begin
         if (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32) then
         begin
-          Result := InstallProject(AProject);
+          Result := InstallProject(AProject, FCompiler.ResolveVars(LOptions.BPLOutput));
           if Result then
             DoMessage(mtNotification, 'installed')
           else

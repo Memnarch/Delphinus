@@ -21,7 +21,7 @@ type
   protected
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); override;
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); override;
-    function InstallProject(const AProject: IDNProjectInfo): Boolean; override;
+    function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; override;
   public
     function Install(const ASourceDirectory: string;
       const ATargetDirectory: string): Boolean; override;
@@ -32,6 +32,7 @@ implementation
 uses
   Windows,
   SysUtils,
+  IOUtils,
   Registry,
   DN.Types,
   ToolsApi,
@@ -100,12 +101,12 @@ begin
   end;
 end;
 
-function TDNIDEInstaller.InstallProject(const AProject: IDNProjectInfo): Boolean;
+function TDNIDEInstaller.InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean;
 var
   LService: IOTAPackageServices;
 begin
   LService := BorlandIDEServices as IOTAPackageServices;
-  Result := LService.InstallPackage(AProject.BinaryName);
+  Result := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
 end;
 
 end.
