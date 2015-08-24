@@ -39,6 +39,8 @@ type
     function GetInstallDirectoryForPackage(const APackage: IDNPackage): string;
     function GetInstallDirectoryForDirectory(const ADirectory: string): string;
     function ExtendInfoFile(const APackage: IDNPackage; const AVersion: IDNPackageVersion; const AInstallDirectory: string): Boolean;
+    function GetSetupTempDir: string;
+    procedure CleanupTemp();
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
@@ -58,6 +60,15 @@ uses
   DN.JSonFile.InstalledInfo;
 
 { TDNSetup }
+
+procedure TDNSetup.CleanupTemp;
+begin
+  ReportInfo('deleting tempfiles');
+  if TDirectory.Exists(GetSetupTempDir()) then
+  begin
+    TDirectory.Delete(GetSetupTempDir(), True);
+  end;
+end;
 
 constructor TDNSetup.Create(const AInstaller: IDNInstaller;
   const AUninstaller: IDNUninstaller;
@@ -84,7 +95,7 @@ var
   LVersion: string;
 begin
   ReportInfo('Downloading ' + APackage.Name);
-  LTempDir := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
+  LTempDir := GetSetupTempDir();
   ForceDirectories(LTempDir);
   if Assigned(AVersion) then
     LVersion := AVersion.Name
@@ -145,25 +156,28 @@ begin
   Result := FOnMessage;
 end;
 
+function TDNSetup.GetSetupTempDir: string;
+begin
+  Result := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
+end;
+
 function TDNSetup.Install(const APackage: IDNPackage;
   const AVersion: IDNPackageVersion): Boolean;
 var
   LContentDirectory: string;
   LInstallDirectory: string;
 begin
-  Result := DownloadPackage(APackage, AVersion, LContentDirectory);
-  if Result then
-  begin
-    LInstallDirectory := GetInstallDirectoryForPackage(APackage);
-    Result := FInstaller.Install(LContentDirectory, LInstallDirectory);
+  try
+    Result := DownloadPackage(APackage, AVersion, LContentDirectory);
     if Result then
-      Result := ExtendInfoFile(APackage, AVersion, LInstallDirectory)
-  end;
-
-  ReportInfo('deleting tempfiles');
-  if TDirectory.Exists(LContentDirectory) then
-  begin
-    TDirectory.Delete(LContentDirectory, True);
+    begin
+      LInstallDirectory := GetInstallDirectoryForPackage(APackage);
+      Result := FInstaller.Install(LContentDirectory, LInstallDirectory);
+      if Result then
+        Result := ExtendInfoFile(APackage, AVersion, LInstallDirectory)
+    end;
+  finally
+    CleanupTemp();
   end;
 
   if Result then
