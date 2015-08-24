@@ -242,7 +242,6 @@ var
   LInfo: TInfoFile;
   LInstallerFile, LInfoFile: string;
 begin
-  Result := False;
   Reset();
   ForceDirectories(ATargetDirectory);
   try
@@ -251,10 +250,18 @@ begin
     begin
       LInfo := TInfoFile.Create();
       try
-        LInfo.LoadFromFile(LInfoFile);
-        if LInfo.ID = TGuid.Empty then
+        Result := LInfo.LoadFromFile(LInfoFile);
+        if Result then
         begin
-          DoMessage(mtError, 'no ID provided');
+          if LInfo.ID = TGuid.Empty then
+          begin
+            DoMessage(mtError, 'no ID provided');
+            Exit(False);
+          end;
+        end
+        else
+        begin
+          DoMessage(mtError, 'Info.json seems to be corrupt');
           Exit(False);
         end;
       finally
@@ -271,14 +278,19 @@ begin
     begin
       LInstallInfo := TInstallationFile.Create();
       try
-        LInstallInfo.LoadFromFile(LInstallerFile);
-
-
-        ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
-        ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
-        ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
-        CopyMetaData(ASourceDirectory, ATargetDirectory);
-        Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+        Result := LInstallInfo.LoadFromFile(LInstallerFile);
+        if Result then
+        begin
+          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+          ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
+          CopyMetaData(ASourceDirectory, ATargetDirectory);
+          Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+        end
+        else
+        begin
+          DoMessage(mtError, 'Install.json seems to be corrupt');
+        end;
       finally
         LInstallInfo.Free;
       end;
