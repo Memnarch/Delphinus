@@ -11,6 +11,7 @@ interface
 
 uses
   Classes,
+  Windows,
   Forms;
 
 type
@@ -29,7 +30,7 @@ uses
 constructor TDelphinusForm.Create(AOwner: TComponent);
 begin
   inherited;
-  Icon.LoadFromResourceName(HInstance, CIconDelphinus);
+  Icon.Handle := LoadImage(HInstance, CIconDelphinus, IMAGE_ICON, 0, 0, 0);
 end;
 
 end.

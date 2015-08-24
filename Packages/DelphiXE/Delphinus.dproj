@@ -134,6 +134,7 @@
 			<DCCReference Include="..\Delphinus.Settings.pas"/>
 			<DCCReference Include="..\..\DN.Setup.Intf.pas"/>
 			<DCCReference Include="..\..\DN.Setup.pas"/>
+			<DCCReference Include="..\..\DN.Version.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>
@@ -190,6 +191,9 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
+					<Parameters>
+						<Parameters Name="HostApplication">D:\Program Files (x86)\Embarcadero\RAD Studio\8.0\bin\bds.exe</Parameters>
+					</Parameters>
 				</Delphi.Personality>
 				<Deployment/>
 				<Platforms>

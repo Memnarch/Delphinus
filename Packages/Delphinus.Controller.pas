@@ -13,6 +13,7 @@ uses
   Classes,
   Types,
   Menus,
+  Windows,
   Graphics,
   ImgList,
   Dialogs,
@@ -36,6 +37,7 @@ implementation
 
 uses
   ToolsApi,
+  DN.Version,
   Delphinus.ResourceNames;
 
 const
@@ -44,10 +46,21 @@ const
 { TDelphinusController }
 
 constructor TDelphinusController.Create;
+var
+  LBitmap: TBitmap;
 begin
   inherited;
   FIcon := TIcon.Create();
-  FIcon.LoadFromResourceName(HInstance, CIconDelphinus);
+  FIcon.SetSize(16, 16);
+  FIcon.Handle := LoadImage(HInstance, CIconDelphinus, IMAGE_ICON, 0, 0, 0);
+  LBitmap := TBitmap.Create();
+  try
+    LBitmap.SetSize(24, 24);
+    LBitmap.Canvas.Draw((24 - FIcon.Width) div 2, (24 - FIcon.Height) div 2, FIcon);
+    SplashScreenServices.AddPluginBitmap(CVersionedDelphinus, LBitmap.Handle);
+  finally
+    LBitmap.Free;
+  end;
   InstallMenu();
   FDialog := TDelphinusDialog.Create(nil);
 end;

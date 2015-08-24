@@ -87,7 +87,8 @@ contains
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
   Delphinus.Settings in '..\Delphinus.Settings.pas',
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
-  DN.Setup in '..\..\DN.Setup.pas';
+  DN.Setup in '..\..\DN.Setup.pas',
+  DN.Version in '..\..\DN.Version.pas';
 
 end.
 
