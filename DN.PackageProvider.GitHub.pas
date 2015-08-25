@@ -324,8 +324,6 @@ var
   LResStream: TResourceStream;
   LIsValid: Boolean;
 begin
-  ShowMessage('Load Request for ' + APictureFile);
-
   LIsValid := False;
   if TFile.Exists(APictureFile) then
   begin
