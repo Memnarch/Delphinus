@@ -30,12 +30,13 @@ implementation
 
 uses
   IOUtils,
+  jpeg,
+  pngimage,
   DN.Package,
   DN.Uninstaller.Intf,
   DN.JSonFile.InstalledInfo,
   DN.Package.Version,
-  DN.Package.Version.Intf,
-  JPeg;
+  DN.Package.Version.Intf;
 
 { TDNInstalledPackageProvider }
 
@@ -50,6 +51,7 @@ procedure TDNInstalledPackageProvider.LoadDetails(const APackage: IDNPackage;
   const AInfoFile: string);
 var
   LJPG: TJPEGImage;
+  LPNG: TPNGImage;
   LImageFile: string;
   LInfo: TInstalledInfoFile;
   LVersion: IDNPackageVersion;
@@ -79,12 +81,25 @@ begin
           LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LInfo.Picture);
           if TFile.Exists(LImageFile) then
           begin
-            LJPG := TJPEGImage.Create();
-            try
-              LJPG.LoadFromFile(LImageFile);
-              APackage.Picture.Graphic := LJPG;
-            finally
-              LJPG.Free;
+            if LowerCase(ExtractFileExt(LImageFile)) = '.png' then
+            begin
+              LPNG := TPNGImage.Create();
+              try
+                LPNG.LoadFromFile(LImageFile);
+                APackage.Picture.Graphic := LPNG;
+              finally
+                LPNG.Free;
+              end;
+            end
+            else
+            begin
+              LJPG := TJPEGImage.Create();
+              try
+                LJPG.LoadFromFile(LImageFile);
+                APackage.Picture.Graphic := LJPG;
+              finally
+                LJPG.Free;
+              end;
             end;
           end;
         end;

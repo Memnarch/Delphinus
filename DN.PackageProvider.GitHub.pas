@@ -36,7 +36,7 @@ type
     function DownloadVersionMeta(const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName, ADefaultBranch: string): Boolean;
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(const APackage: IDNPackage; const APictureFile: string);
-    function IsJPegImage(const AFileName: string): Boolean;
+    function IsValidImage(const AFileName: string): Boolean;
   public
     constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
@@ -49,12 +49,13 @@ implementation
 uses
   IOUtils,
   StrUtils,
-  DN.Package,
-  DN.Package.Github,
+  jpeg,
+  pngimage,
   IdIOHandlerStack,
   IdSSLOpenSSl,
+  DN.Package,
+  DN.Package.Github,
   DN.JSon,
-  JPeg,
   DN.Zip,
   DN.JSOnFile.Info,
   DN.Package.Version,
@@ -95,7 +96,8 @@ begin
   inherited;
 end;
 
-function TDNGitHubPackageProvider.Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean;
+function TDNGitHubPackageProvider.Download(const APackage: IDNPackage;
+  const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean;
 var
   LArchive: TFileStream;
   LArchiveFile, LFileName, LFolder: string;
@@ -130,7 +132,8 @@ begin
 end;
 
 function TDNGitHubPackageProvider.DownloadVersionMeta(
-  const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName, ADefaultBranch: string): Boolean;
+  const AData: TStringStream; ACacheInfo: TCacheInfo; const AAuthor, AName,
+  ADefaultBranch: string): Boolean;
 var
   LArray: TJSONArray;
   LObject: TJSonObject;
@@ -154,13 +157,13 @@ begin
       begin
         LFile.Clear();
         LFirstVersion := LInfo.FirstVersion;
-        if IsJPegImage(LInfo.Picture) and ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
-          LFile.SaveToFile(TPath.Combine(LVersionDir, 'Logo.jpg'));
+        if IsValidImage(LInfo.Picture) and ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
+          LFile.SaveToFile(TPath.Combine(LVersionDir, ExtractFileName(LInfo.Picture)));
       end;
       LFile.Clear();
       if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/install.json') then
       begin
-        LFile.SaveToFile(TPath.Combine(LVersionDir,'install.json'));
+        LFile.SaveToFile(TPath.Combine(LVersionDir, 'install.json'));
         Result := True;
       end;
     end;
@@ -192,7 +195,7 @@ begin
             //stop after first supported release, all others are not supported
             if SameText(LValue.Value, LFirstVersion) then
             begin
-              SetLength(LVersions, i+1);
+              SetLength(LVersions, i + 1);
               Break;
             end;
           end;
@@ -208,7 +211,8 @@ begin
   end;
 end;
 
-function TDNGitHubPackageProvider.ExecuteRequest(const ATarget: TStream; const ARequest: string; const AETag: string): Boolean;
+function TDNGitHubPackageProvider.ExecuteRequest(const ATarget: TStream;
+  const ARequest: string; const AETag: string): Boolean;
 begin
   if AETag <> '' then
   begin
@@ -233,12 +237,13 @@ begin
   FLastEtag := FRequest.Response.ETag;
 end;
 
-function TDNGitHubPackageProvider.IsJPegImage(const AFileName: string): Boolean;
+function TDNGitHubPackageProvider.IsValidImage(const AFileName: string): Boolean;
 var
   LExtension: string;
 begin
-  LExtension := ExtractFileExt(AFileName);
-  Result := SameText(LExtension, '.jpg') or SameText(LExtension, '.jpeg');
+  LExtension := LowerCase(ExtractFileExt(AFileName));
+  Result := (LExtension = '.jpg') or (LExtension = '.jpeg') or
+    (LExtension = '.png');
 end;
 
 function TDNGitHubPackageProvider.LoadCacheInfo(const AInfo: TCacheInfo;
@@ -301,8 +306,9 @@ begin
         LPackage.Versions.Add(LVersion);
       end;
     end;
-    LPicture := TPath.Combine(ADirectory, 'logo.jpg');
+    LPicture := TPath.Combine(ADirectory, ExtractFileName(LInfo.Picture));
     LoadPicture(LPackage, LPicture);
+
     APackage := LPackage;
     Result := True;
   finally
@@ -314,35 +320,49 @@ end;
 procedure TDNGitHubPackageProvider.LoadPicture(const APackage: IDNPackage;
   const APictureFile: string);
 var
-  LJPG: TJPEGImage;
+  LGraphic: TGraphic;
   LResStream: TResourceStream;
   LIsValid: Boolean;
 begin
-  LJPG := TJPEGImage.Create();
-  try
-    LIsValid := False;
-    if TFile.Exists(APictureFile) then
+  LIsValid := False;
+  if TFile.Exists(APictureFile) then
+  begin
+    if LowerCase(ExtractFileExt(APictureFile)) = '.png' then
     begin
+      LGraphic := TPNGImage.Create;
       try
-        LJPG.LoadFromFile(APictureFile);
+        LGraphic.LoadFromFile(APictureFile);
+        LIsValid := True;
+      except
+        on E: EInvalidGraphic do//just catch
+      end;
+    end
+    else
+    begin
+      LGraphic := TJPEGImage.Create();
+      try
+        LGraphic.LoadFromFile(APictureFile);
         LIsValid := True;
       except
         on E: EInvalidGraphic do//just catch
       end;
     end;
-    if not LIsValid then
-    begin
-      LResStream := TResourceStream.Create(HInstance, CJpg_Package, RT_RCDATA);
-      try
-        LJPG.LoadFromStream(LResStream);
-      finally
-        LResStream.Free;
-      end;
-    end;
-    APackage.Picture.Assign(LJPG);
-  finally
-    LJPG.Free;
   end;
+
+  if not LIsValid then
+  begin
+    LResStream := TResourceStream.Create(HInstance, CJpg_Package, RT_RCDATA);
+    try
+      LGraphic := TJPEGImage.Create();
+      LGraphic.LoadFromStream(LResStream);
+    finally
+      LResStream.Free;
+    end;
+  end;
+  APackage.Picture.Assign(LGraphic);
+
+  if Assigned(LGraphic) then
+    LGraphic.Free;
 end;
 
 function TDNGitHubPackageProvider.Reload: Boolean;
