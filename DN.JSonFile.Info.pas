@@ -27,6 +27,7 @@ type
     FPackageCompilerMin: TCompilerVersion;
     FCompilerMin: TCompilerVersion;
     FCompilerMax: TCompilerVersion;
+    FName: string;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
@@ -34,6 +35,7 @@ type
   public
     property Picture: string read FPicture;
     property ID: TGUID read FID write FID;
+    property Name: string read FName write FName;
     property FirstVersion: string read FFirstVersion;
     property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin;
     property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax;
@@ -50,6 +52,7 @@ begin
   inherited;
   FPicture := ReadString(ARoot, 'picture');
   FID := ReadID(ARoot);
+  FName := ReadString(ARoot, 'name');
   FFirstVersion := ReadString(ARoot, 'first_version');
   FPackageCompilerMax := ReadFloat(ARoot, 'package_compiler_max');
   FPackageCompilerMin := ReadFloat(ARoot, 'package_compiler_min');
@@ -77,6 +80,7 @@ begin
   inherited;
   WriteString(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
+  WriteString(ARoot, 'name', FName);
   WriteString(ARoot, 'first_version', FFirstVersion);
   WriteFloat(ARoot, 'package_compiler_max', FPackageCompilerMax);
   WriteFloat(ARoot, 'package_compiler_min', FPackageCompilerMin);
