@@ -160,7 +160,7 @@ begin
   LTargetInfo := TPath.Combine(ATargetDirectory, CInfoFile);
   if TFile.Exists(LSourceInfo) then
   begin
-    TFile.Copy(LSourceInfo, LTargetInfo);
+    TFile.Copy(LSourceInfo, LTargetInfo, True);
 
     LInfo := TInfoFile.Create();
     try
@@ -173,7 +173,7 @@ begin
           if TFile.Exists(LSourcePic) then
           begin
             ForceDirectories(ExtractFilePath(LTargetPic));
-            TFile.Copy(LSourcePic, LTargetPic);
+            TFile.Copy(LSourcePic, LTargetPic, True);
           end;
         end;
       end;
