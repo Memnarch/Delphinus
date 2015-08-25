@@ -19,10 +19,10 @@ const
   CSourceSubDir = 'Source';
   CMacPackageExtension = '.dylib';
   CMacPackagePrefix = 'bpl';
-  CInstallFile = 'install.json';
-  CUninstallFile = 'uninstall.json';
-  CInfoFile = 'info.json';
-  CCacheFile = 'cache.json';
+  CInstallFile = 'Delphinus.Install.json';
+  CUninstallFile = 'Delphinus.Uninstall.json';
+  CInfoFile = 'Delphinus.Info.json';
+  CCacheFile = 'Delphinus.Cache.json';
 
 
 implementation
