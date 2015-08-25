@@ -173,6 +173,7 @@
         <DCCReference Include="..\..\DN.Setup.Intf.pas"/>
         <DCCReference Include="..\..\DN.Setup.pas"/>
         <DCCReference Include="..\..\DN.Version.pas"/>
+        <DCCReference Include="..\..\DN.IOUtils.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

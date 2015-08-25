@@ -48,6 +48,7 @@ implementation
 
 uses
   IOUtils,
+  DN.IOUtils,
   StrUtils,
   jpeg,
   pngimage,
@@ -81,7 +82,7 @@ constructor TDNGitHubPackageProvider.Create;
 begin
   inherited Create();
   FSecurityToken := ASecurityToken;
-  FCacheDir := TPath.Combine(GetEnvironmentVariable('LocalAppData'), 'Delphinus\Github');
+  FCacheDir := TPath.Combine(TPath.GetCachePath(), 'Delphinus\Github');
   ForceDirectories(FCacheDir);
   FRequest := TIdHTTP.Create(nil);
   {$IFDEF SupportsErrorCodes}
