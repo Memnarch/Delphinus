@@ -325,6 +325,7 @@ var
   LIsValid: Boolean;
 begin
   LIsValid := False;
+  LGraphic := nil;
   if TFile.Exists(APictureFile) then
   begin
     if LowerCase(ExtractFileExt(APictureFile)) = '.png' then
@@ -359,6 +360,7 @@ begin
       LResStream.Free;
     end;
   end;
+
   APackage.Picture.Assign(LGraphic);
 
   if Assigned(LGraphic) then
