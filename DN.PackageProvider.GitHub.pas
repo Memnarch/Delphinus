@@ -49,8 +49,8 @@ implementation
 uses
   IOUtils,
   StrUtils,
-  Vcl.Imaging.jpeg,
-  Vcl.Imaging.pngimage,
+  jpeg,
+  pngimage,
   IdIOHandlerStack,
   IdSSLOpenSSl,
   DN.Package,

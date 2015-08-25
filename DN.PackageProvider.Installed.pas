@@ -30,13 +30,13 @@ implementation
 
 uses
   IOUtils,
+  jpeg,
+  pngimage,
   DN.Package,
   DN.Uninstaller.Intf,
   DN.JSonFile.InstalledInfo,
   DN.Package.Version,
-  DN.Package.Version.Intf,
-  Vcl.Imaging.jpeg,
-  Vcl.Imaging.pngimage;
+  DN.Package.Version.Intf;
 
 { TDNInstalledPackageProvider }
 
