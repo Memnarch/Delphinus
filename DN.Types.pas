@@ -19,6 +19,11 @@ const
   CSourceSubDir = 'Source';
   CMacPackageExtension = '.dylib';
   CMacPackagePrefix = 'bpl';
+  CInstallFile = 'install.json';
+  CUninstallFile = 'uninstall.json';
+  CInfoFile = 'info.json';
+  CCacheFile = 'cache.json';
+
 
 implementation
 

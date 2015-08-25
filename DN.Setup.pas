@@ -117,7 +117,7 @@ var
   LInstalledInfo: TInstalledInfoFile;
 begin
   Result := False;
-  LInfoFile := TPath.Combine(AInstallDirectory, 'Info.json');
+  LInfoFile := TPath.Combine(AInstallDirectory, CInfoFile);
   if TFile.Exists(LInfoFile) then
   begin
     LInstalledInfo := TInstalledInfoFile.Create();

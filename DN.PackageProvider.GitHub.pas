@@ -53,6 +53,7 @@ uses
   pngimage,
   IdIOHandlerStack,
   IdSSLOpenSSl,
+  DN.Types,
   DN.Package,
   DN.Package.Github,
   DN.JSon,
@@ -150,10 +151,10 @@ begin
   try
     //first download HEAD
     LVersionDir := TPath.Combine(FCacheDir, AAuthor + '\' + AName);
-    if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/info.json') then
+    if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + CInfoFile) then
     begin
-      LFile.SaveToFile(TPath.Combine(LVersionDir, 'info.json'));
-      if LInfo.LoadFromFile(TPath.Combine(LVersionDir, 'info.json')) then
+      LFile.SaveToFile(TPath.Combine(LVersionDir, CInfoFile));
+      if LInfo.LoadFromFile(TPath.Combine(LVersionDir, CInfoFile)) then
       begin
         LFile.Clear();
         LFirstVersion := LInfo.FirstVersion;
@@ -161,9 +162,9 @@ begin
           LFile.SaveToFile(TPath.Combine(LVersionDir, ExtractFileName(LInfo.Picture)));
       end;
       LFile.Clear();
-      if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/install.json') then
+      if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + CInstallFile) then
       begin
-        LFile.SaveToFile(TPath.Combine(LVersionDir, 'install.json'));
+        LFile.SaveToFile(TPath.Combine(LVersionDir, CInstallFile));
         Result := True;
       end;
     end;
@@ -182,13 +183,13 @@ begin
             LVersionDir := TPath.Combine(FCacheDir, AAuthor + '\' + AName + '\' + LValue.Value);
             TDirectory.CreateDirectory(LVersionDir);
             LFile.Clear;
-            if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, 'info.json'])) then
+            if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, CInfoFile])) then
             begin
-              LFile.SaveToFile(TPath.Combine(LVersionDir, 'info.json'));
+              LFile.SaveToFile(TPath.Combine(LVersionDir, CInfoFile));
               LFile.Clear();
-              if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, 'install.json'])) then
+              if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, CInstallFile])) then
               begin
-                LFile.SaveToFile(TPath.Combine(LVersionDir, 'install.json'));
+                LFile.SaveToFile(TPath.Combine(LVersionDir, CInstallFile));
                 Result := True;
               end;
             end;
@@ -272,10 +273,10 @@ begin
   LInfo := TInfoFile.Create();
   LCache := TCacheInfo.Create();
   try
-    LCache.LoadFromFile(TPath.Combine(ADirectory, 'cache.json'));
+    LCache.LoadFromFile(TPath.Combine(ADirectory, CCacheFile));
     LPackage.Description := LCache.Description;
     LPackage.DownloadLoaction := LCache.DownloadLocation;
-    LInfoFile := TPath.Combine(ADirectory, 'info.json');
+    LInfoFile := TPath.Combine(ADirectory, CInfoFile);
     if TFile.Exists(LInfoFile) then
     begin
       if LInfo.LoadFromFile(LInfoFile) then
@@ -287,7 +288,7 @@ begin
     end;
     for LVersionName in LCache.Versions do
     begin
-      LInfoFile := TPath.Combine(TPath.Combine(ADirectory, LVersionName), 'info.json');
+      LInfoFile := TPath.Combine(TPath.Combine(ADirectory, LVersionName), CInfoFile);
       if TFile.Exists(LInfoFile) then
       begin
         LInfo.LoadFromFile(LInfoFile);
@@ -447,7 +448,7 @@ begin
                   LCacheInfo.DefaultBranch := LDefaultBranch;
                   LCacheInfo.DownloadLocation := LItem.GetValue('archive_url').Value;
                   LCacheInfo.DownloadLocation := StringReplace(LCacheInfo.DownloadLocation, CArchivePlaceholder, 'zipball/', []);
-                  LCacheInfo.SaveToFile(TPath.Combine(LCacheDir, 'cache.json'));
+                  LCacheInfo.SaveToFile(TPath.Combine(LCacheDir, CCacheFile));
                 end;
               end;
             finally

@@ -32,6 +32,7 @@ uses
   IOUtils,
   jpeg,
   pngimage,
+  DN.Types,
   DN.Package,
   DN.Uninstaller.Intf,
   DN.JSonFile.InstalledInfo,
@@ -127,7 +128,7 @@ begin
       begin
         LPackage := TDNPackage.Create();
         LPackage.Name := ExtractFileName(LDirectory);
-        LoadDetails(LPackage, TPath.Combine(LDirectory, 'info.json'));
+        LoadDetails(LPackage, TPath.Combine(LDirectory, CInfoFile));
         Packages.Add(LPackage);
       end;
     end;

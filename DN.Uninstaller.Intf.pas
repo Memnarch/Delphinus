@@ -21,9 +21,6 @@ type
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
 
-const
-  CUninstallFile = 'uninstall.json';
-
 implementation
 
 end.

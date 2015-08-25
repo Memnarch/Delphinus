@@ -75,8 +75,6 @@ const
   CLibDir = 'lib';
   CBinDir = 'bin';
   CSourceDir = 'source';
-  CInstallFile = 'install.json';
-  CInfoFile = 'info.json';
 
 
 { TDNInstaller }
@@ -261,7 +259,7 @@ begin
         end
         else
         begin
-          DoMessage(mtError, 'Info.json seems to be corrupt');
+          DoMessage(mtError, CInfoFile + ' seems to be corrupt');
           Exit(False);
         end;
       finally
@@ -289,7 +287,7 @@ begin
         end
         else
         begin
-          DoMessage(mtError, 'Install.json seems to be corrupt');
+          DoMessage(mtError, CInstallFile + ' seems to be corrupt');
         end;
       finally
         LInstallInfo.Free;
