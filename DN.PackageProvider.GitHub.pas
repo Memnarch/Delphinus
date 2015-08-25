@@ -153,6 +153,7 @@ begin
     LVersionDir := TPath.Combine(FCacheDir, AAuthor + '\' + AName);
     if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + CInfoFile) then
     begin
+      ForceDirectories(LVersionDir);
       LFile.SaveToFile(TPath.Combine(LVersionDir, CInfoFile));
       if LInfo.LoadFromFile(TPath.Combine(LVersionDir, CInfoFile)) then
       begin
@@ -167,6 +168,10 @@ begin
         LFile.SaveToFile(TPath.Combine(LVersionDir, CInstallFile));
         Result := True;
       end;
+    end
+    else
+    begin
+      Exit(False);
     end;
     LArray := TJSOnObject.ParseJSONValue(AData.DataString) as TJSONArray;
     if Assigned(LArray) then
@@ -445,13 +450,12 @@ begin
                 if TDirectory.Exists(LCacheDir) then
                 begin
                   TDirectory.Delete(LCacheDir, True);
-                  TDirectory.CreateDirectory(LCacheDir);
                 end;
 
-                ForceDirectories(LCacheDir);
                 LCacheInfo.CacheID := FLastEtag;
                 if DownloadVersionMeta(LReleases, LCacheInfo, LAuthor, LName, LDefaultBranch) then
                 begin
+                  ForceDirectories(LCacheDir);
                   LCacheInfo.Description := LItem.GetValue('description').Value;
                   LCacheInfo.DefaultBranch := LDefaultBranch;
                   LCacheInfo.DownloadLocation := LItem.GetValue('archive_url').Value;
