@@ -434,7 +434,7 @@ begin
             LName := LItem.GetValue('name').Value;
             LAuthor := TJSonObject(LItem.GetValue('owner')).GetValue('login').Value;
             LDefaultBranch := LItem.GetValue('default_branch').Value;
-            LoadCacheInfo(LCacheInfo, LAuthor, LName, 'cache.json');
+            LoadCacheInfo(LCacheInfo, LAuthor, LName, CCacheFile);
             LReleases := TStringStream.Create();
             try
               if ExecuteRequest(LReleases, Format(CGithubRepoReleases, [LAuthor, LName]), LCacheInfo.CacheID) then
