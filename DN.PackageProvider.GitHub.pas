@@ -264,7 +264,7 @@ var
   LPackage: TDNGitHubPackage;
   LCache: TCacheInfo;
   LInfo: TInfoFile;
-  LVersionName, LPicture, LInfoFile: string;
+  LVersionName, LPicture, LInfoFile, LCacheFile: string;
   LVersion: IDNPackageVersion;
 begin
   LPackage := TDNGitHubPackage.Create();
@@ -273,45 +273,53 @@ begin
   LInfo := TInfoFile.Create();
   LCache := TCacheInfo.Create();
   try
-    LCache.LoadFromFile(TPath.Combine(ADirectory, CCacheFile));
-    LPackage.Description := LCache.Description;
-    LPackage.DownloadLoaction := LCache.DownloadLocation;
-    LInfoFile := TPath.Combine(ADirectory, CInfoFile);
-    if TFile.Exists(LInfoFile) then
+    LCacheFile := TPath.Combine(ADirectory, CCacheFile);
+    if TFile.Exists(LCacheFile) then
     begin
-      if LInfo.LoadFromFile(LInfoFile) then
-      begin
-        LPackage.ID := LInfo.ID;
-        LPackage.CompilerMin := LInfo.CompilerMin;
-        LPackage.CompilerMax := LInfo.CompilerMax;
-      end;
-    end;
-    for LVersionName in LCache.Versions do
-    begin
-      LInfoFile := TPath.Combine(TPath.Combine(ADirectory, LVersionName), CInfoFile);
+      LCache.LoadFromFile(LCacheFile);
+      LPackage.Description := LCache.Description;
+      LPackage.DownloadLoaction := LCache.DownloadLocation;
+      LInfoFile := TPath.Combine(ADirectory, CInfoFile);
       if TFile.Exists(LInfoFile) then
       begin
-        LInfo.LoadFromFile(LInfoFile);
-        LVersion := TDNPackageVersion.Create();
-        LVersion.Name := LVersionName;
-        LVersion.CompilerMin := LInfo.CompilerMin;
-        LVersion.CompilerMax := LInfo.CompilerMax;
-        //the package itself always shows the lowest and highes compiler-version to indicate if there
-        //is any version that matches the required one
-        if (LPackage.CompilerMin = 0) or (LVersion.CompilerMin < LPackage.CompilerMin) then
-          LPackage.CompilerMin := LVersion.CompilerMin;
-
-        if (LPackage.CompilerMax = 0) or (LVersion.CompilerMax > LPackage.CompilerMax) then
-          LPackage.CompilerMax := LVersion.CompilerMax;
-
-        LPackage.Versions.Add(LVersion);
+        if LInfo.LoadFromFile(LInfoFile) then
+        begin
+          LPackage.ID := LInfo.ID;
+          LPackage.CompilerMin := LInfo.CompilerMin;
+          LPackage.CompilerMax := LInfo.CompilerMax;
+        end;
       end;
-    end;
-    LPicture := TPath.Combine(ADirectory, ExtractFileName(LInfo.Picture));
-    LoadPicture(LPackage, LPicture);
+      for LVersionName in LCache.Versions do
+      begin
+        LInfoFile := TPath.Combine(TPath.Combine(ADirectory, LVersionName), CInfoFile);
+        if TFile.Exists(LInfoFile) then
+        begin
+          LInfo.LoadFromFile(LInfoFile);
+          LVersion := TDNPackageVersion.Create();
+          LVersion.Name := LVersionName;
+          LVersion.CompilerMin := LInfo.CompilerMin;
+          LVersion.CompilerMax := LInfo.CompilerMax;
+          //the package itself always shows the lowest and highes compiler-version to indicate if there
+          //is any version that matches the required one
+          if (LPackage.CompilerMin = 0) or (LVersion.CompilerMin < LPackage.CompilerMin) then
+            LPackage.CompilerMin := LVersion.CompilerMin;
 
-    APackage := LPackage;
-    Result := True;
+          if (LPackage.CompilerMax = 0) or (LVersion.CompilerMax > LPackage.CompilerMax) then
+            LPackage.CompilerMax := LVersion.CompilerMax;
+
+          LPackage.Versions.Add(LVersion);
+        end;
+      end;
+      LPicture := TPath.Combine(ADirectory, ExtractFileName(LInfo.Picture));
+      LoadPicture(LPackage, LPicture);
+
+      APackage := LPackage;
+      Result := True;
+    end
+    else
+    begin
+      Result := False;
+    end;
   finally
     LCache.Free;
     LInfo.Free;
