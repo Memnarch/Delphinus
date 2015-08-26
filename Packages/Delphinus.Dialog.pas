@@ -88,6 +88,7 @@ uses
   RTTI,
   Types,
   Registry,
+  DN.Types,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   Delphinus.SetupDialog,
@@ -202,6 +203,8 @@ begin
   RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
+  dlgSelectInstallFile.Filter := CInstallFileFilter;
+  dlgSelectUninstallFile.Filter := CUninstallFileFilter;
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;

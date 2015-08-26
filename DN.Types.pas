@@ -24,6 +24,9 @@ const
   CInfoFile = 'Delphinus.Info.json';
   CCacheFile = 'Delphinus.Cache.json';
 
+  CInstallFileFilter = 'InstallationFile|' + CInstallFile;
+  CUninstallFileFilter = 'UninstallFile|' + CUninstallFile;
+
 
 implementation
 

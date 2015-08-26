@@ -79,7 +79,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800E40018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800E80018001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -697,12 +697,10 @@ object DelphinusDialog: TDelphinusDialog
     end
   end
   object dlgSelectInstallFile: TOpenDialog
-    Filter = 'Installationfile|install.json'
     Left = 432
     Top = 208
   end
   object dlgSelectUninstallFile: TOpenDialog
-    Filter = 'Uninstallationfile|uninstall.json'
     Left = 400
     Top = 160
   end
