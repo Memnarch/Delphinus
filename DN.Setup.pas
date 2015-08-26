@@ -41,6 +41,7 @@ type
     function ExtendInfoFile(const APackage: IDNPackage; const AVersion: IDNPackageVersion; const AInstallDirectory: string): Boolean;
     function GetSetupTempDir: string;
     procedure CleanupTemp();
+    function ConvertNameToValidDirectoryName(const AName: string): string;
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
@@ -68,6 +69,21 @@ begin
   begin
     TDirectory.Delete(GetSetupTempDir(), True);
   end;
+end;
+
+function TDNSetup.ConvertNameToValidDirectoryName(const AName: string): string;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(AName));
+  for i := Low(Result) to High(Result) do
+  begin
+    if TPath.IsValidFileNameChar(AName[i]) then
+      Result[i] := AName[i]
+    else
+      Result[i] := ' ';
+  end;
+  Result := Trim(Result);
 end;
 
 constructor TDNSetup.Create(const AInstaller: IDNInstaller;
@@ -148,7 +164,7 @@ end;
 
 function TDNSetup.GetInstallDirectoryForPackage(const APackage: IDNPackage): string;
 begin
-  Result := TPath.Combine(FComponentDirectory, APackage.Name);
+  Result := TPath.Combine(FComponentDirectory, ConvertNameToValidDirectoryName(APackage.Name));
 end;
 
 function TDNSetup.GetOnMessage: TMessageEvent;

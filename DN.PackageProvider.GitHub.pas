@@ -280,6 +280,8 @@ begin
       begin
         if LInfo.LoadFromFile(LInfoFile) then
         begin
+          if LInfo.Name <> '' then
+            LPackage.Name := LInfo.Name;
           LPackage.ID := LInfo.ID;
           LPackage.CompilerMin := LInfo.CompilerMin;
           LPackage.CompilerMax := LInfo.CompilerMax;
