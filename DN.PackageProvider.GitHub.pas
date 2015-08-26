@@ -162,11 +162,6 @@ begin
         LFirstVersion := LInfo.FirstVersion;
         if IsValidImage(LInfo.Picture) and ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + LInfo.Picture) then
           LFile.SaveToFile(TPath.Combine(LVersionDir, ExtractFileName(LInfo.Picture)));
-      end;
-      LFile.Clear();
-      if ExecuteRequest(LFile, CGithubRaw + AAuthor + '/' + AName + '/' + ADefaultBranch + '/' + CInstallFile) then
-      begin
-        LFile.SaveToFile(TPath.Combine(LVersionDir, CInstallFile));
         Result := True;
       end;
     end
@@ -192,12 +187,7 @@ begin
             if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, CInfoFile])) then
             begin
               LFile.SaveToFile(TPath.Combine(LVersionDir, CInfoFile));
-              LFile.Clear();
-              if ExecuteRequest(LFile, Format(CGithubRawReferencedFile, [AAuthor, AName, LValue.Value, CInstallFile])) then
-              begin
-                LFile.SaveToFile(TPath.Combine(LVersionDir, CInstallFile));
-                Result := True;
-              end;
+              Result := True;
             end;
             //stop after first supported release, all others are not supported
             if SameText(LValue.Value, LFirstVersion) then
