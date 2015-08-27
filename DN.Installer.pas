@@ -523,7 +523,7 @@ begin
         begin
           LBase := IncludeTrailingPathDelimiter(LFolder.Base);
           LRelTargetPath := IncludeTrailingPathDelimiter(LFolder.Folder);
-          if StartsText(LRelTargetPath, LBase) then
+          if StartsText(LBase, LRelTargetPath) then
             LRelTargetPath := Copy(LRelTargetPath, Length(LBase) + 1, Length(LRelTargetPath))
           else
             DoMessage(mtError, 'base must be exactly overlapping with folder string to remove it');
