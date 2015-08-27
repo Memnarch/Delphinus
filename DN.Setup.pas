@@ -74,6 +74,7 @@ end;
 function TDNSetup.ConvertNameToValidDirectoryName(const AName: string): string;
 var
   i: Integer;
+{$i DN.LowHighString.inc}
 begin
   SetLength(Result, Length(AName));
   for i := Low(Result) to High(Result) do
