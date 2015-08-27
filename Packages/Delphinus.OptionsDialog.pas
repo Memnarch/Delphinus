@@ -61,11 +61,12 @@ begin
     LRequest.HandleRedirects := True;
     LRequest.Request.Authentication := TGithubAuthentication.Create();
     LRequest.Request.Authentication.Password := Settings.OAuthToken;
+    LRequest.ReadTimeout := 30000;
     try
       LRequest.Get('https://api.github.com/user', LResponse);
     except
-
     end;
+
     if LRequest.ResponseCode = 200 then
     begin
       LJSon := TJSonObject.ParseJSONValue(LResponse.DataString) as TJSonObject;

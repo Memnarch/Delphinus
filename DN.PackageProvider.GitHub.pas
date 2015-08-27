@@ -85,6 +85,7 @@ begin
   FCacheDir := TPath.Combine(TPath.GetCachePath(), 'Delphinus\Github');
   ForceDirectories(FCacheDir);
   FRequest := TIdHTTP.Create(nil);
+  FRequest.ReadTimeout := 30000;
   {$IFDEF SupportsErrorCodes}
   FRequest.HTTPOptions := FRequest.HTTPOptions + [hoNoProtocolErrorException];
   {$EndIf}
