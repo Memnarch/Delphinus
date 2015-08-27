@@ -18,6 +18,7 @@ uses
   IdAuthentication,
   IdHeaderList,
   Generics.Collections,
+  DN.Package.Github,
   DN.Package.Intf,
   DN.PackageProvider,
   DN.JSonFile.CacheInfo;
@@ -37,6 +38,8 @@ type
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(const APackage: IDNPackage; const APictureFile: string);
     function IsValidImage(const AFileName: string): Boolean;
+  protected
+    function GetLicense(const APackage: TDNGitHubPackage): string;
   public
     constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
@@ -56,7 +59,6 @@ uses
   IdSSLOpenSSl,
   DN.Types,
   DN.Package,
-  DN.Package.Github,
   DN.JSon,
   DN.Zip,
   DN.JSOnFile.Info,
@@ -235,6 +237,33 @@ begin
   FLastEtag := FRequest.Response.ETag;
 end;
 
+function TDNGitHubPackageProvider.GetLicense(
+  const APackage: TDNGitHubPackage): string;
+var
+  LLicense: TStringStream;
+begin
+  Result := '';
+  if (APackage.LicenseType <> '') then
+  begin
+    LLicense := TStringStream.Create();
+    try
+      if ExecuteRequest(LLicense, Format(CGithubRawReferencedFile, [APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile])) then
+      begin
+        Result := LLicense.DataString;
+        //if we do not detect a single Windows-Linebreak, we assume Posix-LineBreaks and convert
+        if not ContainsStr(Result, sLineBreak) then
+          Result := StringReplace(Result, #10, sLineBreak, [rfReplaceAll]);
+      end
+      else
+      begin
+        Result := 'An error occured while doanloading the license information';
+      end;
+    finally
+      LLicense.Free;
+    end;
+  end;
+end;
+
 function TDNGitHubPackageProvider.IsValidImage(const AFileName: string): Boolean;
 var
   LExtension: string;
@@ -265,6 +294,7 @@ var
   LVersion: IDNPackageVersion;
 begin
   LPackage := TDNGitHubPackage.Create();
+  LPackage.OnGetLicense := GetLicense;
   LPackage.Name := ExtractFileName(ExcludeTrailingPathDelimiter(ADirectory));
   LPackage.Author := AAutor;
   LInfo := TInfoFile.Create();
@@ -276,6 +306,8 @@ begin
       LCache.LoadFromFile(LCacheFile);
       LPackage.Description := LCache.Description;
       LPackage.DownloadLoaction := LCache.DownloadLocation;
+      LPackage.RepositoryName := LCache.RepositoryName;
+      LPackage.DefaultBranch := LCache.DefaultBranch;
       LInfoFile := TPath.Combine(ADirectory, CInfoFile);
       if TFile.Exists(LInfoFile) then
       begin
@@ -286,6 +318,8 @@ begin
           LPackage.ID := LInfo.ID;
           LPackage.CompilerMin := LInfo.CompilerMin;
           LPackage.CompilerMax := LInfo.CompilerMax;
+          LPackage.LicenseType := LInfo.LicenseType;
+          LPackage.LicenseFile := LInfo.LicenseFile;
         end;
       end;
       for LVersionName in LCache.Versions do
@@ -452,6 +486,7 @@ begin
                   ForceDirectories(LCacheDir);
                   LCacheInfo.Description := LItem.GetValue('description').Value;
                   LCacheInfo.DefaultBranch := LDefaultBranch;
+                  LCacheInfo.RepositoryName := LName;
                   LCacheInfo.DownloadLocation := LItem.GetValue('archive_url').Value;
                   LCacheInfo.DownloadLocation := StringReplace(LCacheInfo.DownloadLocation, CArchivePlaceholder, 'zipball/', []);
                   LCacheInfo.SaveToFile(TPath.Combine(LCacheDir, CCacheFile));

@@ -51,6 +51,7 @@ type
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
+    procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -148,6 +149,17 @@ begin
   end;
 end;
 
+procedure TDNInstaller.CopyLicense(const ASourceDirectory,
+  ATargetDirectory, ALicense: string);
+var
+  LSource, LTarget: string;
+begin
+  LSource := TPath.Combine(ASourceDirectory, ALicense);
+  LTarget := TPath.Combine(ATargetDirectory, ExtractFileName(ALicense));
+  if TFile.Exists(LSource) then
+    TFile.Copy(LSource, LTarget, True);
+end;
+
 function TDNInstaller.CopyMetaData(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
@@ -238,7 +250,7 @@ function TDNInstaller.Install(const ASourceDirectory,
 var
   LInstallInfo: TInstallationFile;
   LInfo: TInfoFile;
-  LInstallerFile, LInfoFile: string;
+  LInstallerFile, LInfoFile, LLicenseFile: string;
 begin
   Reset();
   ForceDirectories(ATargetDirectory);
@@ -256,6 +268,8 @@ begin
             DoMessage(mtError, 'no ID provided');
             Exit(False);
           end;
+          if LInfo.LicenseType <> '' then
+            LLicenseFile := LInfo.LicenseFile;
         end
         else
         begin
@@ -283,6 +297,7 @@ begin
           ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
           ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
+          CopyLicense(ASourceDirectory, ATargetDirectory, LLicenseFile);
           Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
         end
         else

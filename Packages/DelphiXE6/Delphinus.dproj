@@ -174,6 +174,10 @@
         <DCCReference Include="..\..\DN.Setup.pas"/>
         <DCCReference Include="..\..\DN.Version.pas"/>
         <DCCReference Include="..\..\DN.IOUtils.pas"/>
+        <DCCReference Include="..\Delphinus.LicenseDialog.pas">
+            <Form>LicenseDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

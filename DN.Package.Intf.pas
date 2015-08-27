@@ -37,6 +37,10 @@ type
     function GetLastUpdated: string;
     procedure SetLastUpdated(const Value: string);
     function GetVersions: TList<IDNPackageVersion>;
+    function GetLicenseText: string;
+    function GetLicenseType: string;
+    procedure SetLicenseText(const Value: string);
+    procedure SetLicenseType(const Value: string);
     property ID: TGUID read GetID write SetID;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
@@ -47,6 +51,8 @@ type
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
     property Versions: TList<IDNPackageVersion> read GetVersions;
+    property LicenseType: string read GetLicenseType write SetLicenseType;
+    property LicenseText: string read GetLicenseText write SetLicenseText;
   end;
 
 implementation

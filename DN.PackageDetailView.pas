@@ -30,7 +30,11 @@ type
     lbSupports: TLabel;
     lbInstalledCaption: TLabel;
     lbInstalled: TLabel;
+    Label3: TLabel;
+    lbLicense: TLabel;
+    btnLicense: TButton;
     procedure Button1Click(Sender: TObject);
+    procedure btnLicenseClick(Sender: TObject);
   private
     FCanvas: TControlCanvas;
     FPackage: IDNPackage;
@@ -49,6 +53,9 @@ type
   end;
 
 implementation
+
+uses
+  Delphinus.LicenseDialog;
 
 {$R *.dfm}
 
@@ -89,6 +96,19 @@ const
   end;
 
 { TFrame1 }
+
+procedure TPackageDetailView.btnLicenseClick(Sender: TObject);
+var
+  LDialog: TLicenseDialog;
+begin
+  LDialog := TLicenseDialog.Create(nil);
+  try
+    LDialog.Package := FPackage;
+    LDialog.ShowModal();
+  finally
+    LDialog.Free;
+  end;
+end;
 
 procedure TPackageDetailView.Button1Click(Sender: TObject);
 begin
@@ -145,9 +165,14 @@ begin
     lbDescription.Caption := FPackage.Description;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     imgRepo.Picture := FPackage.Picture;
+    lbLicense.Caption := FPackage.LicenseType;
     if FPackage.Versions.Count > 0 then
     begin
       lbInstalled.Caption := FPackage.Versions[0].Name;
+    end
+    else
+    begin
+      lbInstalled.Caption := '';
     end;
   end
   else
@@ -157,10 +182,12 @@ begin
     lbDescription.Caption := '';
     lbSupports.Caption := '';
     lbInstalled.Caption := '';
+    lbLicense.Caption := '';
     imgRepo.Picture := nil;
   end;
   lbInstalledCaption.Visible := lbInstalled.Caption <> '';
   lbInstalled.Visible := lbInstalled.Caption <> '';
+  btnLicense.Visible := lbLicense.Caption <> '';
 end;
 
 end.

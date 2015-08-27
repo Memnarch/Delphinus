@@ -22,6 +22,7 @@ type
     FDefaultBranch: string;
     FVersions: TStringDynArray;
     FDownloadLocation: string;
+    FRepositoryName: string;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
@@ -29,6 +30,7 @@ type
     property CacheID: string read FCacheID write FCacheID;
     property Description: string read FDescription write FDescription;
     property DefaultBranch: string read FDefaultBranch write FDefaultBranch;
+    property RepositoryName: string read FRepositoryName write FRepositoryName;
     property DownloadLocation: string read FDownloadLocation write FDownloadLocation;
     property Versions: TStringDynArray read FVersions write FVersions;
   end;
@@ -46,6 +48,7 @@ begin
   FCacheID := ReadString(ARoot, 'cache_id');
   FDescription := ReadString(ARoot, 'description');
   FDefaultBranch := ReadString(ARoot, 'default_branch');
+  FRepositoryName := ReadString(ARoot, 'repository_name');
   FDownloadLocation := ReadString(ARoot, 'download_location');
   if ReadArray(ARoot, 'versions', LArray) then
   begin
@@ -66,6 +69,7 @@ begin
   WriteString(ARoot, 'cache_id', FCacheID);
   WriteString(ARoot, 'description', FDescription);
   WriteString(ARoot, 'default_branch', FDefaultBranch);
+  WriteString(ARoot, 'repository_name', FRepositoryName);
   WriteString(ARoot, 'download_location', FDownloadLocation);
   LArray := WriteArray(ARoot, 'versions');
   for LVersion in FVersions do

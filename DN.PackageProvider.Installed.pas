@@ -20,6 +20,7 @@ type
   TDNInstalledPackageProvider = class(TDNPackageProvider)
   private
     FComponentDirectory: string;
+    function LoadLicenceText(const AFile: string): string;
     procedure LoadDetails(const APackage: IDNPackage; const AInfoFile: string);
   public
     constructor Create(const AComponentDirectory: string);
@@ -67,7 +68,9 @@ begin
         APackage.Description := LInfo.Description;
         APackage.ID := LInfo.ID;
         APackage.CompilerMin := LInfo.CompilerMin;
-        Apackage.CompilerMax := LInfo.CompilerMax;
+        APackage.CompilerMax := LInfo.CompilerMax;
+        APackage.LicenseType := LInfo.LicenseType;
+        APackage.LicenseText := LoadLicenceText(TPath.Combine(FComponentDirectory, LInfo.LicenseFile));
         LVersion := TDNPackageVersion.Create();
         if LInfo.Version <> '' then
           LVersion.Name := LInfo.Version
@@ -107,6 +110,24 @@ begin
       end;
     finally
       LInfo.Free;
+    end;
+  end;
+end;
+
+function TDNInstalledPackageProvider.LoadLicenceText(
+  const AFile: string): string;
+var
+  LFile: TStringStream;
+begin
+  Result := '';
+  if TFile.Exists(AFile) then
+  begin
+    LFile := TStringStream.Create();
+    try
+      LFile.LoadFromFile(AFile);
+      Result := LFile.DataString;
+    finally
+      LFile.Free;
     end;
   end;
 end;

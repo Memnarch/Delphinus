@@ -12,23 +12,44 @@ interface
 uses
   Classes,
   Types,
-  DN.Package,
-  DN.PackageProvider.Intf;
+  DN.Package;
 
 type
+  TDNGitHubPackage = class;
+
+  TGetLicenseCallback = function(const APackage: TDNGithubPackage): string of object;
+
   TDNGitHubPackage = class(TDNPackage)
   private
     FDefaultBranch: string;
+    FRepositoryName: string;
+    FLicenseFile: string;
+    FOnGetLicense: TGetLicenseCallback;
+    FLicenseLoaded: Boolean;
+  protected
+    function GetLicenseText: string; override;
   public
     property DefaultBranch: string read FDefaultBranch write FDefaultBranch;
+    property RepositoryName: string read FRepositoryName write FRepositoryName;
+    property LicenseFile: string read FLicenseFile write FLicenseFile;
+    property OnGetLicense: TGetLicenseCallback read FOnGetLicense write FOnGetLicense;
   end;
 
 implementation
 
-uses
-  DN.PackageProvider.Github;
+{ TDNGitHubPackage }
 
 { TDNGitHubPackage }
+
+function TDNGitHubPackage.GetLicenseText: string;
+begin
+  if (not FLicenseLoaded) and Assigned(FOnGetLicense) then
+  begin
+    LicenseText := FOnGetLicense(Self);
+    FLicenseLoaded := True;
+  end;
+  Result := inherited;
+end;
 
 end.
 

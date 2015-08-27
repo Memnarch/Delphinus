@@ -114,6 +114,30 @@ object SetupDialog: TSetupDialog
         Height = 13
         Caption = 'Version:'
       end
+      object lbLicenseAnotation: TLabel
+        Left = 3
+        Top = 192
+        Width = 550
+        Height = 13
+        AutoSize = False
+        Caption = 
+          'By clicking OK, you accept the License provided within the packa' +
+          'ge'
+      end
+      object Label3: TLabel
+        Left = 137
+        Top = 120
+        Width = 39
+        Height = 13
+        Caption = 'License:'
+      end
+      object lbLicenseType: TLabel
+        Left = 182
+        Top = 120
+        Width = 39
+        Height = 13
+        Caption = 'License:'
+      end
       object btnOK: TButton
         Left = 397
         Top = 262
@@ -141,6 +165,15 @@ object SetupDialog: TSetupDialog
         Height = 21
         Style = csDropDownList
         TabOrder = 2
+      end
+      object btnLicense: TButton
+        Left = 288
+        Top = 154
+        Width = 75
+        Height = 25
+        Caption = 'Show License'
+        TabOrder = 3
+        OnClick = btnLicenseClick
       end
     end
     object tsLog: TTabSheet

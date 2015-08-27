@@ -43,8 +43,13 @@ type
     lbDescriptionInstallUpdate: TLabel;
     cbVersion: TComboBox;
     Label1: TLabel;
+    lbLicenseAnotation: TLabel;
+    Label3: TLabel;
+    lbLicenseType: TLabel;
+    btnLicense: TButton;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure btnLicenseClick(Sender: TObject);
   private
     { Private declarations }
     FMode: TSetupDialogMode;
@@ -75,11 +80,25 @@ implementation
 
 uses
   IOUtils,
-  DN.JSonFile.InstalledInfo;
+  DN.JSonFile.InstalledInfo,
+  Delphinus.LicenseDialog;
 
 {$R *.dfm}
 
 { TSetupDialog }
+
+procedure TSetupDialog.btnLicenseClick(Sender: TObject);
+var
+  LDialog: TLicenseDialog;
+begin
+  LDialog := TLicenseDialog.Create(nil);
+  try
+    LDialog.Package := FPackage;
+    LDialog.ShowModal();
+  finally
+    LDialog.Free;
+  end;
+end;
 
 constructor TSetupDialog.Create(const ASetup: IDNSetup);
 begin
@@ -175,6 +194,8 @@ begin
       lbActionInstallUpdate.Caption := 'Install';
       lbNameInstallUpdate.Caption := FPackage.Name;
       lbDescriptionInstallUpdate.Caption := FPackage.Description;
+      lbLicenseType.Caption := FPackage.LicenseType;
+      btnLicense.Visible := lbLicenseType.Caption <> '';
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       InitVersionSelection();
@@ -189,6 +210,8 @@ begin
         Image1.Picture.Assign(FPackage.Picture);
       Label1.Visible := False;
       cbVersion.Visible := False;
+      lbLicenseAnotation.Visible := False;
+      btnLicense.Visible := False;
     end;
 //    sdmUninstallDirectory: ;
     sdmUpdate:

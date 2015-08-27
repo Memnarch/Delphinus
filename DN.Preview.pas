@@ -172,6 +172,7 @@ end;
 procedure TPreview.Paint;
 var
   LLeft, LTop: Integer;
+  LVersionString: string;
 begin
   inherited;
   if Assigned(FPackage) then
@@ -193,16 +194,20 @@ begin
     Canvas.Font.Style := [];
     Canvas.TextOut(5, Width + Abs(Canvas.Font.Height), FPackage.Author);
 
+    if FPackage.LicenseType <> '' then
+    begin
+      Canvas.TextOut(5, Width + Abs(Canvas.Font.Height)*2, FPackage.LicenseType);
+      Canvas.Font.Style := [];
+    end;
+
     if InstalledVersion <> '' then
     begin
-      Canvas.Font.Style := [fsBold];
-      Canvas.TextOut(5, Width + Abs(Canvas.Font.Height)*2, '' + InstalledVersion);
-      if FUpdateVersion <> '' then
+      LVersionString := InstalledVersion;
+      if UpdateVersion <> '' then
       begin
-        LLeft := 5 + Canvas.TextWidth(InstalledVersion);
-        Canvas.TextOut(LLeft, Width + Abs(Canvas.Font.Height)*2, ' -> ' + UpdateVersion);
+        LVersionString := LVersionString + ' -> ' + UpdateVersion;
       end;
-      Canvas.Font.Style := [];
+      Canvas.TextOut(Width - Canvas.TextWidth(LVersionString) - 5, Width + Abs(Canvas.Font.Height)*2, LVersionString);
     end;
 
     Canvas.Pen.Color := clBtnShadow; //cl3DLight;

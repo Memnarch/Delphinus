@@ -30,6 +30,8 @@ type
     FDownloadLocation: string;
     FLastUpdated: string;
     FVersions: TList<IDNPackageVersion>;
+    FLicenseType: string;
+    FLicenseText: string;
   protected
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
@@ -49,6 +51,10 @@ type
     function GetLastUpdated: string; virtual;
     procedure SetLastUpdated(const Value: string); virtual;
     function GetVersions: TList<IDNPackageVersion>; virtual;
+    function GetLicenseText: string; virtual;
+    function GetLicenseType: string; virtual;
+    procedure SetLicenseText(const Value: string); virtual;
+    procedure SetLicenseType(const Value: string); virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -62,6 +68,8 @@ type
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
     property Versions: TList<IDNPackageVersion> read GetVersions;
+    property LicenseType: string read GetLicenseType write SetLicenseType;
+    property LicenseText: string read GetLicenseText write SetLicenseText;
   end;
 
 implementation
@@ -117,6 +125,16 @@ begin
   Result := FLastUpdated;
 end;
 
+function TDNPackage.GetLicenseText: string;
+begin
+  Result := FLicenseText;
+end;
+
+function TDNPackage.GetLicenseType: string;
+begin
+  Result := FLicenseType;
+end;
+
 function TDNPackage.GetName: string;
 begin
   Result := FName;
@@ -165,6 +183,16 @@ end;
 procedure TDNPackage.SetLastUpdated(const Value: string);
 begin
   FLastUpdated := Value;
+end;
+
+procedure TDNPackage.SetLicenseText(const Value: string);
+begin
+  FLicenseText := Value;
+end;
+
+procedure TDNPackage.SetLicenseType(const Value: string);
+begin
+  FLicenseType := Value;
 end;
 
 procedure TDNPackage.SetName(const Value: string);

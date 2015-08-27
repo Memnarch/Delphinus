@@ -92,7 +92,8 @@ contains
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
   DN.Setup in '..\..\DN.Setup.pas',
   DN.Version in '..\..\DN.Version.pas',
-  DN.IOUtils in '..\..\DN.IOUtils.pas';
+  DN.IOUtils in '..\..\DN.IOUtils.pas',
+  Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog};
 
 end.
 

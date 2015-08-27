@@ -167,5 +167,43 @@ object PackageDetailView: TPackageDetailView
       Font.Style = []
       ParentFont = False
     end
+    object Label3: TLabel
+      Left = 0
+      Top = 72
+      Width = 128
+      Height = 33
+      AutoSize = False
+      Caption = 'License:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbLicense: TLabel
+      Left = 134
+      Top = 72
+      Width = 464
+      Height = 33
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'Author'#39's Name'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+  end
+  object btnLicense: TButton
+    Left = 304
+    Top = 216
+    Width = 75
+    Height = 25
+    Caption = 'Show License'
+    TabOrder = 2
+    OnClick = btnLicenseClick
   end
 end
