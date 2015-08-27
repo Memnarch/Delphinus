@@ -77,7 +77,7 @@ var
 {$i DN.LowHighString.inc}
 begin
   SetLength(Result, Length(AName));
-  for i := Low(Result) to High(Result) do
+  for i := 0 to Length(Result) do
   begin
     if TPath.IsValidFileNameChar(AName[i]) then
       Result[i] := AName[i]
