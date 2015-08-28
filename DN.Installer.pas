@@ -43,6 +43,7 @@ type
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
     function GetSourceFolder(const ADirectory: string): string;
+    function UndecoratePath(const APath: string): string;
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
@@ -482,14 +483,7 @@ begin
         for LRelPath in LPathes do
         begin
           DoMessage(mtNotification, LRelPath);
-          if ExtractFileName(ExcludeTrailingPathDelimiter(LRelPath)) <> '.' then
-          begin
-            LFullPath := TPath.Combine(LBasePath, LRelPath);
-          end
-          else
-          begin
-            LFullPath := TPath.Combine(LBasePath, ExtractFilePath(ExcludeTrailingPathDelimiter(LRelPath)));
-          end;
+          LFullPath := TPath.Combine(LBasePath, UndecoratePath(LRelPath));
           case APathType of
             tpSearchPath: AddSearchPath(LFullPath, LPath.Platforms);
             tpBrowsingPath: AddBrowsingPath(LFullPath, LPath.Platforms);
@@ -533,8 +527,8 @@ begin
 
         DoMessage(mtNotification, LFolder.Folder);
         CopyDirectory(
-          TPath.Combine(ASourceDirectory, IfThen(LFolder.Folder = '.', '', LFolder.Folder)),
-          TPath.Combine(ATargetDirectory, LRelTargetPath), LFilter, LFolder.Recursive);
+          TPath.Combine(ASourceDirectory, UndecoratePath(LFolder.Folder)),
+          TPath.Combine(ATargetDirectory, UndecoratePath(LRelTargetPath)), LFilter, LFolder.Recursive);
       end;
     end;
   end;
@@ -564,6 +558,14 @@ end;
 procedure TDNInstaller.SetOnMessage(const Value: TMessageEvent);
 begin
   FOnMessage := Value;
+end;
+
+function TDNInstaller.UndecoratePath(const APath: string): string;
+begin
+  if StartsStr('..', APath) then
+    Result := Copy(APath, 3, Length(APath))
+  else if StartsStr('.', APath) then
+    Result := Copy(APath, 2, Length(APath));
 end;
 
 end.
