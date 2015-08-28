@@ -18,6 +18,7 @@ type
     procedure Load(const ARoot: TJSONObject); virtual;
     procedure Save(const ARoot: TJSONObject); virtual;
     procedure WriteString(AParent: TJSONObject; const AProperty, AContent: string);
+    procedure WritePath(AParent: TJSonObject; const AProperty: string; const AContent: string);
     procedure WriteInteger(AParent: TJSONObject; const AProperty: string; AContent: Integer);
     procedure WriteBoolean(AParent: TJSONObject; const AProperty: string; AValue: Boolean);
     procedure WriteFloat(AParent: TJSonObject; const AProperty: string; AValue: Single);
@@ -233,13 +234,19 @@ begin
   AParent.AddPair(AObjectName, Result);
 end;
 
+procedure TJSonFile.WritePath(AParent: TJSonObject; const AProperty,
+  AContent: string);
+begin
+  WriteString(AParent, AProperty, StringReplace(AContent, '\', '\\', [rfReplaceAll]));
+end;
+
 procedure TJSonFile.WriteString(AParent: TJSONObject; const AProperty,
   AContent: string);
 begin
   {$if CompilerVersion < 23}
   AParent.AddPair(AProperty, EscapeQuotes(AContent));
   {$Else}
-  AParent.AddPair(AProperty, AContent);
+  AParent.AddPair(AProperty, TJSONString.Create(AContent));
   {$IfEnd}
 end;
 

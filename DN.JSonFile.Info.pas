@@ -84,11 +84,11 @@ end;
 procedure TInfoFile.Save(const ARoot: TJSONObject);
 begin
   inherited;
-  WriteString(ARoot, 'picture', FPicture);
+  WritePath(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
   WriteString(ARoot, 'name', FName);
   WriteString(ARoot, 'license_type', FLicenseType);
-  WriteString(ARoot, 'license_file', FLicenseFile);
+  WritePath(ARoot, 'license_file', FLicenseFile);
   WriteString(ARoot, 'first_version', FFirstVersion);
   WriteFloat(ARoot, 'package_compiler_max', FPackageCompilerMax);
   WriteFloat(ARoot, 'package_compiler_min', FPackageCompilerMin);

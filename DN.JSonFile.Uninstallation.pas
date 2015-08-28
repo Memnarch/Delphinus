@@ -71,14 +71,14 @@ var
   LJPackage: TJSONObject;
 begin
   inherited;
-  WriteString(ARoot, 'search_pathes', StringReplace(FSearchPathes, '\', '\\', [rfReplaceAll]));
-  WriteString(ARoot, 'browsing_pathes', StringReplace(FBrowsingPathes, '\', '\\', [rfReplaceAll]));
+  WritePath(ARoot, 'search_pathes', FSearchPathes);
+  WritePath(ARoot, 'browsing_pathes', FBrowsingPathes);
   LPackages := WriteArray(ARoot, 'packages');
   for LPackage in FPackages do
   begin
     LJPackage := WriteArrayObject(LPackages);
-    WriteString(LJPackage, 'bpl_file', StringReplace(LPackage.BPLFile, '\', '\\', [rfReplaceAll]));
-    WriteString(LJPackage, 'dcp_file', StringReplace(LPackage.DCPFile, '\', '\\', [rfReplaceAll]));
+    WritePath(LJPackage, 'bpl_file', LPackage.BPLFile);
+    WritePath(LJPackage, 'dcp_file', LPackage.DCPFile);
     WriteBoolean(LJPackage, 'installed', LPackage.Installed);
   end;
 end;
