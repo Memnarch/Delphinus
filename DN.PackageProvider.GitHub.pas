@@ -213,10 +213,18 @@ end;
 
 function TDNGitHubPackageProvider.ExecuteRequest(const ATarget: TStream;
   const ARequest: string; const AETag: string): Boolean;
+var
+  LIndex: Integer;
 begin
   if AETag <> '' then
   begin
     FRequest.Request.CustomHeaders.Values['If-None-Match'] := AETag;
+  end
+  else
+  begin
+    LIndex := FRequest.Request.CustomHeaders.IndexOfName('If-None-Match');
+    if LIndex > -1 then
+      FRequest.Request.CustomHeaders.Delete(LIndex);
   end;
   if (not Assigned(FRequest.Request.Authentication)) and (FSecurityToken <> '') then
   begin
