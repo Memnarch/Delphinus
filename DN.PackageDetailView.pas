@@ -15,7 +15,8 @@ uses
   DN.Types,
   DN.Package.Intf,
   DN.Controls,
-  DN.Controls.Button;
+  DN.Controls.Button,
+  ImgList;
 
 type
   TPackageDetailView = class(TFrame)
@@ -33,8 +34,15 @@ type
     Label3: TLabel;
     lbLicense: TLabel;
     btnLicense: TButton;
+    btnHome: TButton;
+    ImageList1: TImageList;
+    btnProject: TButton;
+    btnReport: TButton;
     procedure Button1Click(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
+    procedure btnHomeClick(Sender: TObject);
+    procedure btnProjectClick(Sender: TObject);
+    procedure btnReportClick(Sender: TObject);
   private
     FCanvas: TControlCanvas;
     FPackage: IDNPackage;
@@ -44,7 +52,7 @@ type
     { Private declarations }
   protected
     procedure PaintWindow(DC: HDC); override;
-
+    procedure OpenUrl(const AUrl: string);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -55,7 +63,8 @@ type
 implementation
 
 uses
-  Delphinus.LicenseDialog;
+  Delphinus.LicenseDialog,
+  ShellAPi;
 
 {$R *.dfm}
 
@@ -97,6 +106,11 @@ const
 
 { TFrame1 }
 
+procedure TPackageDetailView.btnHomeClick(Sender: TObject);
+begin
+  OpenUrl(FPackage.HomepageUrl);
+end;
+
 procedure TPackageDetailView.btnLicenseClick(Sender: TObject);
 var
   LDialog: TLicenseDialog;
@@ -108,6 +122,16 @@ begin
   finally
     LDialog.Free;
   end;
+end;
+
+procedure TPackageDetailView.btnProjectClick(Sender: TObject);
+begin
+  OpenUrl(FPackage.ProjectUrl);
+end;
+
+procedure TPackageDetailView.btnReportClick(Sender: TObject);
+begin
+  OpenUrl(FPackage.ReportUrl);
 end;
 
 procedure TPackageDetailView.Button1Click(Sender: TObject);
@@ -138,6 +162,11 @@ begin
   FreeAndNil(FCanvas);
   FreeAndNil(FGUI);
   inherited;
+end;
+
+procedure TPackageDetailView.OpenUrl(const AUrl: string);
+begin
+  ShellExecute(0, 'OPEN', PChar(AUrl), '', '', SW_SHOWNORMAL);
 end;
 
 procedure TPackageDetailView.PaintWindow(DC: HDC);
@@ -174,6 +203,9 @@ begin
     begin
       lbInstalled.Caption := '';
     end;
+    btnHome.Enabled := FPackage.HomepageUrl <> '';
+    btnProject.Enabled := FPackage.ProjectUrl <> '';
+    btnReport.Enabled := FPackage.ReportUrl <> '';
   end
   else
   begin
@@ -184,6 +216,9 @@ begin
     lbInstalled.Caption := '';
     lbLicense.Caption := '';
     imgRepo.Picture := nil;
+    btnHome.Enabled := False;
+    btnProject.Enabled := False;
+    btnReport.Enabled := False;
   end;
   lbInstalledCaption.Visible := lbInstalled.Caption <> '';
   lbInstalled.Visible := lbInstalled.Caption <> '';

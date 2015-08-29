@@ -71,6 +71,9 @@ begin
         APackage.CompilerMax := LInfo.CompilerMax;
         APackage.LicenseType := LInfo.LicenseType;
         APackage.LicenseText := LoadLicenceText(TPath.Combine(FComponentDirectory, LInfo.LicenseFile));
+        APackage.ProjectUrl := LInfo.ProjectUrl;
+        APackage.HomepageUrl := LInfo.HomepageUrl;
+        APackage.ReportUrl := LInfo.ReportUrl;
         LVersion := TDNPackageVersion.Create();
         if LInfo.Version <> '' then
           LVersion.Name := LInfo.Version

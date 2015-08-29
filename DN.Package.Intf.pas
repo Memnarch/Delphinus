@@ -41,6 +41,12 @@ type
     function GetLicenseType: string;
     procedure SetLicenseText(const Value: string);
     procedure SetLicenseType(const Value: string);
+    function GetHomepageUrl: string;
+    function GetProjectUrl: string;
+    function GetReportUrl: string;
+    procedure SetProjectUrl(const Value: string);
+    procedure SetReportUrl(const Value: string);
+    procedure SetHomepageUrl(const Value: string);
     property ID: TGUID read GetID write SetID;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
@@ -53,6 +59,9 @@ type
     property Versions: TList<IDNPackageVersion> read GetVersions;
     property LicenseType: string read GetLicenseType write SetLicenseType;
     property LicenseText: string read GetLicenseText write SetLicenseText;
+    property ProjectUrl: string read GetProjectUrl write SetProjectUrl;
+    property HomepageUrl: string read GetHomepageUrl write SetHomepageUrl;
+    property ReportUrl: string read GetReportUrl write SetReportUrl;
   end;
 
 implementation

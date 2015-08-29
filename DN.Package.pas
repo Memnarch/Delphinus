@@ -32,6 +32,9 @@ type
     FVersions: TList<IDNPackageVersion>;
     FLicenseType: string;
     FLicenseText: string;
+    FProjectUrl: string;
+    FHomepageUrl: string;
+    FReportUrl: string;
   protected
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
@@ -55,6 +58,12 @@ type
     function GetLicenseType: string; virtual;
     procedure SetLicenseText(const Value: string); virtual;
     procedure SetLicenseType(const Value: string); virtual;
+    function GetHomepageUrl: string; virtual;
+    function GetProjectUrl: string; virtual;
+    function GetReportUrl: string; virtual;
+    procedure SetProjectUrl(const Value: string); virtual;
+    procedure SetReportUrl(const Value: string); virtual;
+    procedure SetHomepageUrl(const Value: string); virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -70,6 +79,9 @@ type
     property Versions: TList<IDNPackageVersion> read GetVersions;
     property LicenseType: string read GetLicenseType write SetLicenseType;
     property LicenseText: string read GetLicenseText write SetLicenseText;
+    property ProjectUrl: string read GetProjectUrl write SetProjectUrl;
+    property HomepageUrl: string read GetHomepageUrl write SetHomepageUrl;
+    property ReportUrl: string read GetReportUrl write SetReportUrl;
   end;
 
 implementation
@@ -115,6 +127,11 @@ begin
   Result := FDownloadLocation;
 end;
 
+function TDNPackage.GetHomepageUrl: string;
+begin
+  Result := FHomepageUrl;
+end;
+
 function TDNPackage.GetID: TGUID;
 begin
   Result := FID;
@@ -143,6 +160,16 @@ end;
 function TDNPackage.GetPicture: TPicture;
 begin
   Result := FPicture;
+end;
+
+function TDNPackage.GetProjectUrl: string;
+begin
+  Result := FProjectUrl;
+end;
+
+function TDNPackage.GetReportUrl: string;
+begin
+  Result := FReportUrl;
 end;
 
 function TDNPackage.GetVersions: TList<IDNPackageVersion>;
@@ -175,6 +202,11 @@ begin
   FDownloadLocation := Value;
 end;
 
+procedure TDNPackage.SetHomepageUrl(const Value: string);
+begin
+  FHomepageUrl := Value;
+end;
+
 procedure TDNPackage.SetID(const Value: TGUID);
 begin
   FID := Value;
@@ -198,6 +230,16 @@ end;
 procedure TDNPackage.SetName(const Value: string);
 begin
   FName := Value;
+end;
+
+procedure TDNPackage.SetProjectUrl(const Value: string);
+begin
+  FProjectUrl := Value;
+end;
+
+procedure TDNPackage.SetReportUrl(const Value: string);
+begin
+  FReportUrl := Value;
 end;
 
 end.

@@ -316,6 +316,9 @@ begin
       LPackage.DownloadLoaction := LCache.DownloadLocation;
       LPackage.RepositoryName := LCache.RepositoryName;
       LPackage.DefaultBranch := LCache.DefaultBranch;
+      LPackage.HomepageUrl := LCache.HomepageUrl;
+      LPackage.ProjectUrl := LCache.ProjectUrl;
+      LPackage.ReportUrl := LCache.ReportUrl;
       LInfoFile := TPath.Combine(ADirectory, CInfoFile);
       if TFile.Exists(LInfoFile) then
       begin
@@ -452,6 +455,7 @@ var
   LItems: TJSONArray;
   i: Integer;
   LItem: TJSonObject;
+  LSubItem: TJSONValue;
   LCacheInfo: TCacheInfo;
   LName, LAuthor, LDefaultBranch: string;
   LCacheDir, LAuthorDir: string;
@@ -497,6 +501,17 @@ begin
                   LCacheInfo.RepositoryName := LName;
                   LCacheInfo.DownloadLocation := LItem.GetValue('archive_url').Value;
                   LCacheInfo.DownloadLocation := StringReplace(LCacheInfo.DownloadLocation, CArchivePlaceholder, 'zipball/', []);
+                  LCacheInfo.ProjectUrl := LItem.GetValue('html_url').Value;
+                  LSubItem := LItem.GetValue('homepage');
+                  if LSubItem is TJSONString then
+                    LCacheInfo.HomepageUrl := LSubItem.Value
+                  else
+                    LCacheInfo.HomepageUrl := '';
+
+                  if LItem.GetValue('has_issues') is TJSONTrue then
+                    LCacheInfo.ReportUrl := LCacheInfo.ProjectUrl + '/issues'
+                  else
+                    LCacheInfo.ReportUrl := '';
                   LCacheInfo.SaveToFile(TPath.Combine(LCacheDir, CCacheFile));
                 end;
               end;

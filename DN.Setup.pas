@@ -144,6 +144,10 @@ begin
       LInstalledInfo.Description := APackage.Description;
       if Assigned(AVersion) then
         LInstalledInfo.Version := AVersion.Name;
+
+      LInstalledInfo.ProjectUrl := APackage.ProjectUrl;
+      LInstalledInfo.HomepageUrl := APackage.HomepageUrl;
+      LInstalledInfo.ReportUrl := APackage.ReportUrl;
       LInstalledInfo.SaveToFile(LInfoFile);
       Result := True;
     finally

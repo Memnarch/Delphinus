@@ -23,6 +23,9 @@ type
     FVersions: TStringDynArray;
     FDownloadLocation: string;
     FRepositoryName: string;
+    FProjectUrl: string;
+    FReportUrl: string;
+    FHomepageUrl: string;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
@@ -33,6 +36,9 @@ type
     property RepositoryName: string read FRepositoryName write FRepositoryName;
     property DownloadLocation: string read FDownloadLocation write FDownloadLocation;
     property Versions: TStringDynArray read FVersions write FVersions;
+    property ProjectUrl: string read FProjectUrl write FProjectUrl;
+    property HomepageUrl: string read FHomepageUrl write FHomepageUrl;
+    property ReportUrl: string read FReportUrl write FReportUrl;
   end;
 
 implementation
@@ -50,6 +56,9 @@ begin
   FDefaultBranch := ReadString(ARoot, 'default_branch');
   FRepositoryName := ReadString(ARoot, 'repository_name');
   FDownloadLocation := ReadString(ARoot, 'download_location');
+  FProjectUrl := ReadString(ARoot, 'project_url');
+  FHomepageUrl := ReadString(ARoot, 'homepage_url');
+  FReportUrl := ReadString(ARoot, 'report_url');
   if ReadArray(ARoot, 'versions', LArray) then
   begin
     SetLength(FVersions, LArray.Count);
@@ -71,6 +80,9 @@ begin
   WriteString(ARoot, 'default_branch', FDefaultBranch);
   WriteString(ARoot, 'repository_name', FRepositoryName);
   WriteString(ARoot, 'download_location', FDownloadLocation);
+  WriteString(ARoot, 'project_url', FProjectUrl);
+  WriteString(ARoot, 'homepage_url', FHomepageUrl);
+  WriteString(ARoot, 'report_url',FReportUrl);
   LArray := WriteArray(ARoot, 'versions');
   for LVersion in FVersions do
   begin
