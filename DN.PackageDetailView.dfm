@@ -80,8 +80,6 @@ object PackageDetailView: TPackageDetailView
     ParentBackground = False
     ShowCaption = False
     TabOrder = 1
-    ExplicitLeft = 27
-    ExplicitTop = 105
     DesignSize = (
       598
       181)
@@ -225,8 +223,8 @@ object PackageDetailView: TPackageDetailView
     end
   end
   object btnLicense: TButton
-    Left = 304
-    Top = 216
+    Left = 3
+    Top = 241
     Width = 75
     Height = 25
     Caption = 'Show License'
@@ -251,7 +249,7 @@ object PackageDetailView: TPackageDetailView
     Left = 264
     Top = 232
     Bitmap = {
-      494C010103000800200020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010103000800240020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
