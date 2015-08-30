@@ -33,6 +33,7 @@ uses
   Windows,
   SysUtils,
   IOUtils,
+  StrUtils,
   Registry,
   DN.Types,
   ToolsApi,
@@ -46,21 +47,32 @@ var
   LService: IDNEnvironmentOptionsService;
   LPlatform: TDNCompilerPlatform;
   LPathes: string;
+  LLines: TStringList;
 begin
   inherited;
-  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
-  for LPlatform in APlatforms do
-  begin
-    if LPlatform in LService.SupportedPlatforms then
+  LLines := TStringList.Create();
+  try
+    LLines.LineBreak := ';';
+    LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
+    for LPlatform in APlatforms do
     begin
-      LPathes := LService.Options[LPlatform].BrowingPath;
-      if LPathes <> '' then
-        LPathes := LPathes + ';' + ABrowsingPath
-      else
-        LPathes := ABrowsingPath;
+      if LPlatform in LService.SupportedPlatforms then
+      begin
+        LPathes := LService.Options[LPlatform].BrowingPath;
+        LLines.Text := LPathes;
+        if LLines.IndexOf(ABrowsingPath) < 0 then
+        begin
+          if LPathes <> '' then
+            LPathes := LPathes + ';' + ABrowsingPath
+          else
+            LPathes := ABrowsingPath;
 
-      LService.Options[LPlatform].BrowingPath := LPathes;
+          LService.Options[LPlatform].BrowingPath := LPathes;
+        end;
+      end;
     end;
+  finally
+    LLines.Free;
   end;
 end;
 
@@ -69,21 +81,32 @@ var
   LService: IDNEnvironmentOptionsService;
   LPlatform: TDNCompilerPlatform;
   LPathes: string;
+  LLines: TStringList;
 begin
   inherited;
-  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
-  for LPlatform in APlatforms do
-  begin
-    if LPlatform in LService.SupportedPlatforms then
+  LLines := TStringList.Create();
+  try
+    LLines.LineBreak := ';';
+    LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
+    for LPlatform in APlatforms do
     begin
-      LPathes := LService.Options[LPlatform].SearchPath;
-      if LPathes <> '' then
-        LPathes := LPathes + ';' + ASearchPath
-      else
-        LPathes := ASearchPath;
+      if LPlatform in LService.SupportedPlatforms then
+      begin
+        LPathes := LService.Options[LPlatform].SearchPath;
+        LLines.Text := LPathes;
+        if LLines.IndexOf(ASearchPath) < 0 then
+        begin
+          if LPathes <> '' then
+            LPathes := LPathes + ';' + ASearchPath
+          else
+            LPathes := ASearchPath;
 
-      LService.Options[LPlatform].SearchPath := LPathes;
+          LService.Options[LPlatform].SearchPath := LPathes;
+        end;
+      end;
     end;
+  finally
+    LLines.Free;
   end;
 end;
 
