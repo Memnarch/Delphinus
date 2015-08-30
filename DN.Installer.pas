@@ -429,6 +429,10 @@ begin
               if not Result then
                 Break;
             end;
+          end
+          else
+          begin
+            DoMessage(mtError, 'Failed to load Groupproject ' + LProjectfile);
           end;
         end
         else if SameText(LFileExt, CProject) then
@@ -436,7 +440,13 @@ begin
           LInfo := TDNProjectInfo.Create();
           Result := LInfo.LoadFromFile(LProjectFile);
           if Result then
-            ProcessProject(LInfo, LProcessedPlatforms);
+          begin
+            Result := ProcessProject(LInfo, LProcessedPlatforms);
+          end
+          else
+          begin
+            DoMessage(mtError, 'Failed to load project ' + LProjectFile);
+          end;
         end
         else
         begin
