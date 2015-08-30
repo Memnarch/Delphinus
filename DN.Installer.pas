@@ -565,7 +565,9 @@ begin
   if StartsStr('..', APath) then
     Result := Copy(APath, 3, Length(APath))
   else if StartsStr('.', APath) then
-    Result := Copy(APath, 2, Length(APath));
+    Result := Copy(APath, 2, Length(APath))
+  else
+    Result := APath;
 
   if StartsStr('\', Result) then
     Result := Copy(Result, 2, Length(Result));
