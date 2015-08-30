@@ -64,7 +64,7 @@ type
     procedure WriteString(const AName, AValue: string); override;
     procedure Changed; override;
   public
-    constructor Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string);
+    constructor Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string; const ARegistryOptions : TObject);
   end;
 
   TDNOTAEnvironmentOptions = class(TDNEnvironmentOptions)
@@ -171,6 +171,7 @@ var
   LNames: TStringList;
   LOptions: TDNEnvironmentOptions;
   LPlatform: TDNCompilerPlatform;
+  LRegistryOptions: TObject;
 begin
   LService := BorlandIDEservices as IOTAServices;
   LBase := LService.GetBaseRegistryKey();
@@ -199,7 +200,13 @@ begin
           if LReg.KeyExists(CPlatformKeys[LPlatform]) then
           begin
             LPlatformKey := TPath.Combine(LLibraryKey, CPlatformKeys[LPlatform]);
-            LOptions := TDNRegistryEnvironmentOptions.Create(LPlatform, LPlatformKey);
+
+            LRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), LPlatformKey);
+
+            if not Assigned(LRegistryOptions) then
+              Continue;
+
+            LOptions := TDNRegistryEnvironmentOptions.Create(LPlatform, LPlatformKey, LRegistryOptions);
             LOptions.OnChanged := HandleChanged;
             FOptions.Add(LOptions);
             FSupportedPlatforms := FSupportedPlatforms + [LPlatform];
@@ -230,8 +237,7 @@ begin
   inherited;
 end;
 
-constructor TDNRegistryEnvironmentOptions.Create(APlatform: TDNCompilerPlatform;
-  const ARegistryKey: string);
+constructor TDNRegistryEnvironmentOptions.Create(APlatform: TDNCompilerPlatform; const ARegistryKey: string; const ARegistryOptions : TObject);
 begin
   inherited Create(APlatform);
   FSearchPathName := 'Search Path';
@@ -239,7 +245,7 @@ begin
   FBrowsingPathName := 'Browsing Path';
   FDCPOutputName := 'Package DCP Output';
   FRegstryKey := ARegistryKey;
-  FRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), ARegistryKey);
+  FRegistryOptions := ARegistryOptions;
   FRegistry := GetRegistryOptionsMemIni(FRegistryOptions);
 end;
 
