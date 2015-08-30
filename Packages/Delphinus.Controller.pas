@@ -28,6 +28,7 @@ type
     procedure HandleClickDelphinus(Sender: TObject);
     procedure InstallMenu();
     procedure UninstallMenu();
+    function GetIndexOfConfigureTools(AToolsMenu: TMenuItem): Integer;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -42,6 +43,7 @@ uses
 
 const
   CToolsMenu = 'ToolsMenu';
+  CConfigureTools = 'ToolsToolsItem';//heard you like tools....
 
 { TDelphinusController }
 
@@ -73,6 +75,19 @@ begin
   inherited;
 end;
 
+function TDelphinusController.GetIndexOfConfigureTools(
+  AToolsMenu: TMenuItem): Integer;
+var
+  i: Integer;
+begin
+  Result := AToolsMenu.Count;
+  for i := 0 to AToolsMenu.Count - 1 do
+  begin
+    if AToolsMenu.Items[i].Name = CConfigureTools then
+      Exit(i);
+  end;
+end;
+
 procedure TDelphinusController.HandleClickDelphinus(Sender: TObject);
 begin
   FDialog.Show();
@@ -82,7 +97,7 @@ procedure TDelphinusController.InstallMenu;
 var
   LItem: TMenuItem;
   LService: INTAServices;
-  i: Integer;
+  i, LIndex: Integer;
   LImageList: TCustomImageList;
 begin
   LService := BorlandIDEServices as INTAServices;
@@ -95,7 +110,8 @@ begin
       FMenuItem.Caption := 'Delphinus';
       FMenuItem.Name := 'DelphinusMenu';
       FMenuItem.OnClick := HandleClickDelphinus;
-      LItem.Insert(LItem.Count - 1, FMenuItem);
+      LIndex := GetIndexOfConfigureTools(LItem);
+      LItem.Insert(LIndex, FMenuItem);
       LImageList := LItem.GetImageList;
       if Assigned(LImageList) then
       begin
