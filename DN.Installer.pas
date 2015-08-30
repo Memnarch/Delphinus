@@ -433,6 +433,7 @@ begin
           else
           begin
             DoMessage(mtError, 'Failed to load Groupproject ' + LProjectfile);
+            DoMessage(mtError, LGroupInfo.LoadingError);
           end;
         end
         else if SameText(LFileExt, CProject) then
@@ -446,6 +447,7 @@ begin
           else
           begin
             DoMessage(mtError, 'Failed to load project ' + LProjectFile);
+            DoMessage(mtError, LInfo.LoadingError);
           end;
         end
         else

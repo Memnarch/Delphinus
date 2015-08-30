@@ -26,6 +26,7 @@ type
     FIsPackage: Boolean;
     FIsRuntimeOnlyPackage: Boolean;
     FSupportedPlatforms: TDNCompilerPlatforms;
+    FLoadingError: string;
     function GetBinaryName: string;
     function GetDCPName: string;
     function GetIsPackage: Boolean;
@@ -34,6 +35,8 @@ type
     function GetIsRuntimeOnlyPackage: Boolean;
     function GetFileName: string;
     function GetSupportedPlatforms: TDNCompilerPlatforms;
+    function GetLoadingError: string;
+    procedure SetError(const AError: string);
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
     property IsPackage: Boolean read GetIsPackage;
@@ -42,6 +45,7 @@ type
     property DCPName: string read GetDCPName;
     property FileName: string read GetFileName;
     property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
+    property LoadingError: string read GetLoadingError;
   end;
 
 implementation
@@ -96,6 +100,11 @@ end;
 function TDNProjectInfo.GetIsRuntimeOnlyPackage: Boolean;
 begin
   Result := FIsRuntimeOnlyPackage;
+end;
+
+function TDNProjectInfo.GetLoadingError: string;
+begin
+  Result := FLoadingError;
 end;
 
 function TDNProjectInfo.GetPropertyGroupOfConfig(const AProject: IXMLNode;
@@ -208,9 +217,26 @@ begin
         if FSupportedPlatforms = [] then
           FSupportedPlatforms := [cpWin32];
         Result := True;
+      end
+      else
+      begin
+        SetError('PropertyGroup-Node not found');
       end;
+    end
+    else
+    begin
+      SetError('Project-Node not found');
     end;
+  end
+  else
+  begin
+    SetError('File not found');
   end;
+end;
+
+procedure TDNProjectInfo.SetError(const AError: string);
+begin
+  FLoadingError := AError;
 end;
 
 end.

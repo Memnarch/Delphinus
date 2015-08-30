@@ -22,12 +22,14 @@ type
     function GetFileName: string;
     function GetSupportedPlatforms: TDNCompilerPlatforms;
     function LoadFromFile(const AProjectFile: string): Boolean;
+    function GetLoadingError: string;
     property IsPackage: Boolean read GetIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
     property DCPName: string read GetDCPName;
     property FileName: string read GetFileName;
     property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
+    property LoadingError: string read GetLoadingError;
   end;
 
 implementation

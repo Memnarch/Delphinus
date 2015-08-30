@@ -19,8 +19,10 @@ type
     function GetFileName: string;
     function GetProjects: TList<IDNProjectInfo>;
     function LoadFromFile(const AFileName: string): Boolean;
+    function GetLoadingError: string;
     property FileName: string read GetFileName;
     property Projects: TList<IDNProjectInfo> read GetProjects;
+    property LoadingError: string read GetLoadingError;
   end;
 
 implementation
