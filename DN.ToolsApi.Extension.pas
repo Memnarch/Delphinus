@@ -203,13 +203,13 @@ begin
 
             LRegistryOptions := GetRegistryOptionsObject(GetEnvironmentOptionObject(), LPlatformKey);
 
-            if not Assigned(LRegistryOptions) then
-              Continue;
-
-            LOptions := TDNRegistryEnvironmentOptions.Create(LPlatform, LPlatformKey, LRegistryOptions);
-            LOptions.OnChanged := HandleChanged;
-            FOptions.Add(LOptions);
-            FSupportedPlatforms := FSupportedPlatforms + [LPlatform];
+            if Assigned(LRegistryOptions) then
+            begin
+              LOptions := TDNRegistryEnvironmentOptions.Create(LPlatform, LPlatformKey, LRegistryOptions);
+              LOptions.OnChanged := HandleChanged;
+              FOptions.Add(LOptions);
+              FSupportedPlatforms := FSupportedPlatforms + [LPlatform];
+            end;
           end;
         end;
       end;
