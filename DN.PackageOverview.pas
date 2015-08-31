@@ -36,6 +36,7 @@ type
     FOnUninstallPackage: TPackageEvent;
     FOnUpdatePackage: TPackageEvent;
     FOnInfoPackage: TPackageEvent;
+    FColumns: Integer;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
@@ -48,6 +49,10 @@ type
     procedure UninstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
     procedure InfoPackage(const APackage: IDNPackage);
+  protected
+    procedure Resize; override;
+    procedure UpdateElements(AColumns: Integer);
+    procedure SetPreviewPosition(APreview: TPreview; AIndex: Integer);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -82,8 +87,7 @@ begin
     LPreview := TPreview.Create(nil);
   LPreview.Package := APackage;
   LPreview.Parent := Self;
-  LPreview.Top := (FPreviews.Count div CColumns) * (LPreview.Height + CSpace);
-  LPreview.Left := (FPreviews.Count mod CColumns) * (LPreview.Width + CSpace);
+  SetPreviewPosition(LPreview, FPreviews.Count);
   LPreview.InstalledVersion := GetInstalledVersion(APackage);
   LPreview.UpdateVersion := GetUpdateVersion(APackage);
   LPreview.OnClick := HandlePreviewClicked;
@@ -109,6 +113,9 @@ begin
   BorderStyle := bsNone;
   VertScrollBar.Smooth := True;
   VertScrollBar.Tracking := True;
+  VertScrollBar.Visible := True;
+  FColumns := CColumns;
+  Self.ControlStyle := Self.ControlStyle + [csOpaque];
 end;
 
 destructor TPackageOverView.Destroy;
@@ -217,10 +224,38 @@ begin
   end;
 end;
 
+procedure TPackageOverView.Resize;
+var
+  LColumns: Integer;
+begin
+  inherited;
+  LColumns := ClientWidth div (CPreviewWidth + CSpace);
+  if (LColumns > 0) and (LColumns <> FColumns) then
+  begin
+    FColumns := LColumns;
+    UpdateElements(FColumns);
+  end;
+end;
+
+procedure TPackageOverView.SetPreviewPosition(APreview: TPreview;
+  AIndex: Integer);
+begin
+  APreview.Top := (AIndex div FColumns) * (APreview.Height + CSpace);
+  APreview.Left := (AIndex mod FColumns) * (APreview.Width + CSpace);
+end;
+
 procedure TPackageOverView.UninstallPackage(const APackage: IDNPackage);
 begin
   if Assigned(FOnUninstallPackage) then
     FOnUninstallPackage(APackage);
+end;
+
+procedure TPackageOverView.UpdateElements(AColumns: Integer);
+var
+  i: Integer;
+begin
+  for i := 0 to FPreviews.Count - 1 do
+    SetPreviewPosition(FPreviews[i], i);
 end;
 
 procedure TPackageOverView.UpdatePackage(const APackage: IDNPackage);

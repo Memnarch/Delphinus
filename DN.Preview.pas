@@ -75,6 +75,11 @@ type
     property OnInfo: TNotifyEvent read FOnInfo write FOnInfo;
   end;
 
+const
+  CPreviewWidth = 250;
+  CPreviewImageSize = 128;// 80;
+  CPreviewHeight = CPreviewImageSize;
+
 implementation
 
 uses
@@ -101,8 +106,8 @@ end;
 constructor TPreview.Create(AOwner: TComponent);
 begin
   inherited;
-  Width := 128;
-  Height := Width + 25 + Abs(Canvas.Font.Height*3) + 5;
+  Width := CPreviewWidth;
+  Height := CPreviewHeight; //Width + 25 + Abs(Canvas.Font.Height*3) + 5;
 
   FBGSelectedStart := RGB(250, 134, 30);
   FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
@@ -172,33 +177,40 @@ end;
 procedure TPreview.Paint;
 var
   LLeft, LTop: Integer;
-  LVersionString: string;
+  LVersionString, LDescription, LLicenseType: string;
+  LRect: TRect;
+const
+  CMargin = 3;
 begin
   inherited;
   if Assigned(FPackage) then
   begin
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := clWindow;
+//    Canvas.FillRect(Rect(CPreviewImageSize, 0, Width, Height));
+    Canvas.FillRect(Canvas.ClipRect);
     Canvas.Brush.Style := bsClear;
-    GradientFillRectVertical(Canvas, FBGStart, FBGEnd, Rect(0, 128, Width, Height-25));
+    //GradientFillRectVertical(Canvas, FBGStart, FBGEnd, Rect(0, 128, Width, Height-25));
 
 
 
     if Assigned(FPackage.Picture.Graphic) then
     begin
-      LLeft := (Width - 128) div 2;
-      LTop := 0;
-      Canvas.StretchDraw(Rect(LLeft, LTop, LLeft + 128, LTop + 128), FPackage.Picture.Graphic);
+      Canvas.StretchDraw(Rect(0, 0, CPreviewImageSize, CPreviewImageSize), FPackage.Picture.Graphic);
     end;
 
     Canvas.Font.Style := [TFontStyle.fsBold];
-    Canvas.TextOut(5, Width, FPackage.Name);
+    Canvas.TextOut(CMargin + CPreviewImageSize, CMargin, FPackage.Name);
     Canvas.Font.Style := [];
-    Canvas.TextOut(5, Width + Abs(Canvas.Font.Height), FPackage.Author);
+    Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height)), FPackage.Author);
 
     if FPackage.LicenseType <> '' then
-    begin
-      Canvas.TextOut(5, Width + Abs(Canvas.Font.Height)*2, FPackage.LicenseType);
-      Canvas.Font.Style := [];
-    end;
+      LLicenseType := FPackage.LicenseType
+    else
+      LLicenseType := 'No license';
+
+    Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height))*2, LLicenseType);
+    Canvas.Font.Style := [];
 
     if InstalledVersion <> '' then
     begin
@@ -207,11 +219,20 @@ begin
       begin
         LVersionString := LVersionString + ' -> ' + UpdateVersion;
       end;
-      Canvas.TextOut(Width - Canvas.TextWidth(LVersionString) - 5, Width + Abs(Canvas.Font.Height)*2, LVersionString);
+      Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height))*3, LVersionString);
     end;
 
+    LDescription := FPackage.Description;
+    LRect.Left := CMargin + CPreviewImageSize;
+    LRect.Top := (CMargin + Abs(Canvas.Font.Height))*4;
+    LRect.Right := Width - CMargin;
+    LRect.Bottom := Height - 25 - CMargin;
+    Canvas.TextRect(LRect, LDescription, [tfWordBreak, tfEndEllipsis]);
+
     Canvas.Pen.Color := clBtnShadow; //cl3DLight;
-    Canvas.Rectangle(0, 0, Width, Height-24);
+    Canvas.Rectangle(0, 0, Width, Height);
+//    Canvas.MoveTo(CPreviewImageSize, 0);
+//    Canvas.LineTo(CPreviewImageSize, Height);
     FGui.PaintTo(Canvas);
   end;
 end;
@@ -222,13 +243,13 @@ begin
   FUpdateButton.Visible := FUpdateVersion <> '';
   if FUpdateVersion <> '' then
   begin
-    FButton.Width := Width div 2;
-    FButton.Left := Width div 2;
+    FButton.Width := (Width - CPreviewImageSize) div 2;
+    FButton.Left := CPreviewImageSize + FButton.Width;
   end
   else
   begin
-    FButton.Left := 0;
-    FButton.Width := Width;
+    FButton.Left := CPreviewImageSize;
+    FButton.Width := Width - CPreviewImageSize;
   end;
   InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
 end;
@@ -266,17 +287,18 @@ end;
 procedure TPreview.SetupControls;
 begin
   FButton := TDNButton.Create();
-  FButton.Left := 0;
+  FButton.Left := CPreviewImageSize;
   FButton.Top := Height - 25;
-  FButton.Width := Width;
+  FButton.Width := Width - CPreviewImageSize;
   FButton.Height := 25;
   FButton.Color := clSilver;
   FButton.OnClick := HandleButtonClick;
   FGUI.Controls.Add(FButton);
+
   FUpdateButton := TDNButton.Create();
-  FUpdateButton.Left := 0;
+  FUpdateButton.Left := CPreviewImageSize;
   FUpdateButton.Top := Height - 25;
-  FUpdateButton.Width := Width div 2;
+  FUpdateButton.Width := (Width - CPreviewImageSize) div 2;
   FUpdateButton.Height := 25;
   FUpdateButton.Color := clSilver;
   FUpdateButton.HoverColor := FUpdateColor;
@@ -287,7 +309,7 @@ begin
 
   FInfoButton := TDNButton.Create();
   FInfoButton.Left := Width - 25;
-  FInfoButton.Top := 128;// Height - 50;
+  FInfoButton.Top := CPreviewImageSize-50;// Height - 50;
   FInfoButton.Width := 25;
   FInfoButton.Height := 25;
   FInfoButton.Color := clSilver;

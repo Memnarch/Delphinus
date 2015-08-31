@@ -78,7 +78,7 @@ begin
         if LInfo.Version <> '' then
           LVersion.Name := LInfo.Version
         else
-          LVersion.Name := 'unknown';
+          LVersion.Name := 'No version';
 
         LVersion.CompilerMin := LInfo.CompilerMin;
         LVersion.CompilerMax := LInfo.CompilerMax;
