@@ -86,10 +86,12 @@ function TDNUninstaller.ProcessPackages(const APackages: TArray<TPackage>): Bool
 var
   LPackage: TPackage;
   LBPI, LLib: string;
+  i: Integer;
 begin
   Result := Length(APackages) = 0;
-  for LPackage in APackages do
+  for i := High(APackages) downto Low(APackages) do
   begin
+    LPackage := APackages[i];
     if SameText(ExtractFileExt(LPackage.BPLFile), CMacPackageExtension) then
     begin
       LBPI := TPath.Combine(ExtractFilePath(LPackage.BPLFile), ChangeFileExt(ExtractFileName(LPackage.DCPFile), '.info.plist'));
