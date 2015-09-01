@@ -76,8 +76,8 @@ type
   end;
 
 const
-  CPreviewWidth = 250;
-  CPreviewImageSize = 128;// 80;
+  CPreviewWidth = 256;
+  CPreviewImageSize = 128;//
   CPreviewHeight = CPreviewImageSize;
 
 implementation
@@ -181,16 +181,15 @@ var
   LRect: TRect;
 const
   CMargin = 3;
+  CLeftMargin = CMargin*2 + CPreviewImageSize;
 begin
   inherited;
   if Assigned(FPackage) then
   begin
     Canvas.Brush.Style := bsSolid;
     Canvas.Brush.Color := clWindow;
-//    Canvas.FillRect(Rect(CPreviewImageSize, 0, Width, Height));
     Canvas.FillRect(Canvas.ClipRect);
     Canvas.Brush.Style := bsClear;
-    //GradientFillRectVertical(Canvas, FBGStart, FBGEnd, Rect(0, 128, Width, Height-25));
 
 
 
@@ -200,16 +199,16 @@ begin
     end;
 
     Canvas.Font.Style := [TFontStyle.fsBold];
-    Canvas.TextOut(CMargin + CPreviewImageSize, CMargin, FPackage.Name);
+    Canvas.TextOut(CLeftMargin, CMargin, FPackage.Name);
     Canvas.Font.Style := [];
-    Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height)), FPackage.Author);
+    Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height)), FPackage.Author);
 
     if FPackage.LicenseType <> '' then
       LLicenseType := FPackage.LicenseType
     else
       LLicenseType := 'No license';
 
-    Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height))*2, LLicenseType);
+    Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height))*2, LLicenseType);
     Canvas.Font.Style := [];
 
     if InstalledVersion <> '' then
@@ -219,20 +218,18 @@ begin
       begin
         LVersionString := LVersionString + ' -> ' + UpdateVersion;
       end;
-      Canvas.TextOut(CMargin + CPreviewImageSize, (CMargin + Abs(Canvas.Font.Height))*3, LVersionString);
+      Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height))*3, LVersionString);
     end;
 
     LDescription := FPackage.Description;
-    LRect.Left := CMargin + CPreviewImageSize;
+    LRect.Left := CLeftMargin;
     LRect.Top := (CMargin + Abs(Canvas.Font.Height))*4;
     LRect.Right := Width - CMargin;
     LRect.Bottom := Height - 25 - CMargin;
     Canvas.TextRect(LRect, LDescription, [tfWordBreak, tfEndEllipsis]);
 
-    Canvas.Pen.Color := clBtnShadow; //cl3DLight;
+    Canvas.Pen.Color := clBtnShadow;
     Canvas.Rectangle(0, 0, Width, Height);
-//    Canvas.MoveTo(CPreviewImageSize, 0);
-//    Canvas.LineTo(CPreviewImageSize, Height);
     FGui.PaintTo(Canvas);
   end;
 end;
