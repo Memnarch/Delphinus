@@ -102,7 +102,7 @@ end;
 procedure TCategoryFilterView.tvCategoriesChanging(Sender: TObject;
   Node: TTreeNode; var AllowChange: Boolean);
 begin
-  AllowChange := Node <> LPackageNode;
+  AllowChange := Node.Count = 0;
 end;
 
 procedure TCategoryFilterView.tvCategoriesCollapsing(Sender: TObject;
