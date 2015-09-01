@@ -3,7 +3,7 @@ object DelphinusDialog: TDelphinusDialog
   Top = 0
   Caption = 'Delphinus Packagemanager'
   ClientHeight = 450
-  ClientWidth = 558
+  ClientWidth = 761
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,7 +17,7 @@ object DelphinusDialog: TDelphinusDialog
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 558
+    Width = 761
     Height = 30
     AutoSize = True
     ButtonHeight = 30
@@ -56,28 +56,6 @@ object DelphinusDialog: TDelphinusDialog
       OnClick = btnUninstallClick
     end
   end
-  object PageControl: TPageControl
-    Left = 0
-    Top = 30
-    Width = 558
-    Height = 420
-    ActivePage = tsAvailable
-    Align = alClient
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    TabOrder = 1
-    object tsAvailable: TTabSheet
-      Caption = 'Available'
-    end
-    object tsInstalled: TTabSheet
-      Caption = 'Installed'
-      ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-    end
-  end
   object imgMenu: TImageList
     ColorDepth = cd32Bit
     Height = 24
@@ -85,7 +63,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800140118001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800280118001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -139,6 +139,7 @@
 			<DCCReference Include="..\Delphinus.LicenseDialog.pas">
 				<Form>LicenseDialog</Form>
 			</DCCReference>
+			<DCCReference Include="..\Delphinus.CategoryFilterView.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

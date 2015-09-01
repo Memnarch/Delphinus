@@ -93,7 +93,8 @@ contains
   DN.Setup in '..\..\DN.Setup.pas',
   DN.Version in '..\..\DN.Version.pas',
   DN.IOUtils in '..\..\DN.IOUtils.pas',
-  Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog};
+  Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
+  Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas' {CategoryFilterView: TFrame};
 
 end.
 

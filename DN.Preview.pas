@@ -176,7 +176,6 @@ end;
 
 procedure TPreview.Paint;
 var
-  LLeft, LTop: Integer;
   LVersionString, LDescription, LLicenseType: string;
   LRect: TRect;
 const
