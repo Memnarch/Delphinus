@@ -13,6 +13,7 @@ uses
   Classes,
   Types,
   Messages,
+  Windows,
   Controls,
   Forms,
   Generics.Collections,
@@ -52,7 +53,7 @@ type
   protected
     procedure Resize; override;
     procedure UpdateElements(AColumns: Integer);
-    procedure SetPreviewPosition(APreview: TPreview; AIndex: Integer);
+    procedure SetPreviewPosition(APreview: TPreview; AIndex: Integer; AColumns: Integer);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -74,8 +75,8 @@ implementation
 { TPackageOverView }
 
 const
-  CColumns = 4;
-  CSpace = 10;
+  CColumns = 1;
+  CSpace = 3;
 
 procedure TPackageOverView.AddPreview(const APackage: IDNPackage);
 var
@@ -87,7 +88,7 @@ begin
     LPreview := TPreview.Create(nil);
   LPreview.Package := APackage;
   LPreview.Parent := Self;
-  SetPreviewPosition(LPreview, FPreviews.Count);
+  SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
   LPreview.InstalledVersion := GetInstalledVersion(APackage);
   LPreview.UpdateVersion := GetUpdateVersion(APackage);
   LPreview.OnClick := HandlePreviewClicked;
@@ -116,6 +117,7 @@ begin
   VertScrollBar.Visible := True;
   FColumns := CColumns;
   Self.ControlStyle := Self.ControlStyle + [csOpaque];
+  HorzScrollBar.Visible := False;
 end;
 
 destructor TPackageOverView.Destroy;
@@ -225,23 +227,17 @@ begin
 end;
 
 procedure TPackageOverView.Resize;
-var
-  LColumns: Integer;
 begin
   inherited;
-  LColumns := ClientWidth div (CPreviewWidth + CSpace);
-  if (LColumns > 0) and (LColumns <> FColumns) then
-  begin
-    FColumns := LColumns;
-    UpdateElements(FColumns);
-  end;
+  UpdateElements(FColumns);
 end;
 
 procedure TPackageOverView.SetPreviewPosition(APreview: TPreview;
-  AIndex: Integer);
+  AIndex: Integer; AColumns: Integer);
 begin
-  APreview.Top := (AIndex div FColumns) * (APreview.Height + CSpace);
-  APreview.Left := (AIndex mod FColumns) * (APreview.Width + CSpace);
+  APreview.Top := (AIndex div AColumns) * (APreview.Height + CSpace) - VertScrollBar.Position;
+  APreview.Left := (AIndex mod AColumns) * (APreview.Width + CSpace);
+  APreview.Width := ClientWidth;
 end;
 
 procedure TPackageOverView.UninstallPackage(const APackage: IDNPackage);
@@ -255,7 +251,7 @@ var
   i: Integer;
 begin
   for i := 0 to FPreviews.Count - 1 do
-    SetPreviewPosition(FPreviews[i], i);
+    SetPreviewPosition(FPreviews[i], i, AColumns);
 end;
 
 procedure TPackageOverView.UpdatePackage(const APackage: IDNPackage);

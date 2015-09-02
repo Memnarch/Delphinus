@@ -27,6 +27,7 @@ type
 
   TPreview = class(TCustomControl)
   private
+    FTarget: TBitmap;
     FPackage: IDNPackage;
     FSelected: Boolean;
     FBGSelectedStart: TColor;
@@ -56,6 +57,7 @@ type
     procedure DoUpdate();
     procedure DoInfo();
     procedure HandleButtonClick(Sender: TObject);
+    procedure DownSample;
   protected
     procedure Paint; override;
     procedure SetupControls;
@@ -77,7 +79,7 @@ type
 
 const
   CPreviewWidth = 256;
-  CPreviewImageSize = 128;//
+  CPreviewImageSize = 80;
   CPreviewHeight = CPreviewImageSize;
 
 implementation
@@ -106,8 +108,10 @@ end;
 constructor TPreview.Create(AOwner: TComponent);
 begin
   inherited;
+  FTarget := TBitmap.Create();
+  FTarget.PixelFormat := pf32bit;
   Width := CPreviewWidth;
-  Height := CPreviewHeight; //Width + 25 + Abs(Canvas.Font.Height*3) + 5;
+  Height := CPreviewHeight;
 
   FBGSelectedStart := RGB(250, 134, 30);
   FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
@@ -125,6 +129,7 @@ end;
 destructor TPreview.Destroy;
 begin
   FGUI.Free;
+  FTarget.Free();
   inherited;
 end;
 
@@ -150,6 +155,34 @@ procedure TPreview.DoUpdate;
 begin
   if Assigned(FOnUpdate) then
     FOnUpdate(Self);
+end;
+
+procedure TPreview.DownSample;
+var
+  LTemp: TBitmap;
+  LOldMode: Integer;
+begin
+  LTemp := TBitmap.Create();
+  try
+    LTemp.PixelFormat := pf32bit;
+    if Assigned(FPackage.Picture) then
+    begin
+      LTemp.SetSize(FPackage.Picture.Width, FPackage.Picture.Height);
+      LTemp.Canvas.Brush.Color := clWhite;
+      LTemp.Canvas.FillRect(LTemp.Canvas.ClipRect);
+      LTemp.Canvas.Draw(0, 0, FPackage.Picture.Graphic);
+    end;
+    FTarget.SetSize(CPreviewImageSize, CPreviewImageSize);
+    FTarget.Canvas.FillRect(FTarget.Canvas.ClipRect);
+
+    LOldMode := GetStretchBltMode(FTarget.Handle);
+    SetStretchBltMode(FTarget.Canvas.Handle, HALFTONE);
+    StretchBlt(FTarget.Canvas.Handle, 0, 0, FTarget.Width, FTarget.Height,
+    LTemp.Canvas.Handle, 0, 0, LTemp.Width, LTemp.Height, SRCCOPY);
+    SetStretchBltMode(FTarget.Canvas.Handle, LOldMode);
+  finally
+    LTemp.Free;
+  end;
 end;
 
 procedure TPreview.HandleButtonClick(Sender: TObject);
@@ -190,13 +223,7 @@ begin
     Canvas.FillRect(Canvas.ClipRect);
     Canvas.Brush.Style := bsClear;
 
-
-
-    if Assigned(FPackage.Picture.Graphic) then
-    begin
-      Canvas.StretchDraw(Rect(0, 0, CPreviewImageSize, CPreviewImageSize), FPackage.Picture.Graphic);
-    end;
-
+    Canvas.Draw(0, 0, FTarget);
     Canvas.Font.Style := [TFontStyle.fsBold];
     Canvas.TextOut(CLeftMargin, CMargin, FPackage.Name);
     Canvas.Font.Style := [];
@@ -269,6 +296,8 @@ end;
 procedure TPreview.SetPackage(const Value: IDNPackage);
 begin
   FPackage := Value;
+  if Assigned(FPackage) then
+    DownSample();
 end;
 
 procedure TPreview.SetSelected(const Value: Boolean);
