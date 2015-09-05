@@ -218,6 +218,9 @@ end;
 
 procedure TPreview.SetUpdateVersion(const Value: string);
 begin
+  if Parent = nil then
+    Exit;
+
   FUpdateVersion := Value;
   FUpdateButton.Visible := FUpdateVersion <> '';
   if FUpdateVersion <> '' then
@@ -235,6 +238,9 @@ end;
 
 procedure TPreview.SetInstalledVersion(const Value: string);
 begin
+  if Parent = nil then
+    Exit;
+
   FInstalledVersion := Value;
   if FInstalledVersion <> '' then
   begin

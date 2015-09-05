@@ -21,7 +21,7 @@ uses
   DN.PackageDetailView,
   Delphinus.Form,
   Delphinus.Settings,
-  DN.Setup.Intf;
+  DN.Setup.Intf, StdCtrls, ExtCtrls;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -39,10 +39,14 @@ type
     tsAvailable: TTabSheet;
     tsInstalled: TTabSheet;
     actOptions: TAction;
+    pnlFilter: TPanel;
+    btnFilter: TButtonedEdit;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
+    procedure btnFilterChange(Sender: TObject);
+    procedure PageControlChange(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -233,6 +237,17 @@ begin
   inherited;
 end;
 
+procedure TDelphinusDialog.btnFilterChange(Sender: TObject);
+var
+  LPackageOverView: TPackageOverView;
+begin
+  if not (Sender is TButtonedEdit) then
+    Exit;
+
+   LPackageOverView := GetActiveOverView();
+   LPackageOverView.Filter := TButtonedEdit(Sender).Text;
+end;
+
 function TDelphinusDialog.GetActiveOverView: TPackageOverView;
 begin
   if PageControl.ActivePageIndex = 1 then
@@ -355,6 +370,14 @@ begin
   finally
     LRegistry.Free;
   end;
+end;
+
+procedure TDelphinusDialog.PageControlChange(Sender: TObject);
+var
+  LPackageOverView: TPackageOverView;
+begin
+  LPackageOverView := GetActiveOverView();
+  btnFilter.Text := LPackageOverView.Filter;
 end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;

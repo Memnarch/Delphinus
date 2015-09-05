@@ -55,6 +55,23 @@ object DelphinusDialog: TDelphinusDialog
       ImageIndex = 3
       OnClick = btnUninstallClick
     end
+    object pnlFilter: TPanel
+      Left = 124
+      Top = 0
+      Width = 185
+      Height = 30
+      BevelOuter = bvNone
+      TabOrder = 0
+      object btnFilter: TButtonedEdit
+        Left = 0
+        Top = 5
+        Width = 185
+        Height = 21
+        Align = alCustom
+        TabOrder = 0
+        OnChange = btnFilterChange
+      end
+    end
   end
   object PageControl: TPageControl
     Left = 0
@@ -64,6 +81,7 @@ object DelphinusDialog: TDelphinusDialog
     ActivePage = tsAvailable
     Align = alClient
     TabOrder = 1
+    OnChange = PageControlChange
     object tsAvailable: TTabSheet
       Caption = 'Available'
     end
