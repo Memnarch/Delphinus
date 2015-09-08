@@ -22,7 +22,7 @@ uses
   Delphinus.Form,
   Delphinus.Settings,
   DN.Setup.Intf,
-  Delphinus.CategoryFilterView;
+  Delphinus.CategoryFilterView, System.Actions;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -137,6 +137,7 @@ begin
   begin
     FPackages.AddRange(FPackageProvider.Packages);
   end;
+  FCategoryFilteView.OnlineCount := FPackages.Count;
   RefreshInstalledPackages();
 end;
 
@@ -393,12 +394,14 @@ begin
   begin
     FInstalledPackages.Clear;
     FInstalledPackages.AddRange(FInstalledPackageProvider.Packages);
+    FCategoryFilteView.InstalledCount := FInstalledPackages.Count;
     FUpdatePackages.Clear();
     for LInstalledPackage in FInstalledPackages do
     begin
       if GetUpdateVersion(LInstalledPackage) <> '' then
         FUpdatePackages.Add(LInstalledPackage);
     end;
+    FCategoryFilteView.UpdatesCount := FUpdatePackages.Count;
   end;
   RefreshOverview();
   FDetailView.Visible := False;
