@@ -80,6 +80,7 @@ end;
 constructor TCategoryFilterView.Create(AOwner: TComponent);
 var
   LPackageNode, LOnlineNode, LFilterNode: TTreeNode;
+  LRect: TRect;
 begin
   inherited;
   //in case you wonder why i save the nodes index and not the TTreeNode Instance:
@@ -93,7 +94,8 @@ begin
   FOnlineNodeIndex := LOnlineNode.AbsoluteIndex;
   FInstalledNodeIndex := tvCategories.Items.AddChild(LPackageNode, GetNumberedCaption(CInstalled, FInstalledCount)).AbsoluteIndex;
   FUpdatesNodeIndex := tvCategories.Items.AddChild(LPackageNode, GetNumberedCaption(CUpdates, FUpdatesCount)).AbsoluteIndex;
-  tvCategories.ClientHeight := LPackageNode.DisplayRect(False).Height*4;
+  LRect := LPackageNode.DisplayRect(False);
+  tvCategories.ClientHeight := (LRect.Bottom - LRect.Top)*4;
 
   LFilterNode := tvFilters.Items.AddChild(nil, 'Filters');
   FFilterNodeIndex := LFilterNode.AbsoluteIndex;
