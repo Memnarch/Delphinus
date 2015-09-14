@@ -41,6 +41,8 @@ type
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -240,6 +242,21 @@ begin
   inherited;
 end;
 
+procedure TDelphinusDialog.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  LPos: TPoint;
+  LOverView: TPackageOverView;
+begin
+  LOverView := GetActiveOverView();
+  LPos := LOverView.ScreenToClient(MousePos);
+  if PtInRect(Rect(0, 0, LOverView.Width, LOverView.Height), LPos) then
+  begin
+    LOverView.VertScrollBar.Position := LOverView.VertScrollBar.Position - WheelDelta;
+    Handled := True;
+  end;
+end;
+
 function TDelphinusDialog.GetActiveOverView: TPackageOverView;
 begin
   Result := FOverView;
@@ -404,13 +421,13 @@ begin
     FCategoryFilteView.UpdatesCount := FUpdatePackages.Count;
   end;
   RefreshOverview();
-  FDetailView.Visible := False;
 end;
 
 procedure TDelphinusDialog.RefreshOverview;
 begin
   GetActiveOverView().Clear;
   GetActiveOverView().Packages.AddRange(GetActivePackageSource());
+  FDetailView.Visible := False;
 end;
 
 procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
@@ -434,7 +451,6 @@ end;
 procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
 begin
   FDetailView.Package := APackage;
-//  PageControl.Visible := False;
   FDetailView.BringToFront();
   FDetailView.Visible := True;
 end;
