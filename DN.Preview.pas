@@ -58,11 +58,13 @@ type
     procedure DoInfo();
     procedure HandleButtonClick(Sender: TObject);
     procedure DownSample;
+    procedure UpdateControls;
   protected
     procedure Paint; override;
     procedure SetupControls;
     procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
@@ -81,6 +83,8 @@ const
   CPreviewWidth = 256;
   CPreviewImageSize = 80;
   CPreviewHeight = CPreviewImageSize;
+  CButtonHeight = 25;
+  CButtonWidth = 100;
 
 implementation
 
@@ -260,21 +264,25 @@ begin
   end;
 end;
 
+procedure TPreview.Resize;
+begin
+  inherited;
+  UpdateControls();
+end;
+
 procedure TPreview.SetUpdateVersion(const Value: string);
 begin
   FUpdateVersion := Value;
   FUpdateButton.Visible := FUpdateVersion <> '';
-  if FUpdateVersion <> '' then
-  begin
-    FButton.Width := (Width - CPreviewImageSize) div 2;
-    FButton.Left := CPreviewImageSize + FButton.Width;
-  end
-  else
-  begin
-    FButton.Left := CPreviewImageSize;
-    FButton.Width := Width - CPreviewImageSize;
-  end;
+  UpdateControls();
   InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
+end;
+
+procedure TPreview.UpdateControls;
+begin
+  FButton.Left := Width - FButton.Width;
+  FUpdateButton.Left := Width - FUpdateButton.Width;
+  FInfoButton.Left := Width - FInfoButton.Width;
 end;
 
 procedure TPreview.SetInstalledVersion(const Value: string);
@@ -312,19 +320,17 @@ end;
 procedure TPreview.SetupControls;
 begin
   FButton := TDNButton.Create();
-  FButton.Left := CPreviewImageSize;
-  FButton.Top := Height - 25;
-  FButton.Width := Width - CPreviewImageSize;
-  FButton.Height := 25;
+  FButton.Top := Height - CButtonHeight;
+  FButton.Width := CButtonWidth;
+  FButton.Height := CButtonHeight;
   FButton.Color := clSilver;
   FButton.OnClick := HandleButtonClick;
   FGUI.Controls.Add(FButton);
 
   FUpdateButton := TDNButton.Create();
-  FUpdateButton.Left := CPreviewImageSize;
-  FUpdateButton.Top := Height - 25;
-  FUpdateButton.Width := (Width - CPreviewImageSize) div 2;
-  FUpdateButton.Height := 25;
+  FUpdateButton.Width := CButtonWidth;
+  FUpdateButton.Height := CButtonHeight;
+  FUpdateButton.Top := Height - CButtonHeight*2;
   FUpdateButton.Color := clSilver;
   FUpdateButton.HoverColor := FUpdateColor;
   FUpdateButton.Visible := False;
@@ -333,10 +339,8 @@ begin
   FGUI.Controls.Add(FUpdateButton);
 
   FInfoButton := TDNButton.Create();
-  FInfoButton.Left := Width - 25;
-  FInfoButton.Top := CPreviewImageSize-50;// Height - 50;
-  FInfoButton.Width := 25;
-  FInfoButton.Height := 25;
+  FInfoButton.Width := CButtonHeight;
+  FInfoButton.Height := CButtonHeight;
   FInfoButton.Color := clSilver;
   FInfoButton.HoverColor := FInfoColor;
   FInfoButton.Caption := 'i';
