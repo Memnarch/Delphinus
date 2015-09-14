@@ -140,6 +140,9 @@
 				<Form>LicenseDialog</Form>
 			</DCCReference>
 			<DCCReference Include="..\Delphinus.CategoryFilterView.pas"/>
+			<DCCReference Include="..\Delphinus.ProgressDialog.pas">
+				<Form>ProgressDialog</Form>
+			</DCCReference>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

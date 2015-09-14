@@ -22,7 +22,8 @@ uses
   Delphinus.Form,
   Delphinus.Settings,
   DN.Setup.Intf,
-  Delphinus.CategoryFilterView, System.Actions;
+  Delphinus.CategoryFilterView,
+  Delphinus.ProgressDialog;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -55,6 +56,7 @@ type
     FSettings: TDelphinusSettings;
     FCategoryFilteView: TCategoryFilterView;
     FCategory: TPackageCategory;
+    FProgressDialog: TProgressDialog;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -134,13 +136,26 @@ end;
 
 procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
-  FPackages.Clear;
-  if FPackageProvider.Reload() then
-  begin
-    FPackages.AddRange(FPackageProvider.Packages);
-  end;
-  FCategoryFilteView.OnlineCount := FPackages.Count;
-  RefreshInstalledPackages();
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      if FPackageProvider.Reload() then
+      begin
+        FPackages.Clear;
+        FPackages.AddRange(FPackageProvider.Packages);
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          FCategoryFilteView.OnlineCount := FPackages.Count;
+          RefreshInstalledPackages();
+          FProgressDialog.ModalResult := mrOk;
+        end);
+    end).Start;
+  FProgressDialog.Caption := 'Delphinus';
+  FProgressDialog.Task := 'Refreshing';
+  FProgressDialog.Progress := -1;
+  FProgressDialog.ShowModal();
 end;
 
 procedure TDelphinusDialog.btnInstallFolderClick(Sender: TObject);
@@ -178,6 +193,7 @@ end;
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
+  FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
   FDetailView.Align := alClient;
   FDetailView.Visible := False;
