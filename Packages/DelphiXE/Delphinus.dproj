@@ -143,7 +143,7 @@
 			<DCCReference Include="..\Delphinus.ProgressDialog.pas">
 				<Form>ProgressDialog</Form>
 			</DCCReference>
-			<DCCReference Include="..\Delphinus.PackageFilter.pas"/>
+			<DCCReference Include="..\..\DN.PackageFilter.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

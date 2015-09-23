@@ -23,12 +23,14 @@ uses
   Delphinus.Settings,
   DN.Setup.Intf,
   Delphinus.CategoryFilterView,
-  Delphinus.ProgressDialog;
+  Delphinus.ProgressDialog,
+  ExtCtrls,
+  StdCtrls;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
     ToolBar1: TToolBar;
-    imgMenu: TImageList;
+    ilMenu: TImageList;
     DialogActions: TActionList;
     ToolButton1: TToolButton;
     actRefresh: TAction;
@@ -38,12 +40,18 @@ type
     btnUninstall: TToolButton;
     dlgSelectUninstallFile: TOpenDialog;
     actOptions: TAction;
+    pnlPackages: TPanel;
+    edSearch: TButtonedEdit;
+    ilSmall: TImageList;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure edSearchKeyPress(Sender: TObject; var Key: Char);
+    procedure edSearchRightButtonClick(Sender: TObject);
+    procedure edSearchLeftButtonClick(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -57,6 +65,7 @@ type
     FCategoryFilteView: TCategoryFilterView;
     FCategory: TPackageCategory;
     FProgressDialog: TProgressDialog;
+    FFilter: string;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -78,6 +87,8 @@ type
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     function GetActivePackageSource: TList<IDNPackage>;
     procedure RefreshOverview();
+    procedure DoFilter(const AFilter: string);
+    procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -106,7 +117,8 @@ uses
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
   DN.Setup,
-  Delphinus.OptionsDialog;
+  Delphinus.OptionsDialog,
+  StrUtils;
 
 {$R *.dfm}
 
@@ -202,7 +214,7 @@ begin
   FOverView := TPackageOverView.Create(Self);
   FOverView.Align := alClient;
   FOverView.AlignWithMargins := True;
-  FOverView.Parent := Self;
+  FOverView.Parent := pnlPackages;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
   FOverView.OnCheckHasPackageUpdate := GetUpdateVersion;
   FOverView.OnInstallPackage :=  InstallPackage;
@@ -210,6 +222,7 @@ begin
   FOverView.OnUpdatePackage := UpdatePackage;
   FOverView.OnInfoPackage := ShowDetail;
   FOverView.DoubleBuffered := True;
+  FOverView.OnFilter := FilterPackage;
 
   FCategoryFilteView := TCategoryFilterView.Create(Self);
   FCategoryFilteView.Width := 200;
@@ -256,6 +269,45 @@ begin
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
   inherited;
+end;
+
+procedure TDelphinusDialog.DoFilter(const AFilter: string);
+begin
+  FFilter := Trim(AFilter);
+  FOverView.ApplyFilter();
+end;
+
+procedure TDelphinusDialog.edSearchKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Ord(Key) = VK_RETURN then
+  begin
+    DoFilter(edSearch.Text);
+    Key := #0;
+  end;
+
+  if Ord(Key) = VK_ESCAPE then
+  begin
+    edSearch.Text := '';
+    DoFilter('');
+    Key := #0;
+  end;
+end;
+
+procedure TDelphinusDialog.edSearchLeftButtonClick(Sender: TObject);
+begin
+  DoFilter(edSearch.Text);
+end;
+
+procedure TDelphinusDialog.edSearchRightButtonClick(Sender: TObject);
+begin
+  edSearch.Text := '';
+  DoFilter('');
+end;
+
+procedure TDelphinusDialog.FilterPackage(const APackage: IDNPackage;
+  var AAccepted: Boolean);
+begin
+  AAccepted := (FFilter = '') or ContainsText(APackage.Name, FFilter);
 end;
 
 procedure TDelphinusDialog.FormMouseWheel(Sender: TObject; Shift: TShiftState;

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes,
   Graphics, Controls, Forms, Dialogs, ComCtrls, StdCtrls,
-  Delphinus.PackageFilter, Generics.Collections;
+  DN.PackageFilter, Generics.Collections;
 
 type
   TPackageCategory = (pcOnline, pcInstalled, pcUpdates);

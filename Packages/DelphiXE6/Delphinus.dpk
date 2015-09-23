@@ -96,9 +96,10 @@ contains
   Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
   Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas' {CategoryFilterView: TFrame},
   Delphinus.ProgressDialog in '..\Delphinus.ProgressDialog.pas' {ProgressDialog},
-  Delphinus.PackageFilter in '..\Delphinus.PackageFilter.pas';
+  DN.PackageFilter in '..\..\DN.PackageFilter.pas';
 
 end.
+
 
 
 

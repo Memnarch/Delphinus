@@ -18,7 +18,8 @@ uses
   Forms,
   Generics.Collections,
   DN.Package.Intf,
-  DN.Preview;
+  DN.Preview,
+  DN.PackageFilter;
 
 type
   TCheckIsPackageInstalled = reference to function(const APackage: IDNPackage): string;
@@ -26,7 +27,7 @@ type
 
   TPackageOverView = class(TScrollBox)
   private
-    FPreviews: TObjectList<TPreview>;
+    FPreviews: TList<TPreview>;
     FUnusedPreviews: TObjectList<TPreview>;
     FPackages: TList<IDNPackage>;
     FSelectedPackage: IDNPackage;
@@ -38,6 +39,7 @@ type
     FOnUpdatePackage: TPackageEvent;
     FOnInfoPackage: TPackageEvent;
     FColumns: Integer;
+    FOnFilter: TPackageFilter;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
@@ -54,11 +56,14 @@ type
     procedure Resize; override;
     procedure UpdateElements(AColumns: Integer);
     procedure SetPreviewPosition(APreview: TPreview; AIndex: Integer; AColumns: Integer);
+    procedure ClearPreviews;
+    function IsAccepted(const APackage: IDNPackage): Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
     procedure Clear();
     procedure Refresh();
+    procedure ApplyFilter;
     property Packages: TList<IDNPackage> read FPackages;
     property SelectedPackage: IDNPackage read FSelectedPackage;
     property OnSelectedPackageChanged: TNotifyEvent read FOnSelectedPackageChanged write FOnSelectedPackageChanged;
@@ -68,6 +73,7 @@ type
     property OnUninstallPackage: TPackageEvent read FOnUninstallPackage write FOnUninstallPackage;
     property OnUpdatePackage: TPackageEvent read FOnUpdatePackage write FOnUpdatePackage;
     property OnInfoPackage: TPackageEvent read FOnInfoPackage write FOnInfoPackage;
+    property OnFilter: TPackageFilter read FOnFilter write FOnFilter;
   end;
 
 implementation
@@ -82,21 +88,24 @@ procedure TPackageOverView.AddPreview(const APackage: IDNPackage);
 var
   LPreview: TPreview;
 begin
-  if FUnusedPreviews.Count > 0 then
-    LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
-  else
-    LPreview := TPreview.Create(nil);
-  LPreview.Package := APackage;
-  LPreview.Parent := Self;
-  SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
-  LPreview.InstalledVersion := GetInstalledVersion(APackage);
-  LPreview.UpdateVersion := GetUpdateVersion(APackage);
-  LPreview.OnClick := HandlePreviewClicked;
-  LPreview.OnInstall := procedure(Sender: TObject) begin InstallPackage(TPreview(Sender).Package) end;
-  LPreview.OnUninstall := procedure(Sender: TObject) begin UninstallPackage(TPreview(Sender).Package) end;
-  LPreview.OnUpdate := procedure(Sender: TObject) begin UpdatePackage(TPreview(Sender).Package) end;
-  LPreview.OnInfo := procedure(Sender: TObject) begin InfoPackage(TPreview(Sender).Package) end;
-  FPreviews.Add(LPreview)
+  if IsAccepted(APackage) then
+  begin
+    if FUnusedPreviews.Count > 0 then
+      LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
+    else
+      LPreview := TPreview.Create(nil);
+    LPreview.Package := APackage;
+    LPreview.Parent := Self;
+    SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
+    LPreview.InstalledVersion := GetInstalledVersion(APackage);
+    LPreview.UpdateVersion := GetUpdateVersion(APackage);
+    LPreview.OnClick := HandlePreviewClicked;
+    LPreview.OnInstall := procedure(Sender: TObject) begin InstallPackage(TPreview(Sender).Package) end;
+    LPreview.OnUninstall := procedure(Sender: TObject) begin UninstallPackage(TPreview(Sender).Package) end;
+    LPreview.OnUpdate := procedure(Sender: TObject) begin UpdatePackage(TPreview(Sender).Package) end;
+    LPreview.OnInfo := procedure(Sender: TObject) begin InfoPackage(TPreview(Sender).Package) end;
+    FPreviews.Add(LPreview)
+  end;
 end;
 
 procedure TPackageOverView.Clear;
@@ -104,10 +113,23 @@ begin
   FPackages.Clear();
 end;
 
+procedure TPackageOverView.ClearPreviews;
+var
+  LPreview: TPreview;
+begin
+  for LPreview in FPreviews do
+  begin
+    LPreview.Parent := nil;
+    LPreview.Package := nil;
+  end;
+  FUnusedPreviews.AddRange(FPreviews);
+  FPreviews.Clear;
+end;
+
 constructor TPackageOverView.Create(AOwner: TComponent);
 begin
   inherited;
-  FPreviews := TObjectList<TPreview>.Create(True);
+  FPreviews := TList<TPreview>.Create();
   FUnusedPreviews := TObjectList<TPreview>.Create(True);
   FPackages := TList<IDNPackage>.Create();
   FPackages.OnNotify := HandlePackagesChanged;
@@ -180,6 +202,13 @@ procedure TPackageOverView.InstallPackage(const APackage: IDNPackage);
 begin
   if Assigned(FOnInstallPackage) then
     FOnInstallPackage(APackage);
+end;
+
+function TPackageOverView.IsAccepted(const APackage: IDNPackage): Boolean;
+begin
+  Result := True;
+  if Assigned(FOnFilter) then
+    FOnFilter(APackage, Result);
 end;
 
 function TPackageOverView.GetInstalledVersion(
@@ -258,6 +287,17 @@ procedure TPackageOverView.UpdatePackage(const APackage: IDNPackage);
 begin
   if Assigned(FOnUpdatePackage) then
     FOnUpdatePackage(APackage);
+end;
+
+procedure TPackageOverView.ApplyFilter;
+var
+  LPackage: IDNPackage;
+begin
+  ClearPreviews();
+  for LPackage in FPackages do
+  begin
+    AddPreview(LPackage);
+  end;
 end;
 
 procedure TPackageOverView.ChangeSelectedPackage;
