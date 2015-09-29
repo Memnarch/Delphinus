@@ -52,6 +52,25 @@ const
   TDNCompilerConfigName: array[Low(TDNCompilerConfig)..High(TDNCompilerConfig)] of string = ('Release', 'Debug');
   TDNCompilerPlatformName: array[Low(TDNCompilerPlatform)..High(TDNCompilerPlatform)] of string = ('Win32', 'Win64', 'OSX32');
 
+function TryPlatformNameToCompilerPlatform(const AName: string; out APlatform: TDNCompilerPlatform): Boolean;
+
 implementation
+
+uses
+  SysUtils;
+
+function TryPlatformNameToCompilerPlatform(const AName: string; out APlatform: TDNCompilerPlatform): Boolean;
+var
+  LPlatform: TDNCompilerPlatform;
+begin
+  for LPlatform := Low(TDNCompilerPlatformName) to High(TDNCompilerPlatformName) do
+    if SameText(TDNCompilerPlatformName[LPlatform], AName) then
+    begin
+      APlatform := LPlatform;
+      Exit(True);
+    end;
+
+  Result := False;
+end;
 
 end.

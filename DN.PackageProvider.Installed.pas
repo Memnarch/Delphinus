@@ -69,6 +69,7 @@ begin
         APackage.ID := LInfo.ID;
         APackage.CompilerMin := LInfo.CompilerMin;
         APackage.CompilerMax := LInfo.CompilerMax;
+        APackage.Platforms := LInfo.Platforms;
         APackage.LicenseType := LInfo.LicenseType;
         APackage.LicenseText := LoadLicenceText(TPath.Combine(FComponentDirectory, LInfo.LicenseFile));
         APackage.ProjectUrl := LInfo.ProjectUrl;

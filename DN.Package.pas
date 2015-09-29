@@ -15,7 +15,8 @@ uses
   Generics.Collections,
   DN.Types,
   DN.Package.Intf,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.Compiler.Intf;
 
 type
   TDNPackage = class(TInterfacedObject, IDNPackage)
@@ -35,6 +36,7 @@ type
     FProjectUrl: string;
     FHomepageUrl: string;
     FReportUrl: string;
+    FPlatforms: TDNCompilerPlatforms;
   protected
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
@@ -42,6 +44,8 @@ type
     function GetCompilerMin: TCompilerVersion; virtual;
     procedure SetCompilerMax(const Value: TCompilerVersion); virtual;
     procedure SetCompilerMin(const Value: TCompilerVersion); virtual;
+    function GetPlatforms: TDNCompilerPlatforms; virtual;
+    procedure SetPlatforms(const Value: TDNCompilerPlatforms); virtual;
     function GetDownloadLocation: string; virtual;
     procedure SetDownloadLocation(const Value: string); virtual;
     function GetAuthor: string; virtual;
@@ -70,6 +74,7 @@ type
     property ID: TGUID read GetID write SetID;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
+    property Platforms: TDNCompilerPlatforms read GetPlatforms write SetPlatforms;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;
@@ -162,6 +167,11 @@ begin
   Result := FPicture;
 end;
 
+function TDNPackage.GetPlatforms: TDNCompilerPlatforms;
+begin
+  Result := FPlatforms;
+end;
+
 function TDNPackage.GetProjectUrl: string;
 begin
   Result := FProjectUrl;
@@ -230,6 +240,11 @@ end;
 procedure TDNPackage.SetName(const Value: string);
 begin
   FName := Value;
+end;
+
+procedure TDNPackage.SetPlatforms(const Value: TDNCompilerPlatforms);
+begin
+  FPlatforms := Value;
 end;
 
 procedure TDNPackage.SetProjectUrl(const Value: string);

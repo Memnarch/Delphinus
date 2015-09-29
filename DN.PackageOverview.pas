@@ -14,9 +14,11 @@ uses
   Types,
   Messages,
   Windows,
+  Graphics,
   Controls,
   Forms,
   Generics.Collections,
+  ImgList,
   DN.Package.Intf,
   DN.Preview,
   DN.PackageFilter;
@@ -40,6 +42,7 @@ type
     FOnInfoPackage: TPackageEvent;
     FColumns: Integer;
     FOnFilter: TPackageFilter;
+    FOSIcons: TImageList;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
@@ -52,6 +55,7 @@ type
     procedure UninstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
     procedure InfoPackage(const APackage: IDNPackage);
+    procedure LoadIcons;
   protected
     procedure Resize; override;
     procedure UpdateElements(AColumns: Integer);
@@ -80,6 +84,9 @@ implementation
 
 { TPackageOverView }
 
+uses
+  Delphinus.ResourceNames;
+
 const
   CColumns = 1;
   CSpace = 3;
@@ -93,7 +100,7 @@ begin
     if FUnusedPreviews.Count > 0 then
       LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
     else
-      LPreview := TPreview.Create(nil);
+      LPreview := TPreview.Create(nil, FOSIcons);
     LPreview.Package := APackage;
     LPreview.Parent := Self;
     SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
@@ -140,6 +147,11 @@ begin
   FColumns := CColumns;
   Self.ControlStyle := Self.ControlStyle + [csOpaque];
   HorzScrollBar.Visible := False;
+  FOSIcons := TImageList.Create(Self);
+  FOSIcons.Width := 32;
+  FOSIcons.Height := 32;
+  FOSIcons.ColorDepth := cd32Bit;
+  LoadIcons();
 end;
 
 destructor TPackageOverView.Destroy;
@@ -209,6 +221,28 @@ begin
   Result := True;
   if Assigned(FOnFilter) then
     FOnFilter(APackage, Result);
+end;
+
+procedure TPackageOverView.LoadIcons;
+var
+  LIcon: TIcon;
+begin
+  LIcon := TIcon.Create();
+  try
+    LIcon.LoadFromResourceName(HInstance, CIconWindows);
+    FOSIcons.AddIcon(LIcon);
+
+    LIcon.LoadFromResourceName(HInstance, CIconMac);
+    FOSIcons.AddIcon(LIcon);
+
+    LIcon.LoadFromResourceName(HInstance, CIconAndroid);
+    FOSIcons.AddIcon(LIcon);
+
+    LIcon.LoadFromResourceName(HInstance, CIconIOS);
+    FOSIcons.AddIcon(LIcon);
+  finally
+    LIcon.Free;
+  end;
 end;
 
 function TPackageOverView.GetInstalledVersion(

@@ -332,6 +332,7 @@ begin
           LPackage.CompilerMax := LInfo.CompilerMax;
           LPackage.LicenseType := LInfo.LicenseType;
           LPackage.LicenseFile := LInfo.LicenseFile;
+          LPackage.Platforms := LInfo.Platforms;
         end;
       end;
       for LVersionName in LCache.Versions do

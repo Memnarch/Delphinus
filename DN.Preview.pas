@@ -20,7 +20,8 @@ uses
   Math,
   DN.Package.Intf,
   DN.Controls,
-  DN.Controls.Button;
+  DN.Controls.Button,
+  ImgList;
 
 type
   TNotifyEvent = reference to procedure(Sender: TObject);
@@ -48,6 +49,7 @@ type
     FOnInstall: TNotifyEvent;
     FOnUninstall: TNotifyEvent;
     FOnInfo: TNotifyEvent;
+    FOSImages: TImageList;
     procedure SetSelected(const Value: Boolean);
     procedure SetPackage(const Value: IDNPackage);
     procedure SetInstalledVersion(const Value: string);
@@ -59,6 +61,7 @@ type
     procedure HandleButtonClick(Sender: TObject);
     procedure DownSample;
     procedure UpdateControls;
+    procedure PaintOsImages;
   protected
     procedure Paint; override;
     procedure SetupControls;
@@ -66,7 +69,7 @@ type
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
     procedure Resize; override;
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent; AOsImages: TImageList); reintroduce;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
     property Selected: Boolean read FSelected write SetSelected;
@@ -83,13 +86,16 @@ const
   CPreviewWidth = 256;
   CPreviewImageSize = 80;
   CPreviewHeight = CPreviewImageSize;
-  CButtonHeight = 25;
+  CButtonHeight = 21;
   CButtonWidth = 100;
+  CMargin = 3;
+  CLeftMargin = CMargin*2 + CPreviewImageSize;
 
 implementation
 
 uses
-  DN.Graphics;
+  DN.Graphics,
+  DN.Compiler.Intf;
 
 { TPreview }
 
@@ -109,9 +115,10 @@ begin
   inherited;
 end;
 
-constructor TPreview.Create(AOwner: TComponent);
+constructor TPreview.Create(AOwner: TComponent; AOsImages: TImageList);
 begin
-  inherited;
+  inherited Create(AOwner);
+  FOSImages := AOsImages;
   FTarget := TBitmap.Create();
   FTarget.PixelFormat := pf32bit;
   Width := CPreviewWidth;
@@ -215,9 +222,6 @@ procedure TPreview.Paint;
 var
   LVersionString, LDescription, LLicenseType: string;
   LRect: TRect;
-const
-  CMargin = 3;
-  CLeftMargin = CMargin*2 + CPreviewImageSize;
 begin
   inherited;
   if Assigned(FPackage) then
@@ -261,6 +265,26 @@ begin
     Canvas.Pen.Color := clBtnShadow;
     Canvas.Rectangle(0, 0, Width, Height);
     FGui.PaintTo(Canvas);
+    PaintOsImages();
+  end;
+end;
+
+procedure TPreview.PaintOsImages;
+var
+  LOffset: Integer;
+  LTopOffset: Integer;
+begin
+  LOffset :=  FButton.Left - FOSImages.Width - CMargin;
+  LTopOffset := Height - FOSImages.Height - CMargin;
+  if ([cpWin32, cpWin64] * FPackage.Platforms) <> [] then
+  begin
+    FOSImages.Draw(Canvas, LOffset, LTopOffset, 0);
+    Dec(LOffset, FOSImages.Width);
+  end;
+
+  if cpOSX32 in FPackage.Platforms then
+  begin
+    FOSImages.Draw(Canvas, LOffset, LTopOffset, 1);
   end;
 end;
 
@@ -280,9 +304,9 @@ end;
 
 procedure TPreview.UpdateControls;
 begin
-  FButton.Left := Width - FButton.Width;
-  FUpdateButton.Left := Width - FUpdateButton.Width;
-  FInfoButton.Left := Width - FInfoButton.Width;
+  FButton.Left := Width - FButton.Width - CMargin;
+  FUpdateButton.Left := Width - FUpdateButton.Width - CMargin;
+  FInfoButton.Left := Width - FInfoButton.Width - CMargin;
 end;
 
 procedure TPreview.SetInstalledVersion(const Value: string);
@@ -320,7 +344,7 @@ end;
 procedure TPreview.SetupControls;
 begin
   FButton := TDNButton.Create();
-  FButton.Top := Height - CButtonHeight;
+  FButton.Top := Height - CButtonHeight - CMargin;
   FButton.Width := CButtonWidth;
   FButton.Height := CButtonHeight;
   FButton.Color := clSilver;
@@ -330,7 +354,7 @@ begin
   FUpdateButton := TDNButton.Create();
   FUpdateButton.Width := CButtonWidth;
   FUpdateButton.Height := CButtonHeight;
-  FUpdateButton.Top := Height - CButtonHeight*2;
+  FUpdateButton.Top := Height - CButtonHeight*2 - CMargin*2;
   FUpdateButton.Color := clSilver;
   FUpdateButton.HoverColor := FUpdateColor;
   FUpdateButton.Visible := False;
@@ -339,6 +363,7 @@ begin
   FGUI.Controls.Add(FUpdateButton);
 
   FInfoButton := TDNButton.Create();
+  FInfoButton.Top := CMargin;
   FInfoButton.Width := CButtonHeight;
   FInfoButton.Height := CButtonHeight;
   FInfoButton.Color := clSilver;
