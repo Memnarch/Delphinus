@@ -25,7 +25,7 @@ uses
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
   ExtCtrls,
-  StdCtrls;
+  StdCtrls, System.Actions;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -75,7 +75,7 @@ type
     procedure RefreshInstalledPackages;
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
-    function GetOverviewPackage(const APackage: IDNPackage): IDNPackage;
+    function GetOnlinePackage(const APackage: IDNPackage): IDNPackage;
     function GetInstalledVersion(const APackage: IDNPackage): string;
     function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
@@ -388,7 +388,7 @@ begin
   end;
 end;
 
-function TDelphinusDialog.GetOverviewPackage(
+function TDelphinusDialog.GetOnlinePackage(
   const APackage: IDNPackage): IDNPackage;
 var
   LPackage: IDNPackage;
@@ -411,7 +411,7 @@ var
 begin
   Result := '';
   LVersion := GetInstalledVersion(APackage);
-  LPackage := GetOverviewPackage(APackage);
+  LPackage := GetOnlinePackage(APackage);
   if Assigned(LPackage) and (LVersion <> '') then
   begin
     if (LPackage.Versions.Count > 0) and (LPackage.Versions[0].Name <> LVersion) then
@@ -547,7 +547,7 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUpdate(APackage);
+      LDialog.ExecuteUpdate(GetOnlinePackage(APackage));
     finally
       LDialog.Free;
     end;
