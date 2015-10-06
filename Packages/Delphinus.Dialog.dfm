@@ -3,7 +3,7 @@ object DelphinusDialog: TDelphinusDialog
   Top = 0
   Caption = 'Delphinus Packagemanager'
   ClientHeight = 450
-  ClientWidth = 761
+  ClientWidth = 984
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object DelphinusDialog: TDelphinusDialog
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 761
+    Width = 984
     Height = 30
     AutoSize = True
     ButtonHeight = 30
@@ -30,6 +30,7 @@ object DelphinusDialog: TDelphinusDialog
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    ExplicitWidth = 761
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -60,18 +61,19 @@ object DelphinusDialog: TDelphinusDialog
   object pnlPackages: TPanel
     Left = 0
     Top = 30
-    Width = 761
+    Width = 984
     Height = 420
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlPackages'
     ShowCaption = False
     TabOrder = 1
+    ExplicitWidth = 761
     object edSearch: TButtonedEdit
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 755
+      Width = 978
       Height = 21
       Align = alTop
       Images = ilSmall
@@ -84,8 +86,7 @@ object DelphinusDialog: TDelphinusDialog
       OnKeyPress = edSearchKeyPress
       OnLeftButtonClick = edSearchLeftButtonClick
       OnRightButtonClick = edSearchRightButtonClick
-      ExplicitLeft = 6
-      ExplicitTop = 6
+      ExplicitWidth = 755
     end
   end
   object ilMenu: TImageList
@@ -95,7 +96,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C010104001800700118001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104001800800118001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -725,7 +726,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 376
     Top = 232
     Bitmap = {
-      494C0101020008003C0010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C0101020008004C0010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       000000000000000000000000000000000000000000000F0F0F104F4F4FC45757
       576A000000000000000000000000000000000000000000000000000000000000

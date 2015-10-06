@@ -25,7 +25,7 @@ uses
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
   ExtCtrls,
-  StdCtrls, System.Actions;
+  StdCtrls;
 
 type
   TDelphinusDialog = class(TDelphinusForm)
@@ -85,6 +85,7 @@ type
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
+    procedure HandleSelectedPackageChanged(Sender: TObject);
     function GetActivePackageSource: TList<IDNPackage>;
     procedure RefreshOverview();
     procedure DoFilter(const AFilter: string);
@@ -207,8 +208,9 @@ begin
   inherited;
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
-  FDetailView.Align := alClient;
-  FDetailView.Visible := False;
+  FDetailView.OnGetOnlineVersion := GetUpdateVersion;
+  FDetailView.OnGetInstalledVersion := GetInstalledVersion;
+  FDetailView.Align := alRight;
   FDetailView.Parent := Self;
 
   FOverView := TPackageOverView.Create(Self);
@@ -217,10 +219,10 @@ begin
   FOverView.Parent := pnlPackages;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
   FOverView.OnCheckHasPackageUpdate := GetUpdateVersion;
+  FOverView.OnSelectedPackageChanged := HandleSelectedPackageChanged;
   FOverView.OnInstallPackage :=  InstallPackage;
   FOverView.OnUninstallPackage := UninstallPackage;
   FOverView.OnUpdatePackage := UpdatePackage;
-  FOverView.OnInfoPackage := ShowDetail;
   FOverView.DoubleBuffered := True;
   FOverView.OnFilter := FilterPackage;
 
@@ -426,6 +428,11 @@ begin
   RefreshOverview();
 end;
 
+procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
+begin
+  ShowDetail(GetActiveOverView().SelectedPackage);
+end;
+
 procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
@@ -495,7 +502,7 @@ procedure TDelphinusDialog.RefreshOverview;
 begin
   GetActiveOverView().Clear;
   GetActiveOverView().Packages.AddRange(GetActivePackageSource());
-  FDetailView.Visible := False;
+  FDetailView.Package := nil;
 end;
 
 procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
@@ -520,7 +527,6 @@ procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
 begin
   FDetailView.Package := APackage;
   FDetailView.BringToFront();
-  FDetailView.Visible := True;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);

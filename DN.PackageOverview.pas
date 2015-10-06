@@ -39,7 +39,6 @@ type
     FOnInstallPackage: TPackageEvent;
     FOnUninstallPackage: TPackageEvent;
     FOnUpdatePackage: TPackageEvent;
-    FOnInfoPackage: TPackageEvent;
     FColumns: Integer;
     FOnFilter: TPackageFilter;
     FOSIcons: TImageList;
@@ -54,7 +53,6 @@ type
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UninstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
-    procedure InfoPackage(const APackage: IDNPackage);
     procedure LoadIcons;
   protected
     procedure Resize; override;
@@ -76,7 +74,6 @@ type
     property OnInstallPackage: TPackageEvent read FOnInstallPackage write FOnInstallPackage;
     property OnUninstallPackage: TPackageEvent read FOnUninstallPackage write FOnUninstallPackage;
     property OnUpdatePackage: TPackageEvent read FOnUpdatePackage write FOnUpdatePackage;
-    property OnInfoPackage: TPackageEvent read FOnInfoPackage write FOnInfoPackage;
     property OnFilter: TPackageFilter read FOnFilter write FOnFilter;
   end;
 
@@ -110,7 +107,6 @@ begin
     LPreview.OnInstall := procedure(Sender: TObject) begin InstallPackage(TPreview(Sender).Package) end;
     LPreview.OnUninstall := procedure(Sender: TObject) begin UninstallPackage(TPreview(Sender).Package) end;
     LPreview.OnUpdate := procedure(Sender: TObject) begin UpdatePackage(TPreview(Sender).Package) end;
-    LPreview.OnInfo := procedure(Sender: TObject) begin InfoPackage(TPreview(Sender).Package) end;
     FPreviews.Add(LPreview)
   end;
 end;
@@ -202,12 +198,6 @@ begin
   begin
     Result := '';
   end;
-end;
-
-procedure TPackageOverView.InfoPackage(const APackage: IDNPackage);
-begin
-  if Assigned(FOnInfoPackage) then
-    FOnInfoPackage(APackage);
 end;
 
 procedure TPackageOverView.InstallPackage(const APackage: IDNPackage);

@@ -1,20 +1,20 @@
 object PackageDetailView: TPackageDetailView
   Left = 0
   Top = 0
-  Width = 604
-  Height = 348
+  Width = 302
+  Height = 618
   Color = cl3DLight
   ParentBackground = False
   ParentColor = False
   TabOrder = 0
   DesignSize = (
-    604
-    348)
+    302
+    618)
   object pnlHeader: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 598
+    Width = 296
     Height = 128
     Align = alTop
     BevelOuter = bvNone
@@ -24,55 +24,40 @@ object PackageDetailView: TPackageDetailView
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      598
+      296
       128)
     object imgRepo: TImage
       Left = 0
       Top = 0
       Width = 128
       Height = 128
+      Proportional = True
+      Stretch = True
     end
     object lbDescription: TLabel
       Left = 134
-      Top = 45
-      Width = 464
-      Height = 83
+      Top = -3
+      Width = 158
+      Height = 128
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'This is the repository Description'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -19
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Layout = tlCenter
       WordWrap = True
-      ExplicitWidth = 427
-    end
-    object lbTitle: TLabel
-      AlignWithMargins = True
-      Left = 134
-      Top = 0
-      Width = 459
-      Height = 39
-      Anchors = [akLeft, akTop, akRight]
-      AutoSize = False
-      Caption = 'Name of the Repository'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -32
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
     end
   end
   object pnlDetail: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 137
-    Width = 598
-    Height = 181
-    Margins.Bottom = 30
+    Width = 296
+    Height = 478
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlDetail'
@@ -81,127 +66,181 @@ object PackageDetailView: TPackageDetailView
     ShowCaption = False
     TabOrder = 1
     DesignSize = (
-      598
-      181)
+      296
+      478)
     object Label1: TLabel
-      Left = 0
+      Left = 5
       Top = 0
-      Width = 128
-      Height = 33
+      Width = 55
+      Height = 18
       AutoSize = False
       Caption = 'Author:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
-      Font.Style = []
+      Font.Style = [fsBold]
       ParentFont = False
     end
     object lbAuthor: TLabel
-      Left = 134
+      Left = 93
       Top = 0
-      Width = 464
-      Height = 33
+      Width = 199
+      Height = 18
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author'#39's Name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
     end
     object Label2: TLabel
-      Left = 0
-      Top = 24
-      Width = 128
-      Height = 33
-      AutoSize = False
+      Left = 5
+      Top = 23
+      Width = 72
+      Height = 18
       Caption = 'Supports:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
-      Font.Style = []
+      Font.Style = [fsBold]
       ParentFont = False
     end
     object lbSupports: TLabel
-      Left = 134
-      Top = 24
-      Width = 464
-      Height = 33
+      Left = 93
+      Top = 23
+      Width = 199
+      Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author'#39's Name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
     end
     object lbInstalledCaption: TLabel
-      Left = 0
-      Top = 48
-      Width = 128
-      Height = 33
-      AutoSize = False
+      Left = 5
+      Top = 71
+      Width = 72
+      Height = 18
       Caption = 'Installed:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
-      Font.Style = []
+      Font.Style = [fsBold]
       ParentFont = False
     end
     object lbInstalled: TLabel
-      Left = 134
-      Top = 48
-      Width = 464
-      Height = 33
+      Left = 93
+      Top = 71
+      Width = 199
+      Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author'#39's Name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
     end
     object Label3: TLabel
-      Left = 0
-      Top = 72
-      Width = 128
-      Height = 33
-      AutoSize = False
+      Left = 5
+      Top = 95
+      Width = 62
+      Height = 18
       Caption = 'License:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
       Font.Name = 'Tahoma'
-      Font.Style = []
+      Font.Style = [fsBold]
       ParentFont = False
     end
     object lbLicense: TLabel
-      Left = 134
-      Top = 72
-      Width = 464
-      Height = 33
+      Left = 93
+      Top = 95
+      Width = 199
+      Height = 49
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author'#39's Name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      WordWrap = True
+    end
+    object Label5: TLabel
+      Left = 5
+      Top = 150
+      Width = 78
+      Height = 18
+      Caption = 'Platforms:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lbPlatforms: TLabel
+      Left = 93
+      Top = 150
+      Width = 199
+      Height = 25
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'Author'#39's Name'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label4: TLabel
+      Left = 5
+      Top = 47
+      Width = 62
+      Height = 18
+      Caption = 'Version:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lbVersion: TLabel
+      Left = 93
+      Top = 47
+      Width = 199
+      Height = 25
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      Caption = 'Author'#39's Name'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
     end
     object btnProject: TButton
-      Left = 52
-      Top = 135
+      Left = 49
+      Top = 432
       Width = 38
       Height = 38
       Anchors = [akLeft, akBottom]
@@ -211,8 +250,8 @@ object PackageDetailView: TPackageDetailView
       OnClick = btnProjectClick
     end
     object btnReport: TButton
-      Left = 96
-      Top = 135
+      Left = 93
+      Top = 432
       Width = 38
       Height = 38
       Anchors = [akLeft, akBottom]
@@ -223,8 +262,8 @@ object PackageDetailView: TPackageDetailView
     end
   end
   object btnLicense: TButton
-    Left = 3
-    Top = 241
+    Left = 5
+    Top = 256
     Width = 75
     Height = 25
     Caption = 'Show License'
@@ -232,8 +271,8 @@ object PackageDetailView: TPackageDetailView
     OnClick = btnLicenseClick
   end
   object btnHome: TButton
-    Left = 11
-    Top = 272
+    Left = 8
+    Top = 569
     Width = 38
     Height = 38
     Anchors = [akLeft, akBottom]
@@ -249,7 +288,7 @@ object PackageDetailView: TPackageDetailView
     Left = 264
     Top = 232
     Bitmap = {
-      494C010103000800240020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010103000800580020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

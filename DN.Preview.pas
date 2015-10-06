@@ -42,13 +42,11 @@ type
     FGUI: TDNControlsController;
     FButton: TDNButton;
     FUpdateButton: TDNButton;
-    FInfoButton: TDNButton;
     FInstalledVersion: string;
     FUpdateVersion: string;
     FOnUpdate: TNotifyEvent;
     FOnInstall: TNotifyEvent;
     FOnUninstall: TNotifyEvent;
-    FOnInfo: TNotifyEvent;
     FOSImages: TImageList;
     procedure SetSelected(const Value: Boolean);
     procedure SetPackage(const Value: IDNPackage);
@@ -57,7 +55,6 @@ type
     procedure DoInstall();
     procedure DoUninstall();
     procedure DoUpdate();
-    procedure DoInfo();
     procedure HandleButtonClick(Sender: TObject);
     procedure DownSample;
     procedure UpdateControls;
@@ -65,8 +62,6 @@ type
   protected
     procedure Paint; override;
     procedure SetupControls;
-    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
-    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
     procedure Resize; override;
   public
     constructor Create(AOwner: TComponent; AOsImages: TImageList); reintroduce;
@@ -79,7 +74,6 @@ type
     property OnInstall: TNotifyEvent read FOnInstall write FOnInstall;
     property OnUninstall: TNotifyEvent read FOnUninstall write FOnUninstall;
     property OnUpdate: TNotifyEvent read FOnUpdate write FOnUpdate;
-    property OnInfo: TNotifyEvent read FOnInfo write FOnInfo;
   end;
 
 const
@@ -98,22 +92,6 @@ uses
   DN.Compiler.Intf;
 
 { TPreview }
-
-procedure TPreview.CMMouseEnter(var Message: TMessage);
-begin
-  if Message.LParam = 0 then
-    FInfoButton.Visible := True;
-
-  inherited;
-end;
-
-procedure TPreview.CMMouseLeave(var Message: TMessage);
-begin
-  if Message.LParam = 0 then
-    FInfoButton.Visible := False;
-
-  inherited;
-end;
 
 constructor TPreview.Create(AOwner: TComponent; AOsImages: TImageList);
 begin
@@ -142,12 +120,6 @@ begin
   FGUI.Free;
   FTarget.Free();
   inherited;
-end;
-
-procedure TPreview.DoInfo;
-begin
-  if Assigned(FOnInfo) then
-    FOnInfo(Self);
 end;
 
 procedure TPreview.DoInstall;
@@ -213,8 +185,6 @@ begin
   begin
     if Sender = FUpdateButton then
       DoUpdate()
-    else if Sender = FInfoButton then
-      DoInfo();
   end;
 end;
 
@@ -306,7 +276,6 @@ procedure TPreview.UpdateControls;
 begin
   FButton.Left := Width - FButton.Width - CMargin;
   FUpdateButton.Left := Width - FUpdateButton.Width - CMargin;
-  FInfoButton.Left := Width - FInfoButton.Width - CMargin;
 end;
 
 procedure TPreview.SetInstalledVersion(const Value: string);
@@ -361,17 +330,6 @@ begin
   FUpdateButton.Caption := 'Update';
   FUpdateButton.OnClick := HandleButtonClick;
   FGUI.Controls.Add(FUpdateButton);
-
-  FInfoButton := TDNButton.Create();
-  FInfoButton.Top := CMargin;
-  FInfoButton.Width := CButtonHeight;
-  FInfoButton.Height := CButtonHeight;
-  FInfoButton.Color := clSilver;
-  FInfoButton.HoverColor := FInfoColor;
-  FInfoButton.Caption := 'i';
-  FInfoButton.Visible := False;
-  FInfoButton.OnClick := HandleButtonClick;
-  FGUI.Controls.Add(FInfoButton);
 end;
 
 end.
