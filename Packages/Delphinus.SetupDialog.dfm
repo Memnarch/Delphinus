@@ -14,6 +14,7 @@ object SetupDialog: TSetupDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCloseQuery = FormCloseQuery
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -180,15 +181,28 @@ object SetupDialog: TSetupDialog
       Caption = 'tsLog'
       ImageIndex = 2
       TabVisible = False
+      DesignSize = (
+        556
+        290)
       object mLog: TMemo
         AlignWithMargins = True
         Left = 3
         Top = 3
         Width = 550
-        Height = 284
-        Align = alClient
+        Height = 255
+        Anchors = [akLeft, akTop, akRight, akBottom]
         ReadOnly = True
         TabOrder = 0
+      end
+      object btnClose: TButton
+        Left = 478
+        Top = 264
+        Width = 75
+        Height = 25
+        Caption = 'Close'
+        Enabled = False
+        ModalResult = 1
+        TabOrder = 1
       end
     end
   end
