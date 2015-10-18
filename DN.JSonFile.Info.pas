@@ -70,7 +70,7 @@ begin
   begin
     if LNeedsSeperator then
       Result := Result + ';';
-    Result := TDNCompilerPlatformName[LPlatform];
+    Result := Result + TDNCompilerPlatformName[LPlatform];
     LNeedsSeperator := True;
   end;
 end;
