@@ -93,7 +93,9 @@ contains
   Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
   Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas',
   Delphinus.ProgressDialog in '..\Delphinus.ProgressDialog.pas' {ProgressDialog},
-  DN.PackageFilter in '..\..\DN.PackageFilter.pas';
+  DN.PackageFilter in '..\..\DN.PackageFilter.pas',
+  Delphinus.FilterProperties.Dialog in '..\Delphinus.FilterProperties.Dialog.pas' {FilterPropertiesDialog},
+  Delphinus.FilterProperties in '..\Delphinus.FilterProperties.pas';
 
 end.
 

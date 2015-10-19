@@ -25,6 +25,7 @@ type
     lbResponse: TLabel;
     procedure btnTestClick(Sender: TObject);
   private
+    FSettings: TDelphinusSettings;
     procedure SetSettings(const Value: TDelphinusSettings);
     function GetSettings: TDelphinusSettings;
     { Private declarations }
@@ -85,12 +86,20 @@ end;
 
 function TDelphinusOptionsDialog.GetSettings: TDelphinusSettings;
 begin
+  Result := FSettings;
   Result.OAuthToken := Trim(edToken.Text);
 end;
 
 procedure TDelphinusOptionsDialog.SetSettings(const Value: TDelphinusSettings);
 begin
-  edToken.Text := Value.OAuthToken;
+  if FSettings <> Value then
+  begin
+    FSettings := Value;
+    if Assigned(FSettings) then
+    begin
+      edToken.Text := FSettings.OAuthToken;
+    end;
+  end;
 end;
 
 end.

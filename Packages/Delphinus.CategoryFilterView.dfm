@@ -33,8 +33,9 @@ object CategoryFilterView: TCategoryFilterView
     Left = 0
     Top = 105
     Width = 320
-    Height = 135
-    Align = alClient
+    Height = 104
+    Align = alTop
+    Anchors = [akLeft, akTop, akRight, akBottom]
     BorderStyle = bsNone
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -52,5 +53,25 @@ object CategoryFilterView: TCategoryFilterView
     OnChange = tvFiltersChange
     OnChanging = tvCategoriesChanging
     OnCollapsing = tvCategoriesCollapsing
+  end
+  object btnRemove: TButton
+    Left = 245
+    Top = 212
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Remove'
+    TabOrder = 2
+    OnClick = btnRemoveClick
+  end
+  object btnAdd: TButton
+    Left = 164
+    Top = 212
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Add'
+    TabOrder = 3
+    OnClick = btnAddClick
   end
 end
