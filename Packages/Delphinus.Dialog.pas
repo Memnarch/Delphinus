@@ -234,12 +234,11 @@ begin
   FOverView.OnUpdatePackage := UpdatePackage;
   FOverView.DoubleBuffered := True;
   FOverView.OnFilter := FilterPackage;
-
   FCategoryFilteView := TCategoryFilterView.Create(Self);
   FCategoryFilteView.Width := 200;
   FCategoryFilteView.Align := alLeft;
   FCategoryFilteView.AlignWithMargins := True;
-  FCategoryFilteView.Margins.Left := 0;
+//  FCategoryFilteView.Margins.Left := 0;
   FCategoryFilteView.Margins.Bottom := 0;
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.OnFilterChanged := HandlePackageFilterChanged;

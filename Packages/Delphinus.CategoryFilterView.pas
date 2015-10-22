@@ -8,7 +8,10 @@ uses
   DN.PackageFilter, Generics.Collections,
   Delphinus.FilterProperties,
   DN.Package.Intf,
-  Delphinus.Settings;
+  Delphinus.Settings,
+  ExtCtrls,
+  ImgList,
+  Menus;
 
 type
   TPackageCategory = (pcOnline, pcInstalled, pcUpdates);
@@ -18,8 +21,11 @@ type
   TCategoryFilterView = class(TFrame)
     tvCategories: TTreeView;
     tvFilters: TTreeView;
-    btnRemove: TButton;
-    btnAdd: TButton;
+    ilSmall: TImageList;
+    PopupMenu1: TPopupMenu;
+    miAdd: TMenuItem;
+    miEdit: TMenuItem;
+    miDelete: TMenuItem;
     procedure tvCategoriesAdvancedCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; Stage: TCustomDrawStage;
       var PaintImages, DefaultDraw: Boolean);
@@ -32,6 +38,9 @@ type
     procedure tvFiltersChange(Sender: TObject; Node: TTreeNode);
     procedure btnAddClick(Sender: TObject);
     procedure btnRemoveClick(Sender: TObject);
+    procedure tvCategoriesContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
+    procedure btnEditClick(Sender: TObject);
   private
     { Private declarations }
     FPackageNodeIndex: Integer;
@@ -57,6 +66,7 @@ type
     procedure FilterByFilterProperties(const APackage: IDNPackage; var AAccepted: Boolean);
     function IsNameValid(const AName: string): Boolean;
     procedure SetSettings(const Value: TDelphinusSettings);
+    procedure FilterNodeChanged(ANode: TTreeNode);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -107,6 +117,30 @@ begin
       LProperties.Free;
   finally
     LDialog.Free;
+  end;
+end;
+
+procedure TCategoryFilterView.btnEditClick(Sender: TObject);
+var
+  LProperties: TFilterProperties;
+  LDialog: TFilterPropertiesDialog;
+begin
+  if Assigned(tvFilters.Selected) and FFilterProperties.TryGetValue(tvFilters.Selected.Text, LProperties) then
+  begin
+    FFilterProperties.Remove(LProperties.Caption);
+    FFilterCallbacks.Remove(TCharacter.ToLower(LProperties.Caption));
+    LDialog := TFilterPropertiesDialog.Create(nil);
+    try
+      LDialog.OnIsNameValid := IsNameValid;
+      LDialog.FilterProperties := LProperties;
+      LDialog.ShowModal();
+      tvFilters.Selected.Text := LProperties.Caption;
+      FFilterProperties.Add(LProperties.Caption, LProperties);
+      FFilterCallbacks.Add(TCharacter.ToLower(LProperties.Caption), FilterByFilterProperties);
+      FilterNodeChanged(tvFilters.Selected);
+    finally
+      LDialog.Free;
+    end;
   end;
 end;
 
@@ -171,6 +205,20 @@ begin
     FOnFilterChanged(Self, AFilter);
 end;
 
+procedure TCategoryFilterView.FilterNodeChanged(ANode: TTreeNode);
+var
+  LFilter: TPackageFilter;
+begin
+  FCurrentFilterProperties := nil;
+  if FFilterCallbacks.TryGetValue(TCharacter.ToLower(ANode.Text), LFilter) then
+  begin
+    if FFilterProperties.ContainsKey(ANode.Text) then
+      FCurrentFilterProperties := FFilterProperties.Items[ANode.Text];
+
+    FilterChanged(LFilter);
+  end;
+end;
+
 procedure TCategoryFilterView.FrameResize(Sender: TObject);
 begin
   tvCategories.Invalidate;
@@ -196,6 +244,7 @@ procedure TCategoryFilterView.RegisterFilter(const AName: string;
 begin
   tvFilters.Selected := tvFilters.Items.AddChild(tvFilters.Items.Item[FFilterNodeIndex], AName);
   FFilterCallbacks.Add(TCharacter.ToLower(AName), AFilter);
+  FilterNodeChanged(tvFilters.Selected);
 end;
 
 procedure TCategoryFilterView.RegisterFilterProperties(
@@ -286,18 +335,25 @@ begin
   AllowCollapse := False;
 end;
 
-procedure TCategoryFilterView.tvFiltersChange(Sender: TObject; Node: TTreeNode);
+procedure TCategoryFilterView.tvCategoriesContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
 var
-  LFilter: TPackageFilter;
+  LNode: TTreeNode;
 begin
-  FCurrentFilterProperties := nil;
-  if FFilterCallbacks.TryGetValue(TCharacter.ToLower(Node.Text), LFilter) then
-  begin
-    if FFilterProperties.ContainsKey(Node.Text) then
-      FCurrentFilterProperties := FFilterProperties.Items[Node.Text];
+  LNode := tvFilters.GetNodeAt(MousePos.X, MousePos.Y);
+  //ALL node is at index 0, do not allow to modify or delete it
+  miDelete.Enabled := Assigned(LNode) and (LNode.Index > 0);
+  miEdit.Enabled := Assigned(LNode) and (LNode.Index > 0);
+  //do not try to select Captionnodes
+  if Assigned(LNode) and (LNode.Count = 0) then
+    tvFilters.Selected := LNode
+  else
+    Handled := Assigned(LNode);
+end;
 
-    FilterChanged(LFilter);
-  end;
+procedure TCategoryFilterView.tvFiltersChange(Sender: TObject; Node: TTreeNode);
+begin
+  FilterNodeChanged(Node);
 end;
 
 procedure TCategoryFilterView.UnregisterFilter(const AName: string);
