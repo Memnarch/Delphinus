@@ -93,6 +93,7 @@ begin
   {$EndIf}
   FRequest.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(FRequest);
   FRequest.HandleRedirects := True;
+  FRequest.Request.UserAgent := 'Delphinus';
 end;
 
 destructor TDNGitHubPackageProvider.Destroy;

@@ -62,6 +62,7 @@ begin
     LRequest.Request.Authentication := TGithubAuthentication.Create();
     LRequest.Request.Authentication.Password := Settings.OAuthToken;
     LRequest.ReadTimeout := 30000;
+    LRequest.Request.UserAgent := 'Delphinus';
     try
       LRequest.Get('https://api.github.com/user', LResponse);
     except
