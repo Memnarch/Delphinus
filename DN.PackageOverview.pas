@@ -86,7 +86,7 @@ uses
 
 const
   CColumns = 1;
-  CSpace = 3;
+  CSpace = 0;
 
 procedure TPackageOverView.AddPreview(const APackage: IDNPackage);
 var
@@ -148,6 +148,8 @@ begin
   FOSIcons.Height := 32;
   FOSIcons.ColorDepth := cd32Bit;
   LoadIcons();
+  ParentColor := False;
+  Color := clWindow;
 end;
 
 destructor TPackageOverView.Destroy;

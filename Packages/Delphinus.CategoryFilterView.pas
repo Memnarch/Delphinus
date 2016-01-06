@@ -31,8 +31,6 @@ type
       Node: TTreeNode; State: TCustomDrawState; Stage: TCustomDrawStage;
       var PaintImages, DefaultDraw: Boolean);
     procedure FrameResize(Sender: TObject);
-    procedure tvCategoriesChanging(Sender: TObject; Node: TTreeNode;
-      var AllowChange: Boolean);
     procedure tvCategoriesCollapsing(Sender: TObject; Node: TTreeNode;
       var AllowCollapse: Boolean);
     procedure tvCategoriesChange(Sender: TObject; Node: TTreeNode);
@@ -44,7 +42,6 @@ type
     procedure btnEditClick(Sender: TObject);
   private
     { Private declarations }
-    FPackageNodeIndex: Integer;
     FOnlineNodeIndex: Integer;
     FInstalledNodeIndex: Integer;
     FUpdatesNodeIndex: Integer;
@@ -159,7 +156,7 @@ end;
 
 constructor TCategoryFilterView.Create(AOwner: TComponent);
 var
-  LPackageNode, LOnlineNode, LFilterNode: TTreeNode;
+  LOnlineNode, LFilterNode: TTreeNode;
   LRect: TRect;
 begin
   inherited;
@@ -168,21 +165,18 @@ begin
   //See(in german): http://www.delphipraxis.net/89993-treenode-treeview-automatisches-destroy.html
   FFilterCallbacks := TDictionary<string, TPackageFilter>.Create();
   FFilterProperties := TDictionary<string, TFilterProperties>.Create();
-  LPackageNode := tvCategories.Items.AddChild(nil, 'Packages');
-  FPackageNodeIndex := LPackageNode.AbsoluteIndex;
-  LOnlineNode := tvCategories.Items.AddChild(LPackageNode, GetNumberedCaption(COnline, FOnlineCount));
+  LOnlineNode := tvCategories.Items.AddChild(nil, GetNumberedCaption(COnline, FOnlineCount));
   LOnlineNode.Selected := True;
   FOnlineNodeIndex := LOnlineNode.AbsoluteIndex;
-  FInstalledNodeIndex := tvCategories.Items.AddChild(LPackageNode, GetNumberedCaption(CInstalled, FInstalledCount)).AbsoluteIndex;
-  FUpdatesNodeIndex := tvCategories.Items.AddChild(LPackageNode, GetNumberedCaption(CUpdates, FUpdatesCount)).AbsoluteIndex;
-  LRect := LPackageNode.DisplayRect(False);
-  tvCategories.ClientHeight := (LRect.Bottom - LRect.Top)*4;
+  FInstalledNodeIndex := tvCategories.Items.AddChild(nil, GetNumberedCaption(CInstalled, FInstalledCount)).AbsoluteIndex;
+  FUpdatesNodeIndex := tvCategories.Items.AddChild(nil, GetNumberedCaption(CUpdates, FUpdatesCount)).AbsoluteIndex;
+  LRect := LOnlineNode.DisplayRect(False);
+  tvCategories.ClientHeight := (LRect.Bottom - LRect.Top)*3;
 
   LFilterNode := tvFilters.Items.AddChild(nil, 'Filters');
   FFilterNodeIndex := LFilterNode.AbsoluteIndex;
   RegisterFilter('All', nil);
 
-  LPackageNode.Expand(False);
   LFilterNode.Expand(False);
 end;
 
@@ -298,20 +292,25 @@ var
 const
   CDiff = 2;
 begin
-  LRect := Node.DisplayRect(False);
-  LText := Node.Text;
+  if Stage = cdPostPaint then
+  begin
+    LRect := Node.DisplayRect(False);
+    LText := Node.Text;
 
     if cdsSelected in State then
       LBackground := clSkyBlue
+    else if cdsHot in State then
+      LBackground := clLtGray
     else
-      LBackground := clLtGray;
+      LBackground := Color;
 
-    if (not Assigned(Node.Parent)) or (cdsSelected in State) then
-      GradientFillRectVertical(Sender.Canvas, AlterColor(LBackground, CDiff), AlterColor(LBackground, -CDiff), LRect);
+    Sender.Canvas.Brush.Color := LBackground;
+    Sender.Canvas.FillRect(LRect);
     SetBkMode(Sender.Canvas.Handle, TRANSPARENT);
-    Sender.Canvas.TextRect(LRect, LText, [tfCenter]);
-
-  DefaultDraw := False;
+    LRect.Left := 3;
+    Sender.Canvas.TextRect(LRect, LText);
+    DefaultDraw := True;
+  end;
 end;
 
 procedure TCategoryFilterView.tvCategoriesChange(Sender: TObject;
@@ -322,12 +321,6 @@ begin
     1: CategoryChanged(pcInstalled);
     2: CategoryChanged(pcUpdates);
   end;
-end;
-
-procedure TCategoryFilterView.tvCategoriesChanging(Sender: TObject;
-  Node: TTreeNode; var AllowChange: Boolean);
-begin
-  AllowChange := Assigned(Node.Parent);
 end;
 
 procedure TCategoryFilterView.tvCategoriesCollapsing(Sender: TObject;

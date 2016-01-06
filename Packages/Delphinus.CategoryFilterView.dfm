@@ -14,11 +14,13 @@ object CategoryFilterView: TCategoryFilterView
     BorderStyle = bsNone
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -16
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     HideSelection = False
+    HotTrack = True
     Indent = 19
+    ParentColor = True
     ParentFont = False
     RowSelect = True
     ShowButtons = False
@@ -26,7 +28,6 @@ object CategoryFilterView: TCategoryFilterView
     TabOrder = 0
     OnAdvancedCustomDrawItem = tvCategoriesAdvancedCustomDrawItem
     OnChange = tvCategoriesChange
-    OnChanging = tvCategoriesChanging
     OnCollapsing = tvCategoriesCollapsing
   end
   object tvFilters: TTreeView
@@ -49,9 +50,9 @@ object CategoryFilterView: TCategoryFilterView
     ShowButtons = False
     ShowLines = False
     TabOrder = 1
+    Visible = False
     OnAdvancedCustomDrawItem = tvCategoriesAdvancedCustomDrawItem
     OnChange = tvFiltersChange
-    OnChanging = tvCategoriesChanging
     OnCollapsing = tvCategoriesCollapsing
     OnContextPopup = tvCategoriesContextPopup
   end
@@ -60,7 +61,7 @@ object CategoryFilterView: TCategoryFilterView
     Left = 144
     Top = 104
     Bitmap = {
-      494C010103003800680010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010103003800B00010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

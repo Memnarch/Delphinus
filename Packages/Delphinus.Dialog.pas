@@ -46,6 +46,7 @@ type
     pnlPackages: TPanel;
     edSearch: TButtonedEdit;
     ilSmall: TImageList;
+    pnlToolBar: TPanel;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
@@ -214,6 +215,9 @@ constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
   FSettings := TDelphinusSettings.Create();
+  FPackages := TList<IDNPackage>.Create();
+  FInstalledPackages := TList<IDNPackage>.Create();
+  FUpdatePackages := TList<IDNPackage>.Create();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -224,7 +228,6 @@ begin
 
   FOverView := TPackageOverView.Create(Self);
   FOverView.Align := alClient;
-  FOverView.AlignWithMargins := True;
   FOverView.Parent := pnlPackages;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
   FOverView.OnCheckHasPackageUpdate := GetUpdateVersion;
@@ -237,16 +240,11 @@ begin
   FCategoryFilteView := TCategoryFilterView.Create(Self);
   FCategoryFilteView.Width := 200;
   FCategoryFilteView.Align := alLeft;
-  FCategoryFilteView.AlignWithMargins := True;
-//  FCategoryFilteView.Margins.Left := 0;
-  FCategoryFilteView.Margins.Bottom := 0;
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.OnFilterChanged := HandlePackageFilterChanged;
   FCategoryFilteView.Parent := Self;
 
-  FPackages := TList<IDNPackage>.Create();
-  FInstalledPackages := TList<IDNPackage>.Create();
-  FUpdatePackages := TList<IDNPackage>.Create();
+
   LoadSettings(FSettings);
   FCategoryFilteView.Settings := FSettings;
   RecreatePackageProvider();
@@ -254,6 +252,10 @@ begin
   RefreshInstalledPackages();
   dlgSelectInstallFile.Filter := CInstallFileFilter;
   dlgSelectUninstallFile.Filter := CUninstallFileFilter;
+
+  //adjust serachbar to start at the PackageList
+  edSearch.Width := edSearch.Width - (FCategoryFilteView.Width - edSearch.Left);
+  edSearch.Left := FCategoryFilteView.Width;
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;

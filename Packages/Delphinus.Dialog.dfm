@@ -15,71 +15,88 @@ object DelphinusDialog: TDelphinusDialog
   OnMouseWheel = FormMouseWheel
   PixelsPerInch = 96
   TextHeight = 13
-  object ToolBar1: TToolBar
-    Left = 0
-    Top = 0
-    Width = 984
-    Height = 30
-    AutoSize = True
-    ButtonHeight = 30
-    ButtonWidth = 31
-    Caption = 'ToolBar1'
-    DoubleBuffered = False
-    Images = ilMenu
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 0
-    object ToolButton1: TToolButton
-      Left = 0
-      Top = 0
-      Action = actRefresh
-    end
-    object ToolButton2: TToolButton
-      Left = 31
-      Top = 0
-      Action = actOptions
-    end
-    object btnInstallFolder: TToolButton
-      Left = 62
-      Top = 0
-      Hint = 'Install Folder'
-      Caption = 'btnInstallFolder'
-      ImageIndex = 2
-      OnClick = btnInstallFolderClick
-    end
-    object btnUninstall: TToolButton
-      Left = 93
-      Top = 0
-      Hint = 'Uninstall Folder'
-      Caption = 'btnUninstall'
-      ImageIndex = 3
-      OnClick = btnUninstallClick
-    end
-  end
   object pnlPackages: TPanel
     Left = 0
-    Top = 30
+    Top = 32
     Width = 984
-    Height = 420
+    Height = 418
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlPackages'
+    ParentBackground = False
+    ShowCaption = False
+    TabOrder = 0
+  end
+  object pnlToolBar: TPanel
+    Left = 0
+    Top = 0
+    Width = 984
+    Height = 32
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = 'pnlToolBar'
+    Color = cl3DLight
+    ParentBackground = False
     ShowCaption = False
     TabOrder = 1
+    DesignSize = (
+      984
+      32)
+    object ToolBar1: TToolBar
+      Left = 0
+      Top = 0
+      Width = 124
+      Align = alLeft
+      AutoSize = True
+      ButtonHeight = 30
+      ButtonWidth = 31
+      Caption = 'ToolBar1'
+      DoubleBuffered = False
+      Images = ilMenu
+      ParentDoubleBuffered = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 0
+      object ToolButton1: TToolButton
+        Left = 0
+        Top = 0
+        Action = actRefresh
+      end
+      object ToolButton2: TToolButton
+        Left = 31
+        Top = 0
+        Action = actOptions
+      end
+      object btnInstallFolder: TToolButton
+        Left = 62
+        Top = 0
+        Hint = 'Install Folder'
+        Caption = 'btnInstallFolder'
+        ImageIndex = 2
+        OnClick = btnInstallFolderClick
+      end
+      object btnUninstall: TToolButton
+        Left = 93
+        Top = 0
+        Hint = 'Uninstall Folder'
+        Caption = 'btnUninstall'
+        ImageIndex = 3
+        OnClick = btnUninstallClick
+      end
+    end
     object edSearch: TButtonedEdit
       AlignWithMargins = True
-      Left = 3
-      Top = 3
-      Width = 978
+      Left = 130
+      Top = 5
+      Width = 847
       Height = 21
-      Align = alTop
+      Anchors = [akLeft, akTop, akRight]
       Images = ilSmall
       LeftButton.ImageIndex = 1
       LeftButton.Visible = True
       RightButton.ImageIndex = 0
       RightButton.Visible = True
-      TabOrder = 0
+      TabOrder = 1
       TextHint = 'Search'
       OnKeyPress = edSearchKeyPress
       OnLeftButtonClick = edSearchLeftButtonClick
@@ -93,7 +110,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 464
     Top = 80
     Bitmap = {
-      494C0101040050025C0218001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010104005002880218001800FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000600000003000000001002000000000000048
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -723,7 +740,7 @@ object DelphinusDialog: TDelphinusDialog
     Left = 376
     Top = 232
     Bitmap = {
-      494C010102009C00A40010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010102009C00D00010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

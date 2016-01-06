@@ -162,7 +162,7 @@
         <DCCReference Include="..\..\DN.Package.Version.pas"/>
         <DCCReference Include="..\Delphinus.UiTypes.pas"/>
         <DCCReference Include="..\..\DN.JSon.pas"/>
-        <DCCReference Include="..\Delphinus.Form.pas"/>
+        <DCCReference Include="..\Delphinus.Forms.pas"/>
         <DCCReference Include="..\Delphinus.ResourceNames.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.GitHub.Authentication.pas"/>
         <DCCReference Include="..\Delphinus.OptionsDialog.pas">
@@ -193,6 +193,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Delphinus.FilterProperties.pas"/>
+        <DCCReference Include="Delphinus.Theming.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

@@ -81,7 +81,7 @@ contains
   DN.Package.Version in '..\..\DN.Package.Version.pas',
   Delphinus.UiTypes in '..\Delphinus.UiTypes.pas',
   DN.JSon in '..\..\DN.JSon.pas',
-  Delphinus.Form in '..\Delphinus.Form.pas',
+  Delphinus.Forms in '..\Delphinus.Forms.pas',
   Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
   DN.PackageProvider.GitHub.Authentication in '..\..\DN.PackageProvider.GitHub.Authentication.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},

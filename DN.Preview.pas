@@ -19,9 +19,8 @@ uses
   Graphics,
   Math,
   DN.Package.Intf,
-  DN.Controls,
-  DN.Controls.Button,
-  ImgList;
+  ImgList,
+  StdCtrls;
 
 type
   TNotifyEvent = reference to procedure(Sender: TObject);
@@ -31,17 +30,8 @@ type
     FTarget: TBitmap;
     FPackage: IDNPackage;
     FSelected: Boolean;
-    FBGSelectedStart: TColor;
-    FBGSelectedEnd: TColor;
-    FBGStart: TColor;
-    FBGEnd: TColor;
-    FInstallColor: TColor;
-    FUninstallColor: TColor;
-    FUpdateColor: TColor;
-    FInfoColor: TColor;
-    FGUI: TDNControlsController;
-    FButton: TDNButton;
-    FUpdateButton: TDNButton;
+    FButton: TButton;
+    FUpdateButton: TButton;
     FInstalledVersion: string;
     FUpdateVersion: string;
     FOnUpdate: TNotifyEvent;
@@ -82,8 +72,9 @@ const
   CPreviewHeight = CPreviewImageSize;
   CButtonHeight = 21;
   CButtonWidth = 100;
+  CPadding = 3;
   CMargin = 3;
-  CLeftMargin = CMargin*2 + CPreviewImageSize;
+  CLeftMargin = CPadding + CMargin*2 + CPreviewImageSize;
 
 implementation
 
@@ -100,24 +91,12 @@ begin
   FTarget := TBitmap.Create();
   FTarget.PixelFormat := pf32bit;
   Width := CPreviewWidth;
-  Height := CPreviewHeight;
-
-  FBGSelectedStart := RGB(250, 134, 30);
-  FBGSelectedEnd := AlterColor(FBGSelectedStart, -5);
-  FBGStart := AlterColor(clWhite, -30);
-  FBGEnd := AlterColor(FBGStart, -5);
-  FInstallColor := RGB(151, 224, 25);
-  FUninstallColor := RGB(224, 25, 51);
-  FUpdateColor := RGB(153, 242, 222);
-  FInfoColor := RGB(242, 211, 153);
-  FGUI := TDNControlsController.Create();
-  FGUI.Parent := Self;
+  Height := CPreviewHeight + CPadding * 2;
   SetupControls();
 end;
 
 destructor TPreview.Destroy;
 begin
-  FGUI.Free;
   FTarget.Free();
   inherited;
 end;
@@ -201,10 +180,12 @@ begin
     Canvas.FillRect(Canvas.ClipRect);
     Canvas.Brush.Style := bsClear;
 
-    Canvas.Draw(0, 0, FTarget);
+    Canvas.Draw(CPadding, CPadding, FTarget);
     Canvas.Font.Style := [TFontStyle.fsBold];
+    Canvas.Font.Color := clCaptionText;
     Canvas.TextOut(CLeftMargin, CMargin, FPackage.Name);
     Canvas.Font.Style := [];
+    Canvas.Font.Color := clGrayText;
     Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height)), FPackage.Author);
 
     if FPackage.LicenseType <> '' then
@@ -228,13 +209,13 @@ begin
     LDescription := FPackage.Description;
     LRect.Left := CLeftMargin;
     LRect.Top := (CMargin + Abs(Canvas.Font.Height))*4;
-    LRect.Right := Width - CMargin;
-    LRect.Bottom := Height - 25 - CMargin;
+    LRect.Right := Width - CMargin - FOSImages.Width*3 - (Width - FButton.Left);
+    LRect.Bottom := Height - CPadding;
     Canvas.TextRect(LRect, LDescription, [tfWordBreak, tfEndEllipsis]);
 
-    Canvas.Pen.Color := clBtnShadow;
-    Canvas.Rectangle(0, 0, Width, Height);
-    FGui.PaintTo(Canvas);
+    Canvas.Pen.Color := clBtnFace;
+    Canvas.MoveTo(0, Height - 1);
+    Canvas.LineTo(Width, Height - 1);
     PaintOsImages();
   end;
 end;
@@ -284,14 +265,11 @@ begin
   if FInstalledVersion <> '' then
   begin
     FButton.Caption := 'Uninstall';
-    FButton.HoverColor := FUninstallColor; //clRed;
   end
   else
   begin
     FButton.Caption := 'Install';
-    FButton.HoverColor := FInstallColor //clGreen;
   end;
-  InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
 end;
 
 procedure TPreview.SetPackage(const Value: IDNPackage);
@@ -312,24 +290,17 @@ end;
 
 procedure TPreview.SetupControls;
 begin
-  FButton := TDNButton.Create();
-  FButton.Top := Height - CButtonHeight - CMargin;
-  FButton.Width := CButtonWidth;
-  FButton.Height := CButtonHeight;
-  FButton.Color := clSilver;
+  FButton := TButton.Create(Self);
+  FButton.Top := Height - FButton.Height - CMargin;
   FButton.OnClick := HandleButtonClick;
-  FGUI.Controls.Add(FButton);
+  FButton.Parent := Self;
 
-  FUpdateButton := TDNButton.Create();
-  FUpdateButton.Width := CButtonWidth;
-  FUpdateButton.Height := CButtonHeight;
-  FUpdateButton.Top := Height - CButtonHeight*2 - CMargin*2;
-  FUpdateButton.Color := clSilver;
-  FUpdateButton.HoverColor := FUpdateColor;
+  FUpdateButton := TButton.Create(Self);
+  FUpdateButton.Top := Height - FUpdateButton.Height*2 - CMargin*2;
   FUpdateButton.Visible := False;
   FUpdateButton.Caption := 'Update';
   FUpdateButton.OnClick := HandleButtonClick;
-  FGUI.Controls.Add(FUpdateButton);
+  FUpdateButton.Parent := Self;
 end;
 
 end.

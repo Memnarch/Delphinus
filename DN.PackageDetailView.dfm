@@ -3,7 +3,7 @@ object PackageDetailView: TPackageDetailView
   Top = 0
   Width = 302
   Height = 618
-  Color = cl3DLight
+  Color = clBtnFace
   ParentBackground = False
   ParentColor = False
   TabOrder = 0
@@ -12,19 +12,22 @@ object PackageDetailView: TPackageDetailView
     618)
   object pnlHeader: TPanel
     AlignWithMargins = True
-    Left = 3
-    Top = 3
-    Width = 296
+    Left = 1
+    Top = 0
+    Width = 301
     Height = 128
+    Margins.Left = 1
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Align = alTop
     BevelOuter = bvNone
     Caption = 'pnlHeader'
     Color = clWindow
-    ParentBackground = False
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      296
+      301
       128)
     object imgRepo: TImage
       Left = 0
@@ -37,7 +40,7 @@ object PackageDetailView: TPackageDetailView
     object lbDescription: TLabel
       Left = 134
       Top = -3
-      Width = 158
+      Width = 163
       Height = 128
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -50,24 +53,28 @@ object PackageDetailView: TPackageDetailView
       ParentFont = False
       Layout = tlCenter
       WordWrap = True
+      ExplicitWidth = 158
     end
   end
   object pnlDetail: TPanel
     AlignWithMargins = True
-    Left = 3
-    Top = 137
-    Width = 296
-    Height = 478
+    Left = 1
+    Top = 129
+    Width = 301
+    Height = 489
+    Margins.Left = 1
+    Margins.Top = 1
+    Margins.Right = 0
+    Margins.Bottom = 0
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlDetail'
     Color = clWindow
-    ParentBackground = False
     ShowCaption = False
     TabOrder = 1
     DesignSize = (
-      296
-      478)
+      301
+      489)
     object Label1: TLabel
       Left = 5
       Top = 0
@@ -84,8 +91,8 @@ object PackageDetailView: TPackageDetailView
     end
     object lbAuthor: TLabel
       Left = 93
-      Top = 0
-      Width = 199
+      Top = -3
+      Width = 204
       Height = 18
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -96,6 +103,7 @@ object PackageDetailView: TPackageDetailView
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ExplicitWidth = 199
     end
     object Label2: TLabel
       Left = 5
@@ -113,7 +121,7 @@ object PackageDetailView: TPackageDetailView
     object lbSupports: TLabel
       Left = 93
       Top = 23
-      Width = 199
+      Width = 204
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -124,6 +132,7 @@ object PackageDetailView: TPackageDetailView
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ExplicitWidth = 199
     end
     object lbInstalledCaption: TLabel
       Left = 5
@@ -141,7 +150,7 @@ object PackageDetailView: TPackageDetailView
     object lbInstalled: TLabel
       Left = 93
       Top = 71
-      Width = 199
+      Width = 204
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -152,10 +161,11 @@ object PackageDetailView: TPackageDetailView
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ExplicitWidth = 199
     end
     object Label3: TLabel
       Left = 5
-      Top = 95
+      Top = 119
       Width = 62
       Height = 18
       Caption = 'License:'
@@ -168,8 +178,8 @@ object PackageDetailView: TPackageDetailView
     end
     object lbLicense: TLabel
       Left = 93
-      Top = 95
-      Width = 199
+      Top = 119
+      Width = 204
       Height = 49
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -184,7 +194,7 @@ object PackageDetailView: TPackageDetailView
     end
     object Label5: TLabel
       Left = 5
-      Top = 150
+      Top = 95
       Width = 78
       Height = 18
       Caption = 'Platforms:'
@@ -197,8 +207,8 @@ object PackageDetailView: TPackageDetailView
     end
     object lbPlatforms: TLabel
       Left = 93
-      Top = 150
-      Width = 199
+      Top = 95
+      Width = 204
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -226,7 +236,7 @@ object PackageDetailView: TPackageDetailView
     object lbVersion: TLabel
       Left = 93
       Top = 47
-      Width = 199
+      Width = 204
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -237,10 +247,11 @@ object PackageDetailView: TPackageDetailView
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ExplicitWidth = 199
     end
     object btnProject: TButton
       Left = 49
-      Top = 432
+      Top = 443
       Width = 38
       Height = 38
       Anchors = [akLeft, akBottom]
@@ -251,7 +262,7 @@ object PackageDetailView: TPackageDetailView
     end
     object btnReport: TButton
       Left = 93
-      Top = 432
+      Top = 443
       Width = 38
       Height = 38
       Anchors = [akLeft, akBottom]
@@ -262,8 +273,8 @@ object PackageDetailView: TPackageDetailView
     end
   end
   object btnLicense: TButton
-    Left = 5
-    Top = 256
+    Left = 3
+    Top = 272
     Width = 75
     Height = 25
     Caption = 'Show License'
@@ -271,8 +282,8 @@ object PackageDetailView: TPackageDetailView
     OnClick = btnLicenseClick
   end
   object btnHome: TButton
-    Left = 8
-    Top = 569
+    Left = 6
+    Top = 572
     Width = 38
     Height = 38
     Anchors = [akLeft, akBottom]
@@ -288,7 +299,7 @@ object PackageDetailView: TPackageDetailView
     Left = 224
     Top = 240
     Bitmap = {
-      494C010103008000A80020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010103008000C80020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
