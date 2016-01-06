@@ -16,6 +16,7 @@ uses
   DN.Package.Intf,
   DN.Controls,
   DN.Controls.Button,
+  Delphinus.Forms,
   ImgList;
 
 type

@@ -20,7 +20,7 @@ uses
   StdCtrls,
   DN.Types,
   DN.Setup.Intf,
-  Delphinus.Form, ComCtrls, ExtCtrls;
+  Delphinus.Forms, ComCtrls, ExtCtrls;
 
 const
   CStart = WM_USER + 1;
@@ -28,7 +28,7 @@ const
 type
   TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall, sdmUninstallDirectory, sdmUpdate);
 
-  TSetupDialog = class(TDelphinusForm)
+  TSetupDialog = class(TForm)
     mLog: TMemo;
     pcSteps: TPageControl;
     tsMainPage: TTabSheet;

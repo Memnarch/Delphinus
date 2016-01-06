@@ -12,11 +12,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs,
-  Delphinus.Form, StdCtrls,
+  Delphinus.Forms, StdCtrls,
   Delphinus.Settings;
 
 type
-  TDelphinusOptionsDialog = class(TDelphinusForm)
+  TDelphinusOptionsDialog = class(TForm)
     edToken: TEdit;
     Label1: TLabel;
     btnTest: TButton;
@@ -76,7 +76,7 @@ begin
     end
     else
     begin
-      lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LRequest.ResponseCode);
+      lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LRequest.ResponseCode) + ': ' + LRequest.ResponseText;
     end;
   finally
     LResponse.Free;

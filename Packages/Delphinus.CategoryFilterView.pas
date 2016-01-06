@@ -9,6 +9,7 @@ uses
   Delphinus.FilterProperties,
   DN.Package.Intf,
   Delphinus.Settings,
+  Delphinus.Forms,
   ExtCtrls,
   ImgList,
   Menus;

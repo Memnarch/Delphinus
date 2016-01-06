@@ -19,7 +19,7 @@ uses
   ContNrs,
   Generics.Collections,
   DN.PackageDetailView,
-  Delphinus.Form,
+  Delphinus.Forms,
   Delphinus.Settings,
   DN.Setup.Intf,
   Delphinus.CategoryFilterView,
@@ -31,7 +31,7 @@ uses
   Registry;
 
 type
-  TDelphinusDialog = class(TDelphinusForm)
+  TDelphinusDialog = class(TForm)
     ToolBar1: TToolBar;
     ilMenu: TImageList;
     DialogActions: TActionList;
