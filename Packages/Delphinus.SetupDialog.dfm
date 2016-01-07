@@ -4,8 +4,8 @@ object SetupDialog: TSetupDialog
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Setup'
-  ClientHeight = 300
-  ClientWidth = 564
+  ClientHeight = 175
+  ClientWidth = 461
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,8 +21,8 @@ object SetupDialog: TSetupDialog
   object pcSteps: TPageControl
     Left = 0
     Top = 0
-    Width = 564
-    Height = 300
+    Width = 461
+    Height = 175
     ActivePage = tsMainPage
     Align = alClient
     Style = tsFlatButtons
@@ -31,117 +31,67 @@ object SetupDialog: TSetupDialog
       Caption = 'tsMainPage'
       TabVisible = False
       DesignSize = (
-        556
-        290)
+        453
+        165)
       object Image1: TImage
         Left = 3
-        Top = 51
+        Top = 3
         Width = 128
         Height = 128
         Stretch = True
       end
-      object lbActionInstallUpdate: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 550
-        Height = 35
-        Align = alTop
-        Alignment = taCenter
-        AutoSize = False
-        Caption = 'lbActionInstallUpdate'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -29
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-        ExplicitLeft = 19
-        ExplicitTop = -21
-      end
       object lbNameInstallUpdate: TLabel
         AlignWithMargins = True
         Left = 137
-        Top = 51
-        Width = 416
-        Height = 35
+        Top = 3
+        Width = 313
+        Height = 30
+        Anchors = [akLeft, akTop, akRight]
         AutoSize = False
-        Caption = 'lbActionInstallUpdate'
+        Caption = 'Pg'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -29
+        Font.Height = -24
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
-      end
-      object Shape1: TShape
-        AlignWithMargins = True
-        Left = 3
-        Top = 185
-        Width = 550
-        Height = 1
-        Anchors = [akLeft, akRight]
-      end
-      object Shape2: TShape
-        AlignWithMargins = True
-        Left = 3
-        Top = 44
-        Width = 550
-        Height = 1
-        Align = alTop
-        ExplicitLeft = 0
-        ExplicitTop = 37
-        ExplicitWidth = 556
-      end
-      object lbDescriptionInstallUpdate: TLabel
-        Left = 137
-        Top = 92
-        Width = 416
-        Height = 37
-        AutoSize = False
-        Caption = 'lbDescriptionInstallUpdate'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -15
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-        WordWrap = True
       end
       object Label1: TLabel
         Left = 137
-        Top = 139
+        Top = 61
         Width = 39
         Height = 13
         Caption = 'Version:'
       end
       object lbLicenseAnotation: TLabel
-        Left = 3
-        Top = 192
-        Width = 550
-        Height = 13
+        Left = 137
+        Top = 97
+        Width = 313
+        Height = 34
         AutoSize = False
         Caption = 
-          'By clicking OK, you accept the License provided within the packa' +
-          'ge'
+          'By proceeding, you accept the License provided within the packag' +
+          'e. Click Cancel if you do not agree.'
+        WordWrap = True
       end
       object Label3: TLabel
         Left = 137
-        Top = 120
+        Top = 39
         Width = 39
         Height = 13
+        AutoSize = False
         Caption = 'License:'
       end
       object lbLicenseType: TLabel
         Left = 182
-        Top = 120
+        Top = 39
         Width = 39
         Height = 13
         Caption = 'License:'
       end
       object btnOK: TButton
-        Left = 397
-        Top = 262
+        Left = 294
+        Top = 137
         Width = 75
         Height = 25
         Anchors = [akRight, akBottom]
@@ -150,8 +100,8 @@ object SetupDialog: TSetupDialog
         OnClick = HandleOK
       end
       object btnCancel: TButton
-        Left = 478
-        Top = 262
+        Left = 375
+        Top = 137
         Width = 75
         Height = 25
         Anchors = [akRight, akBottom]
@@ -160,16 +110,16 @@ object SetupDialog: TSetupDialog
         TabOrder = 1
       end
       object cbVersion: TComboBox
-        Left = 137
-        Top = 158
-        Width = 145
+        Left = 182
+        Top = 58
+        Width = 187
         Height = 21
         Style = csDropDownList
         TabOrder = 2
       end
       object btnLicense: TButton
-        Left = 288
-        Top = 154
+        Left = 375
+        Top = 56
         Width = 75
         Height = 25
         Caption = 'Show License'
@@ -177,32 +127,66 @@ object SetupDialog: TSetupDialog
         OnClick = btnLicenseClick
       end
     end
-    object tsLog: TTabSheet
-      Caption = 'tsLog'
+    object tsProgress: TTabSheet
+      Caption = 'tsProgress'
       ImageIndex = 2
       TabVisible = False
       DesignSize = (
-        556
-        290)
-      object mLog: TMemo
-        AlignWithMargins = True
+        453
+        165)
+      object lbAction: TLabel
         Left = 3
-        Top = 3
-        Width = 550
-        Height = 255
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        ReadOnly = True
+        Top = 53
+        Width = 38
+        Height = 13
+        Caption = 'lbAction'
+      end
+      object pbProgress: TProgressBar
+        Left = 3
+        Top = 72
+        Width = 447
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
       end
-      object btnClose: TButton
-        Left = 478
-        Top = 264
+      object btnCloseProgress: TButton
+        Left = 375
+        Top = 139
         Width = 75
         Height = 25
+        Anchors = [akRight, akBottom]
         Caption = 'Close'
         Enabled = False
         ModalResult = 1
         TabOrder = 1
+      end
+      object btnShowLog: TButton
+        Left = 294
+        Top = 139
+        Width = 75
+        Height = 25
+        Anchors = [akRight, akBottom]
+        Caption = 'Show Log'
+        Enabled = False
+        TabOrder = 2
+        OnClick = btnShowLogClick
+      end
+    end
+    object tsLog: TTabSheet
+      Caption = 'tsLog'
+      ImageIndex = 2
+      TabVisible = False
+      object mLog: TMemo
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 447
+        Height = 159
+        Align = alClient
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        WordWrap = False
       end
     end
   end

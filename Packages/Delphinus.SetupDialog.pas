@@ -36,22 +36,23 @@ type
     btnOK: TButton;
     btnCancel: TButton;
     Image1: TImage;
-    lbActionInstallUpdate: TLabel;
     lbNameInstallUpdate: TLabel;
-    Shape1: TShape;
-    Shape2: TShape;
-    lbDescriptionInstallUpdate: TLabel;
     cbVersion: TComboBox;
     Label1: TLabel;
     lbLicenseAnotation: TLabel;
     Label3: TLabel;
     lbLicenseType: TLabel;
     btnLicense: TButton;
-    btnClose: TButton;
+    tsProgress: TTabSheet;
+    pbProgress: TProgressBar;
+    btnCloseProgress: TButton;
+    lbAction: TLabel;
+    btnShowLog: TButton;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure btnShowLogClick(Sender: TObject);
   private
     { Private declarations }
     FMode: TSetupDialogMode;
@@ -62,6 +63,7 @@ type
     FSetupIsRunning: Boolean;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
+    procedure HandleProgress(const ACaption: string; AProgress, AMax: Integer);
     procedure InitMainPage();
     procedure InitVersionSelection();
     procedure Execute();
@@ -104,11 +106,17 @@ begin
   end;
 end;
 
+procedure TSetupDialog.btnShowLogClick(Sender: TObject);
+begin
+  pcSteps.ActivePage := tsLog;
+end;
+
 constructor TSetupDialog.Create(const ASetup: IDNSetup);
 begin
   inherited Create(nil);
   FSetup := ASetup;
   FSetup.OnMessage := HandleLogMessage;
+  FSetup.OnProgress := HandleProgress;
 end;
 
 procedure TSetupDialog.Execute;
@@ -117,7 +125,9 @@ var
 begin
   FSetupIsRunning := True;
   mLog.Clear;
-  pcSteps.ActivePage := tsLog;
+  pbProgress.Position := 0;
+  pbProgress.State := pbsNormal;
+  pcSteps.ActivePage := tsProgress;
   LThread := TThread.CreateAnonymousThread(
     procedure
     begin
@@ -196,16 +206,37 @@ end;
 procedure TSetupDialog.HandleLogMessage(AType: TMessageType;
   const AMessage: string);
 begin
-  case AType of
-    mtNotification: Log(AMessage);
-    mtWarning: Log('Warning: ' + AMessage);
-    mtError: Log('Error: ' + AMessage);
-  end;
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      case AType of
+        mtNotification: Log(AMessage);
+        mtWarning: Log('Warning: ' + AMessage);
+        mtError:
+        begin
+          Log('Error: ' + AMessage);
+          pbProgress.State := pbsError;
+        end;
+      end;
+    end
+  );
 end;
 
 procedure TSetupDialog.HandleOK(Sender: TObject);
 begin
   Execute();
+end;
+
+procedure TSetupDialog.HandleProgress(const ACaption: string; AProgress,
+  AMax: Integer);
+begin
+  TThread.Queue(nil,
+  procedure
+  begin
+    lbAction.Caption := ACaption;
+    pbProgress.Position := Round(AProgress / AMax * pbProgress.Max);
+  end
+  );
 end;
 
 procedure TSetupDialog.InitMainPage;
@@ -214,9 +245,8 @@ begin
   case FMode of
     sdmInstall:
     begin
-      lbActionInstallUpdate.Caption := 'Install';
+      btnOK.Caption := 'Install';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
       lbLicenseType.Caption := FPackage.LicenseType;
       btnLicense.Visible := lbLicenseType.Caption <> '';
       if Assigned(FPackage.Picture) then
@@ -226,9 +256,8 @@ begin
 //    sdmInstallDirectory: ;
     sdmUninstall:
     begin
-      lbActionInstallUpdate.Caption := 'Uninstall';
+      btnOK.Caption := 'Uninstall';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
       lbLicenseType.Caption := FPackage.LicenseType;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
@@ -240,9 +269,8 @@ begin
 //    sdmUninstallDirectory: ;
     sdmUpdate:
     begin
-      lbActionInstallUpdate.Caption := 'Update';
+      btnOK.Caption := 'Update';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       InitVersionSelection();
@@ -264,12 +292,13 @@ end;
 
 procedure TSetupDialog.Log(const AMessage: string);
 begin
-  TThread.Synchronize(nil, procedure begin mLog.Lines.Add(AMessage) end);
+  mLog.Lines.Add(AMessage);
 end;
 
 procedure TSetupDialog.SetupFinished;
 begin
-  btnClose.Enabled := True;
+  btnCloseProgress.Enabled := True;
+  btnShowLog.Enabled := True;
   FSetupIsRunning := False;
 end;
 
