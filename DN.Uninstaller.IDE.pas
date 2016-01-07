@@ -115,25 +115,33 @@ end;
 function TDNIDEUninstaller.UninstallPackage(const ABPLFile: string): Boolean;
 var
   LService: IOTAPackageServices;
-  i: Integer;
   LPackage: string;
+  LResult: Boolean;
 begin
-  LService := BorlandIDEServices as IOTAPackageServices;
-  Result := LService.UninstallPackage(ABPLFile);
-  if not Result then
+  TThread.Synchronize(nil,
+  procedure
+  var
+    i: Integer;
   begin
-    Result := True;
-    LPackage := ExtractFileName(ABPLFile);
-    for i := 0 to LService.PackageCount - 1 do
+    LService := BorlandIDEServices as IOTAPackageServices;
+    LResult := LService.UninstallPackage(ABPLFile);
+    if not LResult then
     begin
-      if SameText(LService.Package[i].Name, LPackage) then
+      LResult := True;
+      LPackage := ExtractFileName(ABPLFile);
+      for i := 0 to LService.PackageCount - 1 do
       begin
-        Exit(False);
+        if SameText(LService.Package[i].Name, LPackage) then
+        begin
+          LResult := False;
+          Exit;
+        end;
       end;
-    end;
-    if Result then
-      DoMessage(mtWarning, 'Package was not installed previously');
-  end;
+      if LResult then
+        DoMessage(mtWarning, 'Package was not installed previously');
+    end
+  end);
+  Result := LResult;
 end;
 
 end.

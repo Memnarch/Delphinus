@@ -127,9 +127,15 @@ end;
 function TDNIDEInstaller.InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean;
 var
   LService: IOTAPackageServices;
+  LResult: Boolean;
 begin
-  LService := BorlandIDEServices as IOTAPackageServices;
-  Result := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
+  TThread.Synchronize(nil,
+  procedure
+  begin
+    LService := BorlandIDEServices as IOTAPackageServices;
+    LResult := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
+  end);
+  Result := LResult;
 end;
 
 end.
