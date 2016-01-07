@@ -253,9 +253,9 @@ begin
   dlgSelectInstallFile.Filter := CInstallFileFilter;
   dlgSelectUninstallFile.Filter := CUninstallFileFilter;
 
-  //adjust serachbar to start at the PackageList
-  edSearch.Width := edSearch.Width - (FCategoryFilteView.Width - edSearch.Left);
-  edSearch.Left := FCategoryFilteView.Width;
+  //adjust serachbar to be over the Packagelist
+  edSearch.Width := pnlPackages.Width;
+  edSearch.Left := pnlPackages.Left;
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -277,7 +277,6 @@ destructor TDelphinusDialog.Destroy;
 begin
   SaveSettings(FSettings);
   FOverView.OnSelectedPackageChanged := nil;
-//  FInstalledOverview.OnSelectedPackageChanged := nil;
   FPackages.Free;
   FInstalledPackages.Free;
   FUpdatePackages.Free;
