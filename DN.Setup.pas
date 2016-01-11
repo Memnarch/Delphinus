@@ -83,6 +83,9 @@ begin
 
   if Assigned(FUninstaller) and Supports(FUninstaller, IDNProgress, LProgress) then
     LProgress.OnProgress := HandleProgress;
+
+  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
+    LProgress.OnProgress := HandleProgress;
 end;
 
 procedure TDNSetup.CleanupTemp;
@@ -132,6 +135,9 @@ begin
     LProgress.OnProgress := nil;
 
   if Assigned(FUninstaller) and Supports(FUninstaller, IDNProgress, LProgress) then
+    LProgress.OnProgress := nil;
+
+  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
     LProgress.OnProgress := nil;
 end;
 

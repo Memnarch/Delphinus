@@ -17,20 +17,25 @@ uses
   IdHttp,
   IdAuthentication,
   IdHeaderList,
+  IdComponent,
   Generics.Collections,
   DN.Package.Github,
   DN.Package.Intf,
   DN.PackageProvider,
-  DN.JSonFile.CacheInfo;
+  DN.JSonFile.CacheInfo,
+  DN.Progress.Intf;
 
 type
-  TDNGitHubPackageProvider = class(TDNPackageProvider)
+  TDNGitHubPackageProvider = class(TDNPackageProvider, IDNProgress)
   private
     FRequest: TIdHTTP;
     FLastContentDisposition: string;
     FCacheDir: string;
     FLastEtag: string;
     FSecurityToken: string;
+    FProgress: IDNProgress;
+    FDownloadMax: Int64;
+    FDownloadFile: string;
     function RevalidateCache(): Boolean;
     function ExecuteRequest(const ATarget: TStream; const ARequest: string; const AETag: string = ''): Boolean;
     function LoadCacheInfo(const AInfo: TCacheInfo; const AAuthor, AName, ACache: string): Boolean;
@@ -38,8 +43,12 @@ type
     function LoadPackageFromDirectory(const ADirectory: string;const AAutor: string; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(const APackage: IDNPackage; const APictureFile: string);
     function IsValidImage(const AFileName: string): Boolean;
+    procedure HandleWorkBegin(Sender: TObject; WorkMode: TWorkMode; AMax: Int64);
+    procedure HandleWork(Sender: TObject; WorkMode: TWorkMode; AProgress: Int64);
   protected
     function GetLicense(const APackage: TDNGitHubPackage): string;
+    //properties for interfaceredirection
+    property Progress: IDNProgress read FProgress implements IDNProgress;
   public
     constructor Create(const ASecurityToken: string = '');
     destructor Destroy(); override;
@@ -64,7 +73,8 @@ uses
   DN.JSOnFile.Info,
   DN.Package.Version,
   DN.Package.Version.Intf,
-  DN.PackageProvider.GitHub.Authentication;
+  DN.PackageProvider.GitHub.Authentication,
+  DN.Progress;
 
 const
   CGithubRaw = 'https://raw.githubusercontent.com/';
@@ -94,11 +104,13 @@ begin
   FRequest.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(FRequest);
   FRequest.HandleRedirects := True;
   FRequest.Request.UserAgent := 'Delphinus';
+  FProgress := TDNProgress.Create();
 end;
 
 destructor TDNGitHubPackageProvider.Destroy;
 begin
   FRequest.Free;
+  FProgress := nil;
   inherited;
 end;
 
@@ -111,13 +123,23 @@ var
 const
   CNamePrefix = 'filename=';
 begin
-  LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
-  LArchive := TFileStream.Create(LArchiveFile, fmCreate or fmOpenReadWrite);
+  FProgress.SetTasks(['Downloading']);
+  FRequest.OnWorkBegin := HandleWorkBegin;
+  FRequest.OnWork := HandleWork;
   try
-    Result := ExecuteRequest(LArchive, APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch));
+    FDownloadFile := 'Package.zip';
+    LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
+    LArchive := TFileStream.Create(LArchiveFile, fmCreate or fmOpenReadWrite);
+    try
+      Result := ExecuteRequest(LArchive, APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch));
+    finally
+      LArchive.Free;
+    end;
   finally
-    LArchive.Free;
+    FRequest.OnWorkBegin := nil;
+    FRequest.OnWork := nil;
   end;
+
   LFileName := Copy(FLastContentDisposition, Pos(CNamePrefix, FLastContentDisposition) + Length(CNamePrefix), Length(FLastContentDisposition));
   if Result then
   begin
@@ -271,6 +293,21 @@ begin
       LLicense.Free;
     end;
   end;
+end;
+
+procedure TDNGitHubPackageProvider.HandleWork(Sender: TObject;
+  WorkMode: TWorkMode; AProgress: Int64);
+begin
+//  Inc(FDownloadProgress, AProgress);
+  if WorkMode = wmRead then
+    FProgress.SetTaskProgress(FDownloadFile, AProgress, FDownloadMax);
+end;
+
+procedure TDNGitHubPackageProvider.HandleWorkBegin(Sender: TObject;
+  WorkMode: TWorkMode; AMax: Int64);
+begin
+  if WorkMode = wmRead then
+    FDownloadMax := AMax;
 end;
 
 function TDNGitHubPackageProvider.IsValidImage(const AFileName: string): Boolean;
