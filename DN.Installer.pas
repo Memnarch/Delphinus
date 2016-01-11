@@ -19,10 +19,11 @@ uses
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
   DN.JSonFile.Installation,
-  DN.JSonFile.Uninstallation;
+  DN.JSonFile.Uninstallation,
+  DN.Progress.Intf;
 
 type
-  TDNInstaller = class(TInterfacedObject, IDNInstaller)
+  TDNInstaller = class(TInterfacedObject, IDNInstaller, IDNProgress)
   private
     FCompiler: IDNCompiler;
     FCompilerVersion: Integer;
@@ -30,6 +31,7 @@ type
     FBrowsingPathes: string;
     FPackages: TList<TPackage>;
     FOnMessage: TMessageEvent;
+    FProgress: IDNProgress;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
@@ -53,6 +55,8 @@ type
     function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
+    //properties for interface redirection
+    property Progress: IDNProgress read FProgress implements IDNProgress;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -71,7 +75,8 @@ uses
   DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
   DN.JSonFile.Info,
-  DN.ToolsApi.Extension.Intf;
+  DN.ToolsApi.Extension.Intf,
+  DN.Progress;
 
 const
   CLibDir = 'lib';
@@ -205,11 +210,13 @@ begin
   FCompiler := ACompiler;
   FCompilerVersion := ACompilerVersion;
   FPackages := TList<TPackage>.Create();
+  FProgress := TDNProgress.Create();
 end;
 
 destructor TDNInstaller.Destroy;
 begin
   FPackages.Free();
+  FProgress := nil;
   inherited;
 end;
 
@@ -294,12 +301,18 @@ begin
         Result := LInstallInfo.LoadFromFile(LInstallerFile);
         if Result then
         begin
+          FProgress.SetTasks(['Adding Pathes', 'Copy Source', 'Compile Projects']);
+          FProgress.SetTaskProgress('SearchPath', 0, 1);
           ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+          FProgress.SetTaskProgress('BrowsingPath', 1, 1);
           ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+          FProgress.NextTask();
           ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
           CopyLicense(ASourceDirectory, ATargetDirectory, LLicenseFile);
+          FProgress.NextTask();
           Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+          FProgress.Completed();
         end
         else
         begin

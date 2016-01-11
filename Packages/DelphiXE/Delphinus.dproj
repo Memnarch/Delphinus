@@ -149,6 +149,8 @@
 				<Form>FilterPropertiesDialog</Form>
 			</DCCReference>
 			<DCCReference Include="..\Delphinus.FilterProperties.pas"/>
+			<DCCReference Include="..\..\DN.Progress.Intf.pas"/>
+			<DCCReference Include="..\..\DN.Progress.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

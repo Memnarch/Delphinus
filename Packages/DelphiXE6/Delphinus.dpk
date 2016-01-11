@@ -99,7 +99,9 @@ contains
   DN.PackageFilter in '..\..\DN.PackageFilter.pas',
   Delphinus.FilterProperties.Dialog in '..\Delphinus.FilterProperties.Dialog.pas' {FilterPropertiesDialog},
   Delphinus.FilterProperties in '..\Delphinus.FilterProperties.pas',
-  Delphinus.Theming in 'Delphinus.Theming.pas';
+  Delphinus.Theming in 'Delphinus.Theming.pas',
+  DN.Progress in '..\..\DN.Progress.pas',
+  DN.Progress.Intf in '..\..\DN.Progress.Intf.pas';
 
 end.
 

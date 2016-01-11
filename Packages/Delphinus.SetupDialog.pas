@@ -63,7 +63,7 @@ type
     FSetupIsRunning: Boolean;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
-    procedure HandleProgress(const ACaption: string; AProgress, AMax: Integer);
+    procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     procedure InitMainPage();
     procedure InitVersionSelection();
     procedure Execute();
@@ -86,6 +86,7 @@ implementation
 
 uses
   IOUtils,
+  StrUtils,
   DN.JSonFile.InstalledInfo,
   Delphinus.LicenseDialog;
 
@@ -227,13 +228,12 @@ begin
   Execute();
 end;
 
-procedure TSetupDialog.HandleProgress(const ACaption: string; AProgress,
-  AMax: Integer);
+procedure TSetupDialog.HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
 begin
   TThread.Queue(nil,
   procedure
   begin
-    lbAction.Caption := ACaption;
+    lbAction.Caption := IfThen(AItem <> '', AItem, ATask);
     pbProgress.Position := Round(AProgress / AMax * pbProgress.Max);
   end
   );

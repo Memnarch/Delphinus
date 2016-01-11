@@ -194,6 +194,8 @@
         </DCCReference>
         <DCCReference Include="..\Delphinus.FilterProperties.pas"/>
         <DCCReference Include="Delphinus.Theming.pas"/>
+        <DCCReference Include="..\..\DN.Progress.pas"/>
+        <DCCReference Include="..\..\DN.Progress.Intf.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
