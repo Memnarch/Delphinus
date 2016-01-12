@@ -172,6 +172,7 @@ begin
   inherited;
   FCanvas := TControlCanvas.Create();
   TControlCanvas(FCanvas).Control := Self;
+  Package := nil;
 end;
 
 destructor TPackageDetailView.Destroy;

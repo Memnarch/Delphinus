@@ -42,6 +42,7 @@ type
     FColumns: Integer;
     FOnFilter: TPackageFilter;
     FOSIcons: TImageList;
+    FRemovedSelectedPackage: TGUID;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
@@ -107,7 +108,9 @@ begin
     LPreview.OnInstall := procedure(Sender: TObject) begin InstallPackage(TPreview(Sender).Package) end;
     LPreview.OnUninstall := procedure(Sender: TObject) begin UninstallPackage(TPreview(Sender).Package) end;
     LPreview.OnUpdate := procedure(Sender: TObject) begin UpdatePackage(TPreview(Sender).Package) end;
-    FPreviews.Add(LPreview)
+    FPreviews.Add(LPreview);
+    if (not Assigned(SelectedPackage)) and (FRemovedSelectedPackage = APackage.ID) then
+      ChangeSelectedPackage(APackage);
   end;
 end;
 
@@ -271,14 +274,17 @@ begin
     begin
       FPreviews[i].Parent := nil;
       FPreviews[i].Package := nil;
+      if FPreviews[i].Selected then
+      begin
+        FRemovedSelectedPackage := APackage.ID;
+        FPreviews[i].Selected := False;
+      end;
       FUnusedPreviews.Add(FPreviews.Extract(FPreviews[i]));
       Break;
     end;
   end;
   if FSelectedPackage = APackage then
-  begin
     ChangeSelectedPackage(nil);
-  end;
 end;
 
 procedure TPackageOverView.Resize;
