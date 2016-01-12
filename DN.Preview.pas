@@ -176,7 +176,10 @@ begin
   if Assigned(FPackage) then
   begin
     Canvas.Brush.Style := bsSolid;
-    Canvas.Brush.Color := clWindow;
+    if Selected then
+      Canvas.Brush.Color := clSkyBlue
+    else
+      Canvas.Brush.Color := clWindow;
     Canvas.FillRect(Canvas.ClipRect);
     Canvas.Brush.Style := bsClear;
 
