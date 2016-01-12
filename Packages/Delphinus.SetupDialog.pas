@@ -72,11 +72,11 @@ type
   public
     { Public declarations }
     constructor Create(const ASetup: IDNSetup); reintroduce;
-    procedure ExecuteInstallation(const APackage: IDNPackage);
-    procedure ExecuteInstallationFromDirectory(const ADirectory: string);
-    procedure ExecuteUninstallation(const APackage: IDNPackage);
-    procedure ExecuteUninstallationFromDirectory(const ADirectory: string);
-    procedure ExecuteUpdate(const APackage: IDNPackage);
+    function ExecuteInstallation(const APackage: IDNPackage): Boolean;
+    function ExecuteInstallationFromDirectory(const ADirectory: string): Boolean;
+    function ExecuteUninstallation(const APackage: IDNPackage): Boolean;
+    function ExecuteUninstallationFromDirectory(const ADirectory: string): Boolean;
+    function ExecuteUpdate(const APackage: IDNPackage): Boolean;
   end;
 
 var
@@ -147,48 +147,50 @@ begin
   LThread.Start;
 end;
 
-procedure TSetupDialog.ExecuteInstallation(const APackage: IDNPackage);
+function TSetupDialog.ExecuteInstallation(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmInstall;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteInstallationFromDirectory(
-  const ADirectory: string);
+function TSetupDialog.ExecuteInstallationFromDirectory(
+  const ADirectory: string): Boolean;
 begin
   FDirectoryToInstall := ADirectory;
   FMode := sdmInstallDirectory;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteUninstallation(const APackage: IDNPackage);
+function TSetupDialog.ExecuteUninstallation(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmUninstall;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;;
 end;
 
-procedure TSetupDialog.ExecuteUninstallationFromDirectory(
-  const ADirectory: string);
+function TSetupDialog.ExecuteUninstallationFromDirectory(
+  const ADirectory: string): Boolean;
 begin
   FInstalledComponentDirectory := ADirectory;
   FMode := sdmUninstallDirectory;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteUpdate(const APackage: IDNPackage);
+function TSetupDialog.ExecuteUpdate(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmUpdate;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
 procedure TSetupDialog.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := not FSetupIsRunning;
   if not CanClose then
-    MessageDlg('You can not close the dialog while the setup is running, please wait', mtInformation, [mbOK], 0);
+    MessageDlg('You can not close the dialog while the setup is running, please wait', mtInformation, [mbOK], 0)
+  else if (ModalResult = mrCancel) and (pcSteps.ActivePageIndex > 0) then
+    ModalResult := mrOk;
 end;
 
 procedure TSetupDialog.FormShow(Sender: TObject);

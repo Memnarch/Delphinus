@@ -182,11 +182,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName));
+      if LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName)) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -198,11 +198,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName));
+      if LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName)) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -447,11 +447,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteInstallation(APackage);
+      if LDialog.ExecuteInstallation(APackage) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -506,7 +506,6 @@ procedure TDelphinusDialog.RefreshOverview;
 begin
   GetActiveOverView().Clear;
   GetActiveOverView().Packages.AddRange(GetActivePackageSource());
-  FDetailView.Package := nil;
 end;
 
 procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
@@ -539,11 +538,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUninstallation(APackage);
+      if LDialog.ExecuteUninstallation(APackage) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -555,11 +554,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUpdate(GetOnlinePackage(APackage));
+      if LDialog.ExecuteUpdate(GetOnlinePackage(APackage))then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
