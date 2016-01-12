@@ -15,12 +15,14 @@ uses
   SysUtils,
   DN.Types,
   DN.Uninstaller.Intf,
-  DN.JSonFile.Uninstallation;
+  DN.JSonFile.Uninstallation,
+  DN.Progress.Intf;
 
 type
-  TDNUninstaller = class(TInterfacedObject, IDNUninstaller)
+  TDNUninstaller = class(TInterfacedObject, IDNUninstaller, IDNProgress)
   private
     FOnMessage: TMessageEvent;
+    FProgress: IDNProgress;
     function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
     function DeleteFiles(const ADirectory: string): Boolean;
     function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean;
@@ -32,7 +34,11 @@ type
     function RemoveSearchPath(const ASearchPath: string): Boolean; virtual;
     function RemoveBrowsingPath(const ABrowsingPath: string): Boolean; virtual;
     procedure DoMessage(AType: TMessageType; const AMessage: string);
+    //properties for interfaceredirection
+    property Progress: IDNProgress read FProgress implements IDNProgress;
   public
+    constructor Create;
+    destructor Destroy; override;
     function Uninstall(const ADirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
   end;
@@ -41,9 +47,16 @@ implementation
 
 uses
   IOUtils,
-  StrUtils;
+  StrUtils,
+  DN.Progress;
 
 { TDNUninstaller }
+
+constructor TDNUninstaller.Create;
+begin
+  inherited;
+  FProgress := TDNProgress.Create();
+end;
 
 function TDNUninstaller.DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean): Boolean;
 begin
@@ -69,6 +82,12 @@ begin
   Result := not TDirectory.Exists(ADirectory);
   if not Result then
     DoMessage(mtError, 'failed to delete directory');
+end;
+
+destructor TDNUninstaller.Destroy;
+begin
+  FProgress := nil;
+  inherited;
 end;
 
 procedure TDNUninstaller.DoMessage(AType: TMessageType; const AMessage: string);
@@ -182,10 +201,16 @@ begin
         //remove searchpathes first, because it's less criticall
         //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
         //them manually from disk, than removing individual searchpathes manually from IDE
-        Result :=  RemovePathes(LUninstall.SearchPathes, tpSearchPath)
-          and RemovePathes(LUninstall.BrowsingPathes, tpBrowsingPath)
-          and ProcessPackages(LUninstall.Packages)
-          and DeleteFiles(ADirectory);
+        FProgress.SetTasks(['Removing Pathes', 'Remove Packages', 'Delete Files']);
+        FProgress.SetTaskProgress('SearchPath', 0, 1);
+        Result :=  RemovePathes(LUninstall.SearchPathes, tpSearchPath);
+        FProgress.SetTaskProgress('Browsing Path', 1, 1);
+        Result := Result and RemovePathes(LUninstall.BrowsingPathes, tpBrowsingPath);
+        FProgress.NextTask();
+        Result := Result and ProcessPackages(LUninstall.Packages);
+        FProgress.NextTask();
+        Result := Result and DeleteFiles(ADirectory);
+        FProgress.Completed();
       end
       else
       begin

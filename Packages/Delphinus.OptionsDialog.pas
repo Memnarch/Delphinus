@@ -12,11 +12,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs,
-  Delphinus.Form, StdCtrls,
+  Delphinus.Forms, StdCtrls,
   Delphinus.Settings;
 
 type
-  TDelphinusOptionsDialog = class(TDelphinusForm)
+  TDelphinusOptionsDialog = class(TForm)
     edToken: TEdit;
     Label1: TLabel;
     btnTest: TButton;
@@ -25,6 +25,7 @@ type
     lbResponse: TLabel;
     procedure btnTestClick(Sender: TObject);
   private
+    FSettings: TDelphinusSettings;
     procedure SetSettings(const Value: TDelphinusSettings);
     function GetSettings: TDelphinusSettings;
     { Private declarations }
@@ -75,7 +76,7 @@ begin
     end
     else
     begin
-      lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LRequest.ResponseCode);
+      lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LRequest.ResponseCode) + ': ' + LRequest.ResponseText;
     end;
   finally
     LResponse.Free;
@@ -85,12 +86,20 @@ end;
 
 function TDelphinusOptionsDialog.GetSettings: TDelphinusSettings;
 begin
+  Result := FSettings;
   Result.OAuthToken := Trim(edToken.Text);
 end;
 
 procedure TDelphinusOptionsDialog.SetSettings(const Value: TDelphinusSettings);
 begin
-  edToken.Text := Value.OAuthToken;
+  if FSettings <> Value then
+  begin
+    FSettings := Value;
+    if Assigned(FSettings) then
+    begin
+      edToken.Text := FSettings.OAuthToken;
+    end;
+  end;
 end;
 
 end.

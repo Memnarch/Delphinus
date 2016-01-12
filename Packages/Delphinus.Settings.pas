@@ -9,9 +9,15 @@ unit Delphinus.Settings;
 
 interface
 
+uses
+  Generics.Collections;
+
 type
-  TDelphinusSettings = record
-    OAuthToken: string;
+  TDelphinusSettings = class
+  private
+    FOAuthToken: string;
+  public
+    property OAuthToken: string read FOAuthToken write FOAuthToken;
   end;
 
 implementation

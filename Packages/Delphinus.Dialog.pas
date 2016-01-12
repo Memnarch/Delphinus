@@ -19,14 +19,20 @@ uses
   ContNrs,
   Generics.Collections,
   DN.PackageDetailView,
-  Delphinus.Form,
+  Delphinus.Forms,
   Delphinus.Settings,
-  DN.Setup.Intf;
+  DN.Setup.Intf,
+  Delphinus.CategoryFilterView,
+  Delphinus.ProgressDialog,
+  DN.PackageFilter,
+  ExtCtrls,
+  StdCtrls,
+  Registry;
 
 type
-  TDelphinusDialog = class(TDelphinusForm)
+  TDelphinusDialog = class(TForm)
     ToolBar1: TToolBar;
-    imgMenu: TImageList;
+    ilMenu: TImageList;
     DialogActions: TActionList;
     ToolButton1: TToolButton;
     actRefresh: TAction;
@@ -35,24 +41,34 @@ type
     dlgSelectInstallFile: TOpenDialog;
     btnUninstall: TToolButton;
     dlgSelectUninstallFile: TOpenDialog;
-    PageControl: TPageControl;
-    tsAvailable: TTabSheet;
-    tsInstalled: TTabSheet;
     actOptions: TAction;
+    pnlPackages: TPanel;
+    edSearch: TButtonedEdit;
+    ilSmall: TImageList;
+    pnlToolBar: TPanel;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure btnUninstallClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure edSearchKeyPress(Sender: TObject; var Key: Char);
+    procedure edSearchRightButtonClick(Sender: TObject);
+    procedure edSearchLeftButtonClick(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
-    FInstalledOverview: TPackageOverView;
     FPackageProvider: IDNPackageProvider;
     FInstalledPackageProvider: IDNPackageProvider;
     FPackages: TList<IDNPackage>;
     FInstalledPackages: TList<IDNPackage>;
+    FUpdatePackages: TList<IDNPackage>;
     FDetailView: TPackageDetailView;
     FSettings: TDelphinusSettings;
+    FCategoryFilteView: TCategoryFilterView;
+    FCategory: TPackageCategory;
+    FProgressDialog: TProgressDialog;
+    FFilter: string;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -62,7 +78,7 @@ type
     procedure RefreshInstalledPackages;
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
-    function GetOverviewPackage(const APackage: IDNPackage): IDNPackage;
+    function GetOnlinePackage(const APackage: IDNPackage): IDNPackage;
     function GetInstalledVersion(const APackage: IDNPackage): string;
     function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
@@ -71,6 +87,12 @@ type
     procedure SaveSettings(const ASettings: TDelphinusSettings);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
+    procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
+    procedure HandleSelectedPackageChanged(Sender: TObject);
+    function GetActivePackageSource: TList<IDNPackage>;
+    procedure RefreshOverview();
+    procedure DoFilter(const AFilter: string);
+    procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -87,7 +109,6 @@ uses
   IOUtils,
   RTTI,
   Types,
-  Registry,
   DN.Types,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
@@ -99,12 +120,14 @@ uses
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
   DN.Setup,
-  Delphinus.OptionsDialog;
+  Delphinus.OptionsDialog,
+  StrUtils;
 
 {$R *.dfm}
 
 const
   CDelphinusSubKey = 'Delphinus';
+  CFiltersSubKey = 'Filters';
   COAuthTokenKey = 'OAuthToken';
 
 { TDelphinusDialog }
@@ -129,15 +152,26 @@ end;
 
 procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
-  FPackages.Clear;
-  if FPackageProvider.Reload() then
-  begin
-    FPackages.AddRange(FPackageProvider.Packages);
-    FOverView.Clear;
-    FOverView.Packages.AddRange(FPackages);
-    tsAvailable.Caption := 'Available (' + IntToStr(FPackages.Count) + ')';
-  end;
-  RefreshInstalledPackages();
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      if FPackageProvider.Reload() then
+      begin
+        FPackages.Clear;
+        FPackages.AddRange(FPackageProvider.Packages);
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          FCategoryFilteView.OnlineCount := FPackages.Count;
+          RefreshInstalledPackages();
+          FProgressDialog.ModalResult := mrOk;
+        end);
+    end).Start;
+  FProgressDialog.Caption := 'Delphinus';
+  FProgressDialog.Task := 'Refreshing';
+  FProgressDialog.Progress := -1;
+  FProgressDialog.ShowModal();
 end;
 
 procedure TDelphinusDialog.btnInstallFolderClick(Sender: TObject);
@@ -148,11 +182,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName));
+      if LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName)) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -164,47 +198,57 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName));
+      if LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName)) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
+  FSettings := TDelphinusSettings.Create();
+  FPackages := TList<IDNPackage>.Create();
+  FInstalledPackages := TList<IDNPackage>.Create();
+  FUpdatePackages := TList<IDNPackage>.Create();
+
+  FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
-  FDetailView.Align := alClient;
-  FDetailView.Visible := False;
+  FDetailView.OnGetOnlineVersion := GetUpdateVersion;
+  FDetailView.OnGetInstalledVersion := GetInstalledVersion;
+  FDetailView.Align := alRight;
   FDetailView.Parent := Self;
 
   FOverView := TPackageOverView.Create(Self);
   FOverView.Align := alClient;
-  FOverView.Parent := tsAvailable;
+  FOverView.Parent := pnlPackages;
   FOverView.OnCheckIsPackageInstalled := GetInstalledVersion;
   FOverView.OnCheckHasPackageUpdate := GetUpdateVersion;
+  FOverView.OnSelectedPackageChanged := HandleSelectedPackageChanged;
   FOverView.OnInstallPackage :=  InstallPackage;
   FOverView.OnUninstallPackage := UninstallPackage;
   FOverView.OnUpdatePackage := UpdatePackage;
-  FOverView.OnInfoPackage := ShowDetail;
-  FInstalledOverview := TPackageOverView.Create(Self);
-  FInstalledOverview.Align := alClient;
-  FInstalledOverview.Parent := tsInstalled;
-  FInstalledOverview.OnCheckIsPackageInstalled := GetInstalledVersion;
-  FInstalledOverview.OnCheckHasPackageUpdate := GetUpdateVersion;
-  FInstalledOverview.OnUninstallPackage := UnInstallPackage;
-  FInstalledOverview.OnUpdatePackage := UpdatePackage;
-  FInstalledOverview.OnInfoPackage := ShowDetail;
-  FPackages := TList<IDNPackage>.Create();
-  FInstalledPackages := TList<IDNPackage>.Create();
+  FOverView.DoubleBuffered := True;
+  FOverView.OnFilter := FilterPackage;
+  FCategoryFilteView := TCategoryFilterView.Create(Self);
+  FCategoryFilteView.Width := 200;
+  FCategoryFilteView.Align := alLeft;
+  FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
+  FCategoryFilteView.Parent := Self;
+
+
   LoadSettings(FSettings);
   RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
   dlgSelectInstallFile.Filter := CInstallFileFilter;
   dlgSelectUninstallFile.Filter := CUninstallFileFilter;
+
+  //adjust serachbar to be over the Packagelist
+  edSearch.Width := pnlPackages.Width;
+  edSearch.Left := pnlPackages.Left;
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -224,21 +268,85 @@ end;
 
 destructor TDelphinusDialog.Destroy;
 begin
+  SaveSettings(FSettings);
   FOverView.OnSelectedPackageChanged := nil;
-  FInstalledOverview.OnSelectedPackageChanged := nil;
   FPackages.Free;
   FInstalledPackages.Free;
+  FUpdatePackages.Free;
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
+  FSettings.Free;
   inherited;
+end;
+
+procedure TDelphinusDialog.DoFilter(const AFilter: string);
+begin
+  FFilter := Trim(AFilter);
+  FOverView.ApplyFilter();
+end;
+
+procedure TDelphinusDialog.edSearchKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Ord(Key) = VK_RETURN then
+  begin
+    DoFilter(edSearch.Text);
+    Key := #0;
+  end;
+
+  if Ord(Key) = VK_ESCAPE then
+  begin
+    edSearch.Text := '';
+    DoFilter('');
+    Key := #0;
+  end;
+end;
+
+procedure TDelphinusDialog.edSearchLeftButtonClick(Sender: TObject);
+begin
+  DoFilter(edSearch.Text);
+end;
+
+procedure TDelphinusDialog.edSearchRightButtonClick(Sender: TObject);
+begin
+  edSearch.Text := '';
+  DoFilter('');
+end;
+
+procedure TDelphinusDialog.FilterPackage(const APackage: IDNPackage;
+  var AAccepted: Boolean);
+begin
+  AAccepted := ((FFilter = '') or ContainsText(APackage.Name, FFilter));
+end;
+
+procedure TDelphinusDialog.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  LPos: TPoint;
+  LOverView: TPackageOverView;
+begin
+  LOverView := GetActiveOverView();
+  LPos := LOverView.ScreenToClient(MousePos);
+  if PtInRect(Rect(0, 0, LOverView.Width, LOverView.Height), LPos) then
+  begin
+    LOverView.VertScrollBar.Position := LOverView.VertScrollBar.Position - WheelDelta;
+    Handled := True;
+  end;
 end;
 
 function TDelphinusDialog.GetActiveOverView: TPackageOverView;
 begin
-  if PageControl.ActivePageIndex = 1 then
-    Result := FInstalledOverview
+  Result := FOverView;
+end;
+
+function TDelphinusDialog.GetActivePackageSource: TList<IDNPackage>;
+begin
+  case FCategory of
+    pcOnline: Result := FPackages;
+    pcInstalled: Result := FInstalledPackages;
+    pcUpdates: Result := FUpdatePackages;
   else
-    Result := FOverView;
+    Result := FPackages;
+  end;
 end;
 
 function TDelphinusDialog.GetBPLDirectory: string;
@@ -288,7 +396,7 @@ begin
   end;
 end;
 
-function TDelphinusDialog.GetOverviewPackage(
+function TDelphinusDialog.GetOnlinePackage(
   const APackage: IDNPackage): IDNPackage;
 var
   LPackage: IDNPackage;
@@ -307,14 +415,28 @@ end;
 function TDelphinusDialog.GetUpdateVersion(const APackage: IDNPackage): string;
 var
   LVersion: string;
+  LPackage: IDNPackage;
 begin
   Result := '';
   LVersion := GetInstalledVersion(APackage);
-  if LVersion <> '' then
+  LPackage := GetOnlinePackage(APackage);
+  if Assigned(LPackage) and (LVersion <> '') then
   begin
-    if (APackage.Versions.Count > 0) and (APackage.Versions[0].Name <> LVersion) then
-      Result := APackage.Versions[0].Name;
+    if (LPackage.Versions.Count > 0) and (LPackage.Versions[0].Name <> LVersion) then
+      Result := LPackage.Versions[0].Name;
   end;
+end;
+
+procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject;
+  ANewCategory: TPackageCategory);
+begin
+  FCategory := ANewCategory;
+  RefreshOverview();
+end;
+
+procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
+begin
+  ShowDetail(GetActiveOverView().SelectedPackage);
 end;
 
 procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
@@ -325,11 +447,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteInstallation(APackage);
+      if LDialog.ExecuteInstallation(APackage) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -349,9 +471,7 @@ begin
     LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
     LRegistry.RootKey := HKEY_CURRENT_USER;
     if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), False) then
-    begin
       FSettings.OAuthToken := LRegistry.ReadString(COAuthTokenKey);
-    end;
   finally
     LRegistry.Free;
   end;
@@ -364,25 +484,28 @@ end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
-  LInstalledPackage, LAvailablePackage: IDNPackage;
+  LInstalledPackage: IDNPackage;
 begin
   if FInstalledPackageProvider.Reload() then
   begin
     FInstalledPackages.Clear;
     FInstalledPackages.AddRange(FInstalledPackageProvider.Packages);
-    FInstalledOverview.Clear;
+    FCategoryFilteView.InstalledCount := FInstalledPackages.Count;
+    FUpdatePackages.Clear();
     for LInstalledPackage in FInstalledPackages do
     begin
-      LAvailablePackage := GetOverviewPackage(LInstalledPackage);
-      if Assigned(LAvailablePackage) then
-        FInstalledOverview.Packages.Add(LAvailablePackage)
-      else
-        FInstalledOverview.Packages.Add(LInstalledPackage);
+      if GetUpdateVersion(LInstalledPackage) <> '' then
+        FUpdatePackages.Add(LInstalledPackage);
     end;
-    tsInstalled.Caption := 'Installed (' + IntToStr(FInstalledPackages.Count) + ')';
-    FOverView.Refresh();
+    FCategoryFilteView.UpdatesCount := FUpdatePackages.Count;
   end;
-  FDetailView.Visible := False;
+  RefreshOverview();
+end;
+
+procedure TDelphinusDialog.RefreshOverview;
+begin
+  GetActiveOverView().Clear;
+  GetActiveOverView().Packages.AddRange(GetActivePackageSource());
 end;
 
 procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
@@ -395,9 +518,7 @@ begin
     LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
     LRegistry.RootKey := HKEY_CURRENT_USER;
     if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), True) then
-    begin
       LRegistry.WriteString(COAuthTokenKey, FSettings.OAuthToken);
-    end;
   finally
     LRegistry.Free;
   end;
@@ -406,9 +527,7 @@ end;
 procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
 begin
   FDetailView.Package := APackage;
-//  PageControl.Visible := False;
   FDetailView.BringToFront();
-  FDetailView.Visible := True;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);
@@ -419,11 +538,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUninstallation(APackage);
+      if LDialog.ExecuteUninstallation(APackage) then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 
@@ -435,11 +554,11 @@ begin
   begin
     LDialog := TSetupDialog.Create(CreateSetup());
     try
-      LDialog.ExecuteUpdate(APackage);
+      if LDialog.ExecuteUpdate(GetOnlinePackage(APackage))then
+        RefreshInstalledPackages();
     finally
       LDialog.Free;
     end;
-    RefreshInstalledPackages();
   end;
 end;
 

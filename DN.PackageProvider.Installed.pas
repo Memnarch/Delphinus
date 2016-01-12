@@ -69,6 +69,7 @@ begin
         APackage.ID := LInfo.ID;
         APackage.CompilerMin := LInfo.CompilerMin;
         APackage.CompilerMax := LInfo.CompilerMax;
+        APackage.Platforms := LInfo.Platforms;
         APackage.LicenseType := LInfo.LicenseType;
         APackage.LicenseText := LoadLicenceText(TPath.Combine(FComponentDirectory, LInfo.LicenseFile));
         APackage.ProjectUrl := LInfo.ProjectUrl;
@@ -78,7 +79,7 @@ begin
         if LInfo.Version <> '' then
           LVersion.Name := LInfo.Version
         else
-          LVersion.Name := 'unknown';
+          LVersion.Name := 'No version';
 
         LVersion.CompilerMin := LInfo.CompilerMin;
         LVersion.CompilerMax := LInfo.CompilerMax;

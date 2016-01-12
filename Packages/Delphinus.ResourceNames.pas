@@ -11,6 +11,10 @@ interface
 
 const
   CIconDelphinus = 'Icon_Dolphin16';
+  CIconWindows = 'Icon_Windows';
+  CIconAndroid = 'Icon_Android';
+  CIconMac = 'Icon_Mac';
+  CIconIOS = 'Icon_IOS';
 
 implementation
 

@@ -162,7 +162,7 @@
         <DCCReference Include="..\..\DN.Package.Version.pas"/>
         <DCCReference Include="..\Delphinus.UiTypes.pas"/>
         <DCCReference Include="..\..\DN.JSon.pas"/>
-        <DCCReference Include="..\Delphinus.Form.pas"/>
+        <DCCReference Include="..\Delphinus.Forms.pas"/>
         <DCCReference Include="..\Delphinus.ResourceNames.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.GitHub.Authentication.pas"/>
         <DCCReference Include="..\Delphinus.OptionsDialog.pas">
@@ -178,6 +178,19 @@
             <Form>LicenseDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\Delphinus.CategoryFilterView.pas">
+            <Form>CategoryFilterView</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\Delphinus.ProgressDialog.pas">
+            <Form>ProgressDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\DN.PackageFilter.pas"/>
+        <DCCReference Include="Delphinus.Theming.pas"/>
+        <DCCReference Include="..\..\DN.Progress.pas"/>
+        <DCCReference Include="..\..\DN.Progress.Intf.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

@@ -14,7 +14,8 @@ uses
   Graphics,
   Generics.Collections,
   DN.Types,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.Compiler.Intf;
 
 type
   IDNPackage = interface
@@ -25,6 +26,8 @@ type
     function GetCompilerMin: TCompilerVersion;
     procedure SetCompilerMax(const Value: TCompilerVersion);
     procedure SetCompilerMin(const Value: TCompilerVersion);
+    function GetPlatforms: TDNCompilerPlatforms;
+    procedure SetPlatforms(const Value: TDNCompilerPlatforms);
     function GetDownloadLocation: string;
     procedure SetDownloadLocation(const Value: string);
     function GetAuthor: string;
@@ -50,6 +53,7 @@ type
     property ID: TGUID read GetID write SetID;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
+    property Platforms: TDNCompilerPlatforms read GetPlatforms write SetPlatforms;
     property Author: string read GetAuthor write SetAuthor;
     property Name: string read GetName write SetName;
     property Description: string read GetDescription write SetDescription;

@@ -19,10 +19,11 @@ uses
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
   DN.JSonFile.Installation,
-  DN.JSonFile.Uninstallation;
+  DN.JSonFile.Uninstallation,
+  DN.Progress.Intf;
 
 type
-  TDNInstaller = class(TInterfacedObject, IDNInstaller)
+  TDNInstaller = class(TInterfacedObject, IDNInstaller, IDNProgress)
   private
     FCompiler: IDNCompiler;
     FCompilerVersion: Integer;
@@ -30,6 +31,7 @@ type
     FBrowsingPathes: string;
     FPackages: TList<TPackage>;
     FOnMessage: TMessageEvent;
+    FProgress: IDNProgress;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
@@ -44,6 +46,7 @@ type
     procedure SetOnMessage(const Value: TMessageEvent);
     function GetSourceFolder(const ADirectory: string): string;
     function UndecoratePath(const APath: string): string;
+    function LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
@@ -53,6 +56,8 @@ type
     function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
+    //properties for interface redirection
+    property Progress: IDNProgress read FProgress implements IDNProgress;
   public
     constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
     destructor Destroy(); override;
@@ -71,7 +76,8 @@ uses
   DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
   DN.JSonFile.Info,
-  DN.ToolsApi.Extension.Intf;
+  DN.ToolsApi.Extension.Intf,
+  DN.Progress;
 
 const
   CLibDir = 'lib';
@@ -205,11 +211,13 @@ begin
   FCompiler := ACompiler;
   FCompilerVersion := ACompilerVersion;
   FPackages := TList<TPackage>.Create();
+  FProgress := TDNProgress.Create();
 end;
 
 destructor TDNInstaller.Destroy;
 begin
   FPackages.Free();
+  FProgress := nil;
   inherited;
 end;
 
@@ -244,6 +252,52 @@ end;
 function TDNInstaller.GetSourceFolder(const ADirectory: string): string;
 begin
   Result := TPath.Combine(ADirectory, CSourceDir);
+end;
+
+function TDNInstaller.LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
+var
+  LProject: TProject;
+  LInfo: IDNProjectInfo;
+  LGroup: IDNProjectGroupInfo;
+const
+  CGroup = '.groupproj';
+  CProject = '.dproj';
+begin
+  Result := True;
+  for LProject in AProjects do
+  begin
+    if IsSupported(LProject.CompilerMin, LProject.CompilerMax) then
+    begin
+      case AnsiIndexText(ExtractFileExt(LProject.Project), [CProject, CGroup]) of
+        0:
+        begin
+          LInfo := TDNProjectInfo.Create();
+          if not LInfo.LoadFromFile(TPath.Combine(ABaseDirectory, LProject.Project)) then
+          begin
+            DoMessage(mtError, 'Failed to load project ' + LProject.Project);
+            DoMessage(mtError, LInfo.LoadingError);
+            Break;
+          end;
+          ASupportedProjects.Add(LInfo);
+        end;
+        1:
+        begin
+          LGroup := TDNProjectGroupInfo.Create();
+          if not LGroup.LoadFromFile(TPath.Combine(ABaseDirectory, LProject.Project)) then
+          begin
+            DoMessage(mtError, 'Failed to load group ' + LProject.Project);
+            DoMessage(mtError, LGroup.LoadingError);
+            Break;
+          end;
+          ASupportedProjects.AddRange(LGroup.Projects);
+        end
+        else
+        begin
+          DoMessage(mtError, 'Unknown fileextension for project ' + LProject.Project);
+        end;
+      end;
+    end;
+  end;
 end;
 
 function TDNInstaller.Install(const ASourceDirectory,
@@ -294,12 +348,18 @@ begin
         Result := LInstallInfo.LoadFromFile(LInstallerFile);
         if Result then
         begin
+          FProgress.SetTasks(['Adding Pathes', 'Copy Source', 'Compile Projects']);
+          FProgress.SetTaskProgress('SearchPath', 0, 1);
           ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+          FProgress.SetTaskProgress('BrowsingPath', 1, 1);
           ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+          FProgress.NextTask();
           ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
           CopyLicense(ASourceDirectory, ATargetDirectory, LLicenseFile);
+          FProgress.NextTask();
           Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+          FProgress.Completed();
         end
         else
         begin
@@ -393,80 +453,39 @@ end;
 
 function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
 var
-  LProject: TProject;
-  LProjectFile, LFileExt, LLibBaseDir: string;
-  LInfo: IDNProjectInfo;
-  LGroupInfo: IDNProjectGroupInfo;
+  LProject: IDNProjectInfo;
+  LProjects: TList<IDNProjectInfo>;
+  LLibBaseDir: string;
   LProcessedPlatforms: TDNCompilerPlatforms;
   LPlatform: TDNCompilerPlatform;
-const
-  CGroup = '.groupproj';
-  CProject = '.dproj';
+  i: Integer;
 begin
   Result := True;
-  LInfo := TDNProjectInfo.Create();
   LLibBaseDir := TPath.Combine(ATargetDirectory, CLibDir);
   FCompiler.DCUOutput := TPath.Combine(LLibBaseDir, '$(Platform)\$(Config)');
   FCompiler.ExeOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CBinDir), '$(Platform)\$(Config)');
   LProcessedPlatforms := [];
-  if Length(AProjects) > 0 then
-  begin
-    for LProject in AProjects do
+  LProjects := TList<IDNProjectInfo>.Create();
+  try
+    if LoadSupportedProjects(GetSourceFolder(ATargetDirectory), AProjects, LProjects) and (LProjects.Count > 0) then
     begin
-      if IsSupported(LProject.CompilerMin, LProject.CompilerMax) then
+      for i := 0 to LProjects.Count - 1 do
       begin
-        LProjectFile := TPath.Combine(GetSourceFolder(ATargetDirectory), LProject.Project);
-        LFileExt := ExtractFileExt(LProjectFile);
-        if SameText(LFileExt, CGroup) then
-        begin
-          LGroupInfo := TDNProjectGroupInfo.Create();
-          Result := LGroupInfo.LoadFromFile(LProjectFile);
-          if Result then
-          begin
-            for LInfo in LGroupInfo.Projects do
-            begin
-              Result := ProcessProject(LInfo, LProcessedPlatforms);
-              if not Result then
-                Break;
-            end;
-          end
-          else
-          begin
-            DoMessage(mtError, 'Failed to load Groupproject ' + LProjectfile);
-            DoMessage(mtError, LGroupInfo.LoadingError);
-          end;
-        end
-        else if SameText(LFileExt, CProject) then
-        begin
-          LInfo := TDNProjectInfo.Create();
-          Result := LInfo.LoadFromFile(LProjectFile);
-          if Result then
-          begin
-            Result := ProcessProject(LInfo, LProcessedPlatforms);
-          end
-          else
-          begin
-            DoMessage(mtError, 'Failed to load project ' + LProjectFile);
-            DoMessage(mtError, LInfo.LoadingError);
-          end;
-        end
-        else
-        begin
-          DoMessage(mtError, 'Unknown fileextension for project ' + LProjectFile);
-        end;
-
-
+        LProject := LProjects[i];
+        FProgress.SetTaskProgress(ExtractFileName(LProject.FileName), i, LProjects.Count);
+        Result := ProcessProject(LProject, LProcessedPlatforms);
         if not Result then
           Break;
       end;
     end;
+  finally
+    LProjects.Free;
   end;
+
   if Result then
   begin
     for LPlatform in LProcessedPlatforms do
-    begin
       AddSearchPath(TPath.Combine(LLibBaseDir, TDNCompilerPlatformName[LPlatform] + '\' + TDNCompilerConfigName[FCompiler.Config]), [LPlatform]);
-    end;
   end;
 
 end;

@@ -20,7 +20,7 @@ uses
   StdCtrls,
   DN.Types,
   DN.Setup.Intf,
-  Delphinus.Form, ComCtrls, ExtCtrls;
+  Delphinus.Forms, ComCtrls, ExtCtrls;
 
 const
   CStart = WM_USER + 1;
@@ -28,7 +28,7 @@ const
 type
   TSetupDialogMode = (sdmInstall, sdmInstallDirectory, sdmUninstall, sdmUninstallDirectory, sdmUpdate);
 
-  TSetupDialog = class(TDelphinusForm)
+  TSetupDialog = class(TForm)
     mLog: TMemo;
     pcSteps: TPageControl;
     tsMainPage: TTabSheet;
@@ -36,20 +36,23 @@ type
     btnOK: TButton;
     btnCancel: TButton;
     Image1: TImage;
-    lbActionInstallUpdate: TLabel;
     lbNameInstallUpdate: TLabel;
-    Shape1: TShape;
-    Shape2: TShape;
-    lbDescriptionInstallUpdate: TLabel;
     cbVersion: TComboBox;
     Label1: TLabel;
     lbLicenseAnotation: TLabel;
     Label3: TLabel;
     lbLicenseType: TLabel;
     btnLicense: TButton;
+    tsProgress: TTabSheet;
+    pbProgress: TProgressBar;
+    btnCloseProgress: TButton;
+    lbAction: TLabel;
+    btnShowLog: TButton;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure btnShowLogClick(Sender: TObject);
   private
     { Private declarations }
     FMode: TSetupDialogMode;
@@ -57,20 +60,23 @@ type
     FInstalledComponentDirectory: string;
     FDirectoryToInstall: string;
     FSetup: IDNSetup;
+    FSetupIsRunning: Boolean;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
+    procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     procedure InitMainPage();
     procedure InitVersionSelection();
     procedure Execute();
+    procedure SetupFinished;
     function GetSelectedVersion: IDNPackageVersion;
   public
     { Public declarations }
     constructor Create(const ASetup: IDNSetup); reintroduce;
-    procedure ExecuteInstallation(const APackage: IDNPackage);
-    procedure ExecuteInstallationFromDirectory(const ADirectory: string);
-    procedure ExecuteUninstallation(const APackage: IDNPackage);
-    procedure ExecuteUninstallationFromDirectory(const ADirectory: string);
-    procedure ExecuteUpdate(const APackage: IDNPackage);
+    function ExecuteInstallation(const APackage: IDNPackage): Boolean;
+    function ExecuteInstallationFromDirectory(const ADirectory: string): Boolean;
+    function ExecuteUninstallation(const APackage: IDNPackage): Boolean;
+    function ExecuteUninstallationFromDirectory(const ADirectory: string): Boolean;
+    function ExecuteUpdate(const APackage: IDNPackage): Boolean;
   end;
 
 var
@@ -80,6 +86,7 @@ implementation
 
 uses
   IOUtils,
+  StrUtils,
   DN.JSonFile.InstalledInfo,
   Delphinus.LicenseDialog;
 
@@ -100,61 +107,90 @@ begin
   end;
 end;
 
+procedure TSetupDialog.btnShowLogClick(Sender: TObject);
+begin
+  pcSteps.ActivePage := tsLog;
+end;
+
 constructor TSetupDialog.Create(const ASetup: IDNSetup);
 begin
   inherited Create(nil);
   FSetup := ASetup;
   FSetup.OnMessage := HandleLogMessage;
+  FSetup.OnProgress := HandleProgress;
 end;
 
 procedure TSetupDialog.Execute;
+var
+  LThread: TThread;
 begin
+  FSetupIsRunning := True;
   mLog.Clear;
-  pcSteps.ActivePage := tsLog;
-  case FMode of
-    sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
-    sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
-    sdmUninstall: FSetup.Uninstall(FPackage);
-    sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
-    sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
-  end;
+  pbProgress.Position := 0;
+  pbProgress.State := pbsNormal;
+  pcSteps.ActivePage := tsProgress;
+  LThread := TThread.CreateAnonymousThread(
+    procedure
+    begin
+      try
+        case FMode of
+          sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
+          sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
+          sdmUninstall: FSetup.Uninstall(FPackage);
+          sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
+          sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
+        end;
+      finally
+        TThread.Synchronize(nil, SetupFinished);
+      end;
+    end);
+  LThread.Start;
 end;
 
-procedure TSetupDialog.ExecuteInstallation(const APackage: IDNPackage);
+function TSetupDialog.ExecuteInstallation(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmInstall;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteInstallationFromDirectory(
-  const ADirectory: string);
+function TSetupDialog.ExecuteInstallationFromDirectory(
+  const ADirectory: string): Boolean;
 begin
   FDirectoryToInstall := ADirectory;
   FMode := sdmInstallDirectory;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteUninstallation(const APackage: IDNPackage);
+function TSetupDialog.ExecuteUninstallation(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmUninstall;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;;
 end;
 
-procedure TSetupDialog.ExecuteUninstallationFromDirectory(
-  const ADirectory: string);
+function TSetupDialog.ExecuteUninstallationFromDirectory(
+  const ADirectory: string): Boolean;
 begin
   FInstalledComponentDirectory := ADirectory;
   FMode := sdmUninstallDirectory;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
 end;
 
-procedure TSetupDialog.ExecuteUpdate(const APackage: IDNPackage);
+function TSetupDialog.ExecuteUpdate(const APackage: IDNPackage): Boolean;
 begin
   FPackage := APackage;
   FMode := sdmUpdate;
-  ShowModal();
+  Result := ShowModal() <> mrCancel;
+end;
+
+procedure TSetupDialog.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := not FSetupIsRunning;
+  if not CanClose then
+    MessageDlg('You can not close the dialog while the setup is running, please wait', mtInformation, [mbOK], 0)
+  else if (ModalResult = mrCancel) and (pcSteps.ActivePageIndex > 0) then
+    ModalResult := mrOk;
 end;
 
 procedure TSetupDialog.FormShow(Sender: TObject);
@@ -173,16 +209,36 @@ end;
 procedure TSetupDialog.HandleLogMessage(AType: TMessageType;
   const AMessage: string);
 begin
-  case AType of
-    mtNotification: Log(AMessage);
-    mtWarning: Log('Warning: ' + AMessage);
-    mtError: Log('Error: ' + AMessage);
-  end;
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      case AType of
+        mtNotification: Log(AMessage);
+        mtWarning: Log('Warning: ' + AMessage);
+        mtError:
+        begin
+          Log('Error: ' + AMessage);
+          pbProgress.State := pbsError;
+        end;
+      end;
+    end
+  );
 end;
 
 procedure TSetupDialog.HandleOK(Sender: TObject);
 begin
   Execute();
+end;
+
+procedure TSetupDialog.HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
+begin
+  TThread.Queue(nil,
+  procedure
+  begin
+    lbAction.Caption := IfThen(AItem <> '', AItem, ATask);
+    pbProgress.Position := Round(AProgress / AMax * pbProgress.Max);
+  end
+  );
 end;
 
 procedure TSetupDialog.InitMainPage;
@@ -191,9 +247,8 @@ begin
   case FMode of
     sdmInstall:
     begin
-      lbActionInstallUpdate.Caption := 'Install';
+      btnOK.Caption := 'Install';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
       lbLicenseType.Caption := FPackage.LicenseType;
       btnLicense.Visible := lbLicenseType.Caption <> '';
       if Assigned(FPackage.Picture) then
@@ -203,9 +258,9 @@ begin
 //    sdmInstallDirectory: ;
     sdmUninstall:
     begin
-      lbActionInstallUpdate.Caption := 'Uninstall';
+      btnOK.Caption := 'Uninstall';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
+      lbLicenseType.Caption := FPackage.LicenseType;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       Label1.Visible := False;
@@ -216,9 +271,8 @@ begin
 //    sdmUninstallDirectory: ;
     sdmUpdate:
     begin
-      lbActionInstallUpdate.Caption := 'Update';
+      btnOK.Caption := 'Update';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbDescriptionInstallUpdate.Caption := FPackage.Description;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       InitVersionSelection();
@@ -241,6 +295,13 @@ end;
 procedure TSetupDialog.Log(const AMessage: string);
 begin
   mLog.Lines.Add(AMessage);
+end;
+
+procedure TSetupDialog.SetupFinished;
+begin
+  btnCloseProgress.Enabled := True;
+  btnShowLog.Enabled := True;
+  FSetupIsRunning := False;
 end;
 
 end.

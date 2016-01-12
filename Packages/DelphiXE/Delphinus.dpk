@@ -81,7 +81,7 @@ contains
   DN.Package.Version in '..\..\DN.Package.Version.pas',
   Delphinus.UiTypes in '..\Delphinus.UiTypes.pas',
   DN.JSon in '..\..\DN.JSon.pas',
-  Delphinus.Form in '..\Delphinus.Form.pas',
+  Delphinus.Forms in '..\Delphinus.Forms.pas',
   Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
   DN.PackageProvider.GitHub.Authentication in '..\..\DN.PackageProvider.GitHub.Authentication.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
@@ -90,7 +90,12 @@ contains
   DN.Setup in '..\..\DN.Setup.pas',
   DN.Version in '..\..\DN.Version.pas',
   DN.IOUtils in '..\..\DN.IOUtils.pas',
-  Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog};
+  Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
+  Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas',
+  Delphinus.ProgressDialog in '..\Delphinus.ProgressDialog.pas' {ProgressDialog},
+  DN.PackageFilter in '..\..\DN.PackageFilter.pas',
+  DN.Progress.Intf in '..\..\DN.Progress.Intf.pas',
+  DN.Progress in '..\..\DN.Progress.pas';
 
 end.
 

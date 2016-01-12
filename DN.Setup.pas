@@ -16,13 +16,16 @@ uses
   DN.Uninstaller.Intf,
   DN.Package.Intf,
   DN.Package.Version.Intf,
-  DN.PackageProvider.Intf;
+  DN.PackageProvider.Intf,
+  DN.Progress.Intf;
 
 type
   TDNSetup = class(TInterfacedObject, IDNSetup)
   private
     FComponentDirectory: string;
     FOnMessage: TMessageEvent;
+    FOnProgress: TDNProgressEvent;
+    FProgress: IDNProgress;
     FProvider: IDNPackageProvider;
     FInstaller: IDNInstaller;
     FUninstaller: IDNUninstaller;
@@ -30,8 +33,11 @@ type
     procedure SetComponentDirectory(const Value: string);
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
+    function GetOnProgress: TDNProgressEvent;
+    procedure SetOnProgress(const Value: TDNProgressEvent);
   protected
     procedure DoMessage(AType: TMessageType; const AMessage: string);
+    procedure DoProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     procedure ReportInfo(const AInfo: string);
     procedure ReportWarning(const AWarning: string);
     procedure ReportError(const AError: string);
@@ -42,6 +48,9 @@ type
     function GetSetupTempDir: string;
     procedure CleanupTemp();
     function ConvertNameToValidDirectoryName(const AName: string): string;
+    procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
+    procedure AttachProgressEvents;
+    procedure DetachProgressEvents;
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
@@ -51,6 +60,7 @@ type
     function UninstallDirectory(const ADirectory: string): Boolean;
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
+    property OnProgress: TDNProgressEvent read GetOnProgress write SetOnProgress;
   end;
 
 implementation
@@ -58,9 +68,25 @@ implementation
 uses
   SysUtils,
   IOUtils,
-  DN.JSonFile.InstalledInfo;
+  StrUtils,
+  DN.JSonFile.InstalledInfo,
+  DN.Progress;
 
 { TDNSetup }
+
+procedure TDNSetup.AttachProgressEvents;
+var
+  LProgress: IDNProgress;
+begin
+  if Assigned(FInstaller) and Supports(FInstaller, IDNProgress, LProgress) then
+    LProgress.OnProgress := HandleProgress;
+
+  if Assigned(FUninstaller) and Supports(FUninstaller, IDNProgress, LProgress) then
+    LProgress.OnProgress := HandleProgress;
+
+  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
+    LProgress.OnProgress := HandleProgress;
+end;
 
 procedure TDNSetup.CleanupTemp;
 begin
@@ -97,12 +123,34 @@ begin
   FUninstaller := AUninstaller;
   FUninstaller.OnMessage := DoMessage;
   FProvider := APackageProvider;
+  FProgress := TDNProgress.Create();
+  FProgress.OnProgress := DoProgress;
+end;
+
+procedure TDNSetup.DetachProgressEvents;
+var
+  LProgress: IDNProgress;
+begin
+  if Assigned(FInstaller) and Supports(FInstaller, IDNProgress, LProgress) then
+    LProgress.OnProgress := nil;
+
+  if Assigned(FUninstaller) and Supports(FUninstaller, IDNProgress, LProgress) then
+    LProgress.OnProgress := nil;
+
+  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
+    LProgress.OnProgress := nil;
 end;
 
 procedure TDNSetup.DoMessage(AType: TMessageType; const AMessage: string);
 begin
   if Assigned(FOnMessage) then
     FOnMessage(AType, AMessage);
+end;
+
+procedure TDNSetup.DoProgress(const ATask, AItem: string; AProgress, AMax: Int64);
+begin
+  if Assigned(FOnProgress) then
+    FOnProgress(ATask, AItem, AProgress, AMax);
 end;
 
 function TDNSetup.DownloadPackage(const APackage: IDNPackage;
@@ -177,9 +225,20 @@ begin
   Result := FOnMessage;
 end;
 
+function TDNSetup.GetOnProgress: TDNProgressEvent;
+begin
+  Result := FOnProgress;
+end;
+
 function TDNSetup.GetSetupTempDir: string;
 begin
   Result := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
+end;
+
+procedure TDNSetup.HandleProgress(const ATask, AItem: string; AProgress,
+  AMax: Int64);
+begin
+  FProgress.SetTaskProgress(IfThen(AItem <> '', ATask + ': ' + AItem, ATask), AProgress, AMax);
 end;
 
 function TDNSetup.Install(const APackage: IDNPackage;
@@ -188,16 +247,21 @@ var
   LContentDirectory: string;
   LInstallDirectory: string;
 begin
+  AttachProgressEvents();
   try
+    FProgress.SetTasks(['Downloading', 'Installing']);
     Result := DownloadPackage(APackage, AVersion, LContentDirectory);
     if Result then
     begin
+      FProgress.NextTask();
       LInstallDirectory := GetInstallDirectoryForPackage(APackage);
       Result := FInstaller.Install(LContentDirectory, LInstallDirectory);
       if Result then
-        Result := ExtendInfoFile(APackage, AVersion, LInstallDirectory)
+        Result := ExtendInfoFile(APackage, AVersion, LInstallDirectory);
+      FProgress.Completed();
     end;
   finally
+    DetachProgressEvents();
     CleanupTemp();
   end;
 
@@ -211,13 +275,19 @@ function TDNSetup.InstallDirectory(const ADirectory: string): Boolean;
 var
   LInstallDirectory: string;
 begin
-  LInstallDirectory := GetInstallDirectoryForDirectory(ADirectory);
-  Result := FInstaller.Install(ADirectory, LInstallDirectory);
-
-  if Result then
-    ReportInfo('Installation finished')
-  else
-    ReportError('Installation failed');
+  AttachProgressEvents();
+  try
+    FProgress.SetTasks(['Installing']);
+    LInstallDirectory := GetInstallDirectoryForDirectory(ADirectory);
+    Result := FInstaller.Install(ADirectory, LInstallDirectory);
+    FProgress.Completed();
+    if Result then
+      ReportInfo('Installation finished')
+    else
+      ReportError('Installation failed');
+  finally
+    DetachProgressEvents();
+  end;
 end;
 
 procedure TDNSetup.ReportError(const AError: string);
@@ -245,6 +315,11 @@ begin
   FOnMessage := Value;
 end;
 
+procedure TDNSetup.SetOnProgress(const Value: TDNProgressEvent);
+begin
+  FOnProgress := Value;
+end;
+
 function TDNSetup.Uninstall(const APackage: IDNPackage): Boolean;
 begin
   Result := UninstallDirectory(GetInstallDirectoryForPackage(APackage));
@@ -252,12 +327,19 @@ end;
 
 function TDNSetup.UninstallDirectory(const ADirectory: string): Boolean;
 begin
-  ReportInfo('Uninstalling...');
-  Result := FUninstaller.Uninstall(ADirectory);
-  if Result then
-    ReportInfo('success')
-  else
-    ReportError('failed');
+  AttachProgressEvents();
+  try
+    ReportInfo('Uninstalling...');
+    FProgress.SetTasks(['Uninstalling']);
+    Result := FUninstaller.Uninstall(ADirectory);
+    FProgress.Completed();
+    if Result then
+      ReportInfo('success')
+    else
+      ReportError('failed');
+  finally
+    DetachProgressEvents();
+  end;
 end;
 
 function TDNSetup.Update(const APackage: IDNPackage;

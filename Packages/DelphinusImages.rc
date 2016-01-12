@@ -1,2 +1,6 @@
 Icon_Dolphin16 ICON "..\\Icons\\Dolphin16.ico"
+Icon_Windows ICON "..\\Icons\\Windows.ico"
+Icon_Android ICON "..\\Icons\Android.ico"
+Icon_Mac ICON "..\\Icons\\Mac.ico"
+Icon_IOS ICON "..\\Icons\\IOS.ico"
 Jpg_Package RCDATA "..\\Icons\\Package.jpg"
