@@ -25,7 +25,6 @@ uses
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
   DN.PackageFilter,
-  Delphinus.Filterproperties,
   ExtCtrls,
   StdCtrls,
   Registry;
@@ -70,7 +69,6 @@ type
     FCategory: TPackageCategory;
     FProgressDialog: TProgressDialog;
     FFilter: string;
-    FPackageFilter: TPackageFilter;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -87,12 +85,9 @@ type
     procedure ShowDetail(const APackage: IDNPackage);
     procedure LoadSettings(out ASettings: TDelphinusSettings);
     procedure SaveSettings(const ASettings: TDelphinusSettings);
-    procedure LoadFilters(ARegistry: TRegistry; AFilter: TObjectList<TFilterProperties>);
-    procedure SaveFilters(ARegistry: TRegistry; AFilter: TObjectList<TFilterProperties>);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
-    procedure HandlePackageFilterChanged(Sender: TObject; ANewFilter: TPackageFilter);
     procedure HandleSelectedPackageChanged(Sender: TObject);
     function GetActivePackageSource: TList<IDNPackage>;
     procedure RefreshOverview();
@@ -241,12 +236,10 @@ begin
   FCategoryFilteView.Width := 200;
   FCategoryFilteView.Align := alLeft;
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
-  FCategoryFilteView.OnFilterChanged := HandlePackageFilterChanged;
   FCategoryFilteView.Parent := Self;
 
 
   LoadSettings(FSettings);
-  FCategoryFilteView.Settings := FSettings;
   RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
@@ -323,8 +316,6 @@ procedure TDelphinusDialog.FilterPackage(const APackage: IDNPackage;
   var AAccepted: Boolean);
 begin
   AAccepted := ((FFilter = '') or ContainsText(APackage.Name, FFilter));
-  if AAccepted and Assigned(FPackageFilter) then
-    FPackageFilter(APackage, AAccepted);
 end;
 
 procedure TDelphinusDialog.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -443,13 +434,6 @@ begin
   RefreshOverview();
 end;
 
-procedure TDelphinusDialog.HandlePackageFilterChanged(Sender: TObject;
-  ANewFilter: TPackageFilter);
-begin
-  FPackageFilter := ANewFilter;
-  GetActiveOverView.ApplyFilter;
-end;
-
 procedure TDelphinusDialog.HandleSelectedPackageChanged(Sender: TObject);
 begin
   ShowDetail(GetActiveOverView().SelectedPackage);
@@ -477,32 +461,6 @@ begin
   Result := Assigned(GetInstalledPackage(APackage));
 end;
 
-procedure TDelphinusDialog.LoadFilters(ARegistry: TRegistry;
-  AFilter: TObjectList<TFilterProperties>);
-var
-  LFilter: TFilterProperties;
-  LName: string;
-  LNames: TStringList;
-  LPlatforms: TDNCompilerPlatforms;
-begin
-  LNames := TStringList.Create();
-  ARegistry.GetKeyNames(LNames);
-  for LName in LNames do
-  begin
-    if ARegistry.OpenKeyReadOnly(LName) then
-    begin
-      LFilter := TFilterProperties.Create();
-      LFilter.Caption := LName;
-      if ARegistry.ValueExists('Platforms') then
-      begin
-        Byte(LPlatforms) := ARegistry.ReadInteger('Platforms');
-        LFilter.Platforms := LPlatforms;
-      end;
-      AFilter.Add(LFilter);
-    end;
-  end;
-end;
-
 procedure TDelphinusDialog.LoadSettings(out ASettings: TDelphinusSettings);
 var
   LRegistry: TRegistry;
@@ -513,11 +471,7 @@ begin
     LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
     LRegistry.RootKey := HKEY_CURRENT_USER;
     if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), False) then
-    begin
       FSettings.OAuthToken := LRegistry.ReadString(COAuthTokenKey);
-      if LRegistry.OpenKeyReadOnly(CFiltersSubKey) then
-        LoadFilters(LRegistry, FSettings.Filters);
-    end;
   finally
     LRegistry.Free;
   end;
@@ -555,24 +509,6 @@ begin
   FDetailView.Package := nil;
 end;
 
-procedure TDelphinusDialog.SaveFilters(ARegistry: TRegistry;
-  AFilter: TObjectList<TFilterProperties>);
-var
-  LFilter: TFilterProperties;
-begin
-  for LFilter in AFilter do
-  begin
-    if ARegistry.OpenKey(LFilter.Caption, True) then
-    begin
-      try
-        ARegistry.WriteInteger('Platforms', Byte(LFilter.Platforms));
-      finally
-        ARegistry.CloseKey();
-      end;
-    end;
-  end;
-end;
-
 procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
 var
   LRegistry: TRegistry;
@@ -583,12 +519,7 @@ begin
     LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
     LRegistry.RootKey := HKEY_CURRENT_USER;
     if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), True) then
-    begin
       LRegistry.WriteString(COAuthTokenKey, FSettings.OAuthToken);
-
-      if LRegistry.DeleteKey(CFiltersSubKey) and LRegistry.OpenKey(CFiltersSubKey, True) then
-        SaveFilters(LRegistry, FSettings.Filters);
-    end;
   finally
     LRegistry.Free;
   end;

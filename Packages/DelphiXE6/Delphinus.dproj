@@ -188,11 +188,6 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.PackageFilter.pas"/>
-        <DCCReference Include="..\Delphinus.FilterProperties.Dialog.pas">
-            <Form>FilterPropertiesDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="..\Delphinus.FilterProperties.pas"/>
         <DCCReference Include="Delphinus.Theming.pas"/>
         <DCCReference Include="..\..\DN.Progress.pas"/>
         <DCCReference Include="..\..\DN.Progress.Intf.pas"/>
