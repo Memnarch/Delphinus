@@ -104,14 +104,11 @@
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="dbrtl.dcp"/>
         <DCCReference Include="DbxCommonDriver.dcp"/>
-        <DCCReference Include="IndySystem.dcp"/>
-        <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="IndyCore.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="..\Delphinus.Main.pas"/>
         <DCCReference Include="..\Delphinus.Controller.pas"/>
         <DCCReference Include="..\Delphinus.Dialog.pas">
             <Form>DelphinusDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.Compiler.Intf.pas"/>
         <DCCReference Include="..\..\DN.Compiler.MSBuild.pas"/>
@@ -132,7 +129,6 @@
         <DCCReference Include="..\..\DN.Zip.pas"/>
         <DCCReference Include="..\Delphinus.SetupDialog.pas">
             <Form>SetupDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.PackageProvider.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.Installed.pas"/>
@@ -149,7 +145,6 @@
         <DCCReference Include="..\..\DN.Graphics.pas"/>
         <DCCReference Include="..\..\DN.PackageDetailView.pas">
             <Form>PackageDetailView</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="..\..\DN.JSonFile.Uninstallation.pas"/>
@@ -164,10 +159,8 @@
         <DCCReference Include="..\..\DN.JSon.pas"/>
         <DCCReference Include="..\Delphinus.Forms.pas"/>
         <DCCReference Include="..\Delphinus.ResourceNames.pas"/>
-        <DCCReference Include="..\..\DN.PackageProvider.GitHub.Authentication.pas"/>
         <DCCReference Include="..\Delphinus.OptionsDialog.pas">
             <Form>DelphinusOptionsDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Delphinus.Settings.pas"/>
         <DCCReference Include="..\..\DN.Setup.Intf.pas"/>
@@ -176,24 +169,22 @@
         <DCCReference Include="..\..\DN.IOUtils.pas"/>
         <DCCReference Include="..\Delphinus.LicenseDialog.pas">
             <Form>LicenseDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Delphinus.CategoryFilterView.pas">
             <Form>CategoryFilterView</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="..\Delphinus.ProgressDialog.pas">
             <Form>ProgressDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.PackageFilter.pas"/>
         <DCCReference Include="Delphinus.Theming.pas"/>
         <DCCReference Include="..\..\DN.Progress.pas"/>
         <DCCReference Include="..\..\DN.Progress.Intf.pas"/>
-        <RcCompile Include="..\DelphinusImages.rc">
-            <Form>DelphinusImages.res</Form>
-        </RcCompile>
+        <DCCReference Include="..\..\DN.HttpClient.Intf.pas"/>
+        <DCCReference Include="..\..\DN.HttpClient.pas"/>
+        <DCCReference Include="..\..\DN.HttpClient.WinHttp.pas"/>
+        <DCCReference Include="..\..\DN.Import.WinHttp.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -32,7 +32,8 @@ unit DN.Import.WinHttp;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.Variants, System.Win.StdVCL, Vcl.Graphics, Vcl.OleServer, Winapi.ActiveX;
+uses
+  Windows, Classes, Variants, StdVCL, Graphics, OleServer, ActiveX;
   
 
 // *********************************************************************//
@@ -228,7 +229,8 @@ type
 
 implementation
 
-uses System.Win.ComObj;
+uses
+  ComObj;
 
 class function CoWinHttpRequest.Create: IWinHttpRequest;
 begin

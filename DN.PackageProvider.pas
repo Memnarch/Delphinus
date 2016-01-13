@@ -13,7 +13,6 @@ uses
   Classes,
   Types,
   SysUtils,
-  IdHttp,
   Generics.Collections,
   DN.Package.Intf,
   DN.PackageProvider.Intf;

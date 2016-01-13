@@ -121,6 +121,8 @@ uses
   DN.Uninstaller.IDE,
   DN.Setup,
   Delphinus.OptionsDialog,
+  DN.HttpClient.Intf,
+  DN.HttpClient.WinHttp,
   StrUtils;
 
 {$R *.dfm}
@@ -237,7 +239,6 @@ begin
   FCategoryFilteView.Align := alLeft;
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.Parent := Self;
-
 
   LoadSettings(FSettings);
   RecreatePackageProvider();
@@ -478,8 +479,12 @@ begin
 end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;
+var
+  LClient: IDNHttpClient;
 begin
-  FPackageProvider := TDNGitHubPackageProvider.Create(FSettings.OAuthToken);
+  LClient := TDNWinHttpClient.Create();
+  LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
+  FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;

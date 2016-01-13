@@ -40,10 +40,10 @@ var
 implementation
 
 uses
-  IdHttp,
-  IdSSLOpenSSl,
-  DN.PackageProvider.GitHub.Authentication,
-  DN.JSon;
+  DN.PackageProvider.GitHub,
+  DN.JSon,
+  DN.HttpClient.Intf,
+  DN.HttpClient.WinHttp;
 
 {$R *.dfm}
 
@@ -51,36 +51,26 @@ uses
 
 procedure TDelphinusOptionsDialog.btnTestClick(Sender: TObject);
 var
-  LRequest: TIdHTTP;
-  LResponse: TStringStream;
+  LClient: IDNHttpClient;
+  LResult: Integer;
+  LResponse: string;
   LJSon: TJSONObject;
 begin
-  LRequest := TIdHTTP.Create(nil);
-  LResponse := TStringStream.Create('', TEncoding.UTF8);
-  try
-    LRequest.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(LRequest);
-    LRequest.HandleRedirects := True;
-    LRequest.Request.Authentication := TGithubAuthentication.Create();
-    LRequest.Request.Authentication.Password := Settings.OAuthToken;
-    LRequest.ReadTimeout := 30000;
-    LRequest.Request.UserAgent := 'Delphinus';
+  LClient := TDNWinHttpClient.Create();
+  LClient.Authentication := Format(CGithubOAuthAuthentication, [Settings.OAuthToken]);
+  LResult := LClient.GetText('https://api.github.com/user', LResponse);
+  if LResult = HTTPErrorOk then
+  begin
+    LJSon := TJSonObject.ParseJSONValue(LResponse) as TJSonObject;
     try
-      LRequest.Get('https://api.github.com/user', LResponse);
-    except
-    end;
-
-    if LRequest.ResponseCode = 200 then
-    begin
-      LJSon := TJSonObject.ParseJSONValue(LResponse.DataString) as TJSonObject;
       lbResponse.Caption := 'Authenticated as ' + LJSon.GetValue('login').Value;
-    end
-    else
-    begin
-      lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LRequest.ResponseCode) + ': ' + LRequest.ResponseText;
+    finally
+      LJSon.Free;
     end;
-  finally
-    LResponse.Free;
-    LRequest.Free;
+  end
+  else
+  begin
+    lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LResult);
   end;
 end;
 

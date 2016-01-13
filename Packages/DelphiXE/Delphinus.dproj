@@ -68,9 +68,6 @@
 			<DCCReference Include="vclimg.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="DbxCommonDriver.dcp"/>
-			<DCCReference Include="IndySystem.dcp"/>
-			<DCCReference Include="IndyProtocols.dcp"/>
-			<DCCReference Include="IndyCore.dcp"/>
 			<DCCReference Include="..\Delphinus.Main.pas"/>
 			<DCCReference Include="..\Delphinus.Controller.pas"/>
 			<DCCReference Include="..\Delphinus.Dialog.pas">
@@ -128,7 +125,6 @@
 			<DCCReference Include="..\..\DN.JSon.pas"/>
 			<DCCReference Include="..\Delphinus.Forms.pas"/>
 			<DCCReference Include="..\Delphinus.ResourceNames.pas"/>
-			<DCCReference Include="..\..\DN.PackageProvider.GitHub.Authentication.pas"/>
 			<DCCReference Include="..\Delphinus.OptionsDialog.pas">
 				<Form>DelphinusOptionsDialog</Form>
 			</DCCReference>
@@ -147,6 +143,10 @@
 			<DCCReference Include="..\..\DN.PackageFilter.pas"/>
 			<DCCReference Include="..\..\DN.Progress.Intf.pas"/>
 			<DCCReference Include="..\..\DN.Progress.pas"/>
+			<DCCReference Include="..\..\DN.HttpClient.Intf.pas"/>
+			<DCCReference Include="..\..\DN.HttpClient.pas"/>
+			<DCCReference Include="..\..\DN.HttpClient.WinHttp.pas"/>
+			<DCCReference Include="..\..\DN.Import.WinHttp.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>
