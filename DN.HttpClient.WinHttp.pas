@@ -44,6 +44,7 @@ var
   LRead, LWritten: Int64;
 begin
   FRequest.Open('Get', AUrl, False);
+  FRequest.SetRequestHeader('Authorization', Authentication);
   FRequest.Send('');
   Result := FRequest.Status;
   if Result = HTTPErrorOk then
