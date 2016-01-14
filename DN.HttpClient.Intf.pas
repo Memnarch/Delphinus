@@ -7,6 +7,7 @@ uses
 
 const
   HTTPErrorOk = 200;
+  HTTPErrorNotModified = 304;
 
 type
   IDNHttpClient = interface

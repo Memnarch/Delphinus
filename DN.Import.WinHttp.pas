@@ -148,7 +148,7 @@ type
                              Flags: HTTPREQUEST_SETCREDENTIALS_FLAGS); safecall;
     procedure Open(const Method: WideString; const Url: WideString; Async: OleVariant); safecall;
     procedure SetRequestHeader(const Header: WideString; const Value: WideString); safecall;
-    function GetResponseHeader(const Header: WideString): WideString; safecall;
+    function GetResponseHeader(const Header: WideString; out Value: WideString): HResult; stdcall;
     function GetAllResponseHeaders: WideString; safecall;
     procedure Send(Body: OleVariant); safecall;
     function Get_Status: Integer; safecall;
