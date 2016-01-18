@@ -27,7 +27,7 @@ uses
   DN.PackageFilter,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions;
 
 type
   TDelphinusDialog = class(TForm)
@@ -89,6 +89,7 @@ type
     function CreateSetup: IDNSetup;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     procedure HandleSelectedPackageChanged(Sender: TObject);
+    procedure HandleAsyncProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     function GetActivePackageSource: TList<IDNPackage>;
     procedure RefreshOverview();
     procedure DoFilter(const AFilter: string);
@@ -123,6 +124,7 @@ uses
   Delphinus.OptionsDialog,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
+  DN.Progress.Intf,
   StrUtils;
 
 {$R *.dfm}
@@ -156,19 +158,28 @@ procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
   TThread.CreateAnonymousThread(
     procedure
+    var
+      LProgress: IDNProgress;
     begin
-      if FPackageProvider.Reload() then
-      begin
-        FPackages.Clear;
-        FPackages.AddRange(FPackageProvider.Packages);
-      end;
-      TThread.Queue(nil,
-        procedure
+      try
+        if Supports(FPackageProvider, IDNProgress, LProgress) then
+          LProgress.OnProgress := HandleAsyncProgress;
+        if FPackageProvider.Reload() then
         begin
-          FCategoryFilteView.OnlineCount := FPackages.Count;
-          RefreshInstalledPackages();
-          FProgressDialog.ModalResult := mrOk;
-        end);
+          FPackages.Clear;
+          FPackages.AddRange(FPackageProvider.Packages);
+        end;
+      finally
+        if Assigned(LProgress) then
+          LProgress.OnProgress := nil;
+        TThread.Queue(nil,
+          procedure
+          begin
+            FCategoryFilteView.OnlineCount := FPackages.Count;
+            RefreshInstalledPackages();
+            FProgressDialog.ModalResult := mrOk;
+          end);
+      end;
     end).Start;
   FProgressDialog.Caption := 'Delphinus';
   FProgressDialog.Task := 'Refreshing';
@@ -426,6 +437,18 @@ begin
     if (LPackage.Versions.Count > 0) and (LPackage.Versions[0].Name <> LVersion) then
       Result := LPackage.Versions[0].Name;
   end;
+end;
+
+procedure TDelphinusDialog.HandleAsyncProgress(const ATask, AItem: string;
+  AProgress, AMax: Int64);
+begin
+  TThread.Queue(nil,
+    procedure
+    begin
+      FProgressDialog.Task := AItem;
+      FProgressDialog.Progress := AProgress;
+    end
+  );
 end;
 
 procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject;

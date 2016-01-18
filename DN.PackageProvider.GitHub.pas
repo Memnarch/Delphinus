@@ -317,12 +317,13 @@ end;
 
 function TDNGitHubPackageProvider.Reload: Boolean;
 var
-  LRoot: TJSONObject;
+  LRoot, LItem: TJSONObject;
   LItems: TJSONArray;
   i: Integer;
   LSearchResponse: string;
 begin
   Result := False;
+  FProgress.SetTasks(['Reolading']);
   if FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk then
   begin
     Packages.Clear();
@@ -331,8 +332,11 @@ begin
       LItems := LRoot.GetValue('items') as TJSONArray;
       for i := 0 to LItems.Count - 1 do
       begin
-        AddPackageFromJSon(LItems.Items[i] as TJSONObject);
+        LItem := LItems.Items[i] as TJSONObject;
+        FProgress.SetTaskProgress(LItem.GetValue('name').Value, i, LItems.Count);
+        AddPackageFromJSon(LItem);
       end;
+      FProgress.Completed();
     finally
       LRoot.Free;
     end;
