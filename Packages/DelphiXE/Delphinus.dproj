@@ -150,6 +150,7 @@
 			<DCCReference Include="..\..\DN.HttpClient.Cache.Intf.pas"/>
 			<DCCReference Include="..\..\DN.HttpClient.Cache.pas"/>
 			<DCCReference Include="..\..\DN.Environment.pas"/>
+			<DCCReference Include="..\..\DN.ComCtrls.Helper.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

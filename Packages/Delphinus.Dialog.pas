@@ -27,7 +27,7 @@ uses
   DN.PackageFilter,
   ExtCtrls,
   StdCtrls,
-  Registry, System.Actions;
+  Registry;
 
 type
   TDelphinusDialog = class(TForm)

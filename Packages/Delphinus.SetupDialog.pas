@@ -20,7 +20,10 @@ uses
   StdCtrls,
   DN.Types,
   DN.Setup.Intf,
-  Delphinus.Forms, ComCtrls, ExtCtrls;
+  Delphinus.Forms,
+  ComCtrls,
+  ExtCtrls,
+  DN.ComCtrls.Helper;
 
 const
   CStart = WM_USER + 1;
