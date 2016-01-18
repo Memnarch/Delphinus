@@ -34,6 +34,7 @@ type
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);
     function GetInfoFile(const AAuthor, ARepository, AVersion: string; AInfo: TInfoFile): Boolean;
+    procedure HandleDownloadProgress(AProgress, AMax: Int64);
   protected
     function GetLicense(const APackage: TDNGitHubPackage): string;
     //properties for interfaceredirection
@@ -162,8 +163,9 @@ const
 begin
   FProgress.SetTasks(['Downloading']);
   LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
+  FClient.OnProgress := HandleDownloadProgress;
   Result := FClient.Download(APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch), LArchiveFile) = HTTPErrorOk;
-
+  FClient.OnProgress := nil;
   if Result then
   begin
     LFolder := TPath.Combine(AFolder, TGuid.NewGuid.ToString);
@@ -251,6 +253,12 @@ begin
       Result := 'An error occured while doanloading the license information';
     end;
   end;
+end;
+
+procedure TDNGitHubPackageProvider.HandleDownloadProgress(AProgress,
+  AMax: Int64);
+begin
+  FProgress.SetTaskProgress('Archive', AProgress, AMax);
 end;
 
 procedure TDNGitHubPackageProvider.LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);

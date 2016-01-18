@@ -11,18 +11,30 @@ type
   TDNHttpClient = class(TInterfacedObject, IDNHttpClient)
   private
     FAuthentication: string;
+    FOnProgress: TProgressEvent;
     function GetAuthentication: string;
     procedure SetAuthentication(const Value: string);
+    function GetOnProgress: TProgressEvent;
+    procedure SetOnProgress(const Value: TProgressEvent);
+  protected
+    procedure DoProgress(AProgress, AMax: Int64);
   public
     function Get(const AUrl: string; AResponse: TStream): Integer; virtual; abstract;
     function GetText(const AUrl: string; out AResponse: string): Integer; virtual;
     function Download(const AUrl, ATargetFile: string): Integer; virtual;
     property Authentication: string read GetAuthentication write SetAuthentication;
+    property OnProgress: TProgressEvent read GetOnProgress write SetOnProgress;
   end;
 
 implementation
 
 { TDNHttpClient }
+
+procedure TDNHttpClient.DoProgress(AProgress, AMax: Int64);
+begin
+  if Assigned(FOnProgress) then
+    FOnProgress(AProgress, AMax);
+end;
 
 function TDNHttpClient.Download(const AUrl, ATargetFile: string): Integer;
 var
@@ -39,6 +51,11 @@ end;
 function TDNHttpClient.GetAuthentication: string;
 begin
   Result := FAuthentication;
+end;
+
+function TDNHttpClient.GetOnProgress: TProgressEvent;
+begin
+  Result := FOnProgress;
 end;
 
 function TDNHttpClient.GetText(const AUrl: string;
@@ -59,6 +76,11 @@ end;
 procedure TDNHttpClient.SetAuthentication(const Value: string);
 begin
   FAuthentication := Value;
+end;
+
+procedure TDNHttpClient.SetOnProgress(const Value: TProgressEvent);
+begin
+  FOnProgress := Value;
 end;
 
 end.
