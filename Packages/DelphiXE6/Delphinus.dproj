@@ -187,6 +187,7 @@
         <DCCReference Include="..\..\DN.Import.WinHttp.pas"/>
         <DCCReference Include="..\..\DN.HttpClient.Cache.Intf.pas"/>
         <DCCReference Include="..\..\DN.HttpClient.Cache.pas"/>
+        <DCCReference Include="..\..\DN.Environment.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

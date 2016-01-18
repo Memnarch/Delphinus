@@ -27,6 +27,7 @@ uses
   ActiveX,
   Windows,
   IOUtils,
+  DN.Environment,
   DN.HttpClient.Intf,
   DN.HttpClient.Cache;
 
@@ -34,7 +35,7 @@ uses
 
 constructor TDNWinHttpClient.Create;
 begin
-  FCache := TDNHttpCache.Create(TPath.Combine(TPath.GetTempPath(), 'Delphinus'));
+  FCache := TDNHttpCache.Create(TPath.Combine(GetDelphinusTempFolder(), 'HttpCache'));
   inherited;
 end;
 

@@ -102,7 +102,8 @@ contains
   DN.HttpClient.WinHttp in '..\..\DN.HttpClient.WinHttp.pas',
   DN.Import.WinHttp in '..\..\DN.Import.WinHttp.pas',
   DN.HttpClient.Cache.Intf in '..\..\DN.HttpClient.Cache.Intf.pas',
-  DN.HttpClient.Cache in '..\..\DN.HttpClient.Cache.pas';
+  DN.HttpClient.Cache in '..\..\DN.HttpClient.Cache.pas',
+  DN.Environment in '..\..\DN.Environment.pas';
 
 end.
 
