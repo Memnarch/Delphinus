@@ -11,18 +11,29 @@ type
   TDNHttpClient = class(TInterfacedObject, IDNHttpClient)
   private
     FAuthentication: string;
+    FAccept: string;
     FOnProgress: TProgressEvent;
+    FIgnoreCacheExpiration: Boolean;
     function GetAuthentication: string;
     procedure SetAuthentication(const Value: string);
     function GetOnProgress: TProgressEvent;
     procedure SetOnProgress(const Value: TProgressEvent);
+    function GetAccept: string;
+    procedure SetAccept(const Value: string);
+    function GetLastResponseSoure: TResponseSource;
+    function GetIgnoreCacheExpiration: Boolean;
+    procedure SetIgnoreCacheExpiration(const Value: Boolean);
   protected
+    FLastResponseSource: TResponseSource;
     procedure DoProgress(AProgress, AMax: Int64);
   public
     function Get(const AUrl: string; AResponse: TStream): Integer; virtual; abstract;
     function GetText(const AUrl: string; out AResponse: string): Integer; virtual;
     function Download(const AUrl, ATargetFile: string): Integer; virtual;
     property Authentication: string read GetAuthentication write SetAuthentication;
+    property Accept: string read GetAccept write SetAccept;
+    property LastResponseSource: TResponseSource read GetLastResponseSoure;
+    property IgnoreCacheExpiration: Boolean read GetIgnoreCacheExpiration write SetIgnoreCacheExpiration;
     property OnProgress: TProgressEvent read GetOnProgress write SetOnProgress;
   end;
 
@@ -48,9 +59,24 @@ begin
   end;
 end;
 
+function TDNHttpClient.GetAccept: string;
+begin
+  Result := FAccept;
+end;
+
 function TDNHttpClient.GetAuthentication: string;
 begin
   Result := FAuthentication;
+end;
+
+function TDNHttpClient.GetIgnoreCacheExpiration: Boolean;
+begin
+  Result := FIgnoreCacheExpiration;
+end;
+
+function TDNHttpClient.GetLastResponseSoure: TResponseSource;
+begin
+  Result := FLastResponseSource;
 end;
 
 function TDNHttpClient.GetOnProgress: TProgressEvent;
@@ -73,9 +99,19 @@ begin
   end;
 end;
 
+procedure TDNHttpClient.SetAccept(const Value: string);
+begin
+  FAccept := Value;
+end;
+
 procedure TDNHttpClient.SetAuthentication(const Value: string);
 begin
   FAuthentication := Value;
+end;
+
+procedure TDNHttpClient.SetIgnoreCacheExpiration(const Value: Boolean);
+begin
+  FIgnoreCacheExpiration := Value;
 end;
 
 procedure TDNHttpClient.SetOnProgress(const Value: TProgressEvent);

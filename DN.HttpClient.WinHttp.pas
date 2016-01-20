@@ -111,6 +111,7 @@ var
   LEntry: IDNHttpCacheEntry;
   LETag, LCacheControl: WideString;
 begin
+  FLastResponseSource := rsServer;
   RequiresRequest();
 
   FRequest.Open('Get', AUrl, False);
@@ -118,11 +119,15 @@ begin
   if Authentication <> '' then
     FRequest.SetRequestHeader('Authorization', Authentication);
 
+  if Accept <> '' then
+    FRequest.SetRequestHeader('Accept', Accept);
+
   if FCache.TryGetCache(AUrl, LEntry) then
   begin
-    if not LEntry.IsExpired then
+    if IgnoreCacheExpiration or not LEntry.IsExpired then
     begin
       LEntry.Load(AResponse);
+      FLastResponseSource := rsCache;
       Exit(HTTPErrorOk);
     end
     else
@@ -137,6 +142,9 @@ begin
   if (Result = HTTPErrorNotModified) and Assigned(LEntry) then
   begin
     LEntry.Load(AResponse);
+    //if it expired but is still valid revalidate it for its last MaxAge
+    LEntry.LastModified := Now();
+    FLastResponseSource := rsCache;
     Exit(HTTPErrorOk);
   end;
 

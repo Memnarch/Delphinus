@@ -29,14 +29,21 @@ type
   private
     FClient: IDNHttpClient;
     FProgress: IDNProgress;
-    function DownloadVersionMeta(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion: string): Boolean;
+    FPushDates: TDictionary<string, string>;
+    function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
     procedure AddPackageFromJSon(AJSon: TJSONObject);
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);
     function GetInfoFile(const AAuthor, ARepository, AVersion: string; AInfo: TInfoFile): Boolean;
+    function GetFileText(const AAuthor, ARepository, AVersion, AFilePath: string; out AText: string): Boolean;
+    function GetFileStream(const AAuthor, ARepository, AVersion, AFilePath: string; AFile: TStream): Boolean;
+    function GetReleaseText(const AAuthor, ARepository: string; out AReleases: string): Boolean;
     procedure HandleDownloadProgress(AProgress, AMax: Int64);
   protected
     function GetLicense(const APackage: TDNGitHubPackage): string;
+    function GetPushDateFile: string;
+    procedure SavePushDates;
+    procedure LoadPushDates;
     //properties for interfaceredirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
@@ -62,15 +69,16 @@ uses
   DN.Zip,
   DN.Package.Version,
   DN.Package.Version.Intf,
-  DN.Progress;
+  DN.Progress,
+  DN.Environment;
 
 const
-  CGithubRaw = 'https://raw.githubusercontent.com/';
-  CGithubRawReferencedFile = CGithubRaw + '%s/%s/%s/%s';//User/Repo/Reference/Filename
+  CGithubFileContent = 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s';//user/repo filepath/branch
   CGitRepoSearch = 'https://api.github.com/search/repositories?q="Delphinus-Support"+in:readme&per_page=100';
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
-//  CGitRepoSearch = 'https://api.github.com/search/repositories?q=tetris&per_page=30';
   CJpg_Package = 'Jpg_Package';
+  CMediaTypeRaw = 'application/vnd.github.v3.raw';
+  CPushDates = 'PushDates.ini';
 
 { TDCPMPackageProvider }
 
@@ -89,22 +97,35 @@ begin
   inherited Create();
   FClient := AClient;
   FProgress := TDNProgress.Create();
+  FPushDates := TDictionary<string, string>.Create();
+  LoadPushDates();
 end;
 
 function TDNGitHubPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
   out APackage: IDNPackage): Boolean;
 var
   LPackage: TDNGitHubPackage;
-  LName, LAuthor, LDefaultBranch: string;
+  LName, LAuthor, LDefaultBranch, LReleases: string;
+  LFullName, LPushDate, LOldPushDate: string;
   LHeadInfo: TInfoFile;
   LHomePage: TJSONValue;
 const
   CArchivePlaceholder = '{archive_format}{/ref}';
 begin
   Result := False;
+  LFullName := AItem.GetValue('full_name').Value;
+  LPushDate := AItem.GetValue('pushed_at').Value;
+  if not FPushDates.TryGetValue(LFullName, LOldPushDate) then
+    LOldPushDate := '';
+
   LName := AItem.GetValue('name').Value;
   LAuthor := TJSonObject(AItem.GetValue('owner')).GetValue('login').Value;
   LDefaultBranch := AItem.GetValue('default_branch').Value;
+  if not GetReleaseText(LAuthor, LName, LReleases) then
+    Exit(False);
+
+  //if nothing was pushed or released since last refresh, we can go fullcache and not contact the server
+  FClient.IgnoreCacheExpiration := (LPushDate = LOldPushDate) and (FClient.LastResponseSource = rsCache);
   LHeadInfo := TInfoFile.Create();
   try
     if GetInfoFile(LAuthor, LName, LDefaultBranch, LHeadInfo) then
@@ -138,7 +159,8 @@ begin
       LPackage.Platforms := LHeadInfo.Platforms;
       APackage := LPackage;
       LoadPicture(APackage.Picture, LAuthor, LPackage.RepositoryName, LPackage.DefaultBranch, LHeadInfo.Picture);
-      DownloadVersionMeta(APackage, LAuthor, LName, LHeadInfo.FirstVersion);
+      LoadVersionInfo(APackage, LAuthor, LName, LHeadInfo.FirstVersion, LReleases);
+      FPushDates.AddOrSetValue(LFullName, LPushDate);
       Result := True;
     end;
   finally
@@ -148,6 +170,8 @@ end;
 
 destructor TDNGitHubPackageProvider.Destroy;
 begin
+  SavePushDates();
+  FPushDates.Free;
   FClient := nil;
   FProgress := nil;
   inherited;
@@ -184,46 +208,64 @@ begin
   TFile.Delete(LArchiveFile);
 end;
 
-function TDNGitHubPackageProvider.DownloadVersionMeta(
+function TDNGitHubPackageProvider.LoadVersionInfo(
   const APackage: IDNPackage; const AAuthor, AName,
-  AFirstVersion: string): Boolean;
+  AFirstVersion, AReleases: string): Boolean;
 var
   LArray: TJSONArray;
   LObject: TJSonObject;
   i: Integer;
   LVersionName: string;
   LInfo: TInfoFile;
-  LReleaseResponse: string;
   LVersion: IDNPackageVersion;
 begin
   Result := False;
   LInfo := TInfoFile.Create();
   try
-    if FClient.GetText(Format(CGithubRepoReleases, [AAuthor, AName]), LReleaseResponse) = HTTPErrorOk then
-    begin
-      LArray := TJSOnObject.ParseJSONValue(LReleaseResponse) as TJSONArray;
-      try
-        for i := 0 to LArray.Count - 1 do
+    LArray := TJSOnObject.ParseJSONValue(AReleases) as TJSONArray;
+    try
+      for i := 0 to LArray.Count - 1 do
+      begin
+        LObject := LArray.Items[i] as TJSonObject;
+        LVersionName := LObject.GetValue('tag_name').Value;
+        if GetInfoFile(AAuthor, AName, LVersionName, LInfo) then
         begin
-          LObject := LArray.Items[i] as TJSonObject;
-          LVersionName := LObject.GetValue('tag_name').Value;
-          if GetInfoFile(AAuthor, AName, LVersionName, LInfo) then
-          begin
-            LVersion := TDNPackageVersion.Create();
-            LVersion.Name := LVersionName;
-            LVersion.CompilerMin := LInfo.CompilerMin;
-            LVersion.CompilerMax := LInfo.CompilerMax;
-            APackage.Versions.Add(LVersion);
-          end;
-          if SameText(AFirstVersion, LVersionName) then
-            Break;
+          LVersion := TDNPackageVersion.Create();
+          LVersion.Name := LVersionName;
+          LVersion.CompilerMin := LInfo.CompilerMin;
+          LVersion.CompilerMax := LInfo.CompilerMax;
+          APackage.Versions.Add(LVersion);
         end;
-      finally
-        LArray.Free;
+        if SameText(AFirstVersion, LVersionName) then
+          Break;
       end;
+    finally
+      LArray.Free;
     end;
   finally
     LInfo.Free;
+  end;
+end;
+
+function TDNGitHubPackageProvider.GetFileStream(const AAuthor, ARepository,
+  AVersion, AFilePath: string; AFile: TStream): Boolean;
+begin
+  FClient.Accept := CMediaTypeRaw;
+  try
+    Result := FClient.Get(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AFile) = HTTPErrorOk;
+  finally
+    FClient.Accept := '';
+  end;
+end;
+
+function TDNGitHubPackageProvider.GetFileText(const AAuthor, ARepository,
+  AVersion, AFilePath: string; out AText: string): Boolean;
+begin
+  FClient.Accept := CMediaTypeRaw;
+  try
+    Result := FClient.GetText(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AText) = HTTPErrorOk;
+  finally
+    FClient.Accept := '';
   end;
 end;
 
@@ -232,8 +274,13 @@ function TDNGitHubPackageProvider.GetInfoFile(const AAuthor, ARepository,
 var
   LResponse: string;
 begin
-  Result := (FClient.GetText(CGithubRaw + AAuthor + '/' + ARepository + '/' + AVersion + '/' + CInfoFile, LResponse) = HTTPErrorOk)
-    and AInfo.LoadFromString(LResponse);
+  FClient.Accept := CMediaTypeRaw;
+  try
+    Result := GetFileText(AAuthor, ARepository, AVersion, CInfoFile, LResponse)
+      and AInfo.LoadFromString(LResponse);
+  finally
+    FClient.Accept := '';
+  end;
 end;
 
 function TDNGitHubPackageProvider.GetLicense(
@@ -242,7 +289,7 @@ begin
   Result := '';
   if (APackage.LicenseType <> '') then
   begin
-    if FClient.GetText(Format(CGithubRawReferencedFile, [APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile]), Result) = HTTPErrorOk then
+    if GetFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile, Result) then
     begin
       //if we do not detect a single Windows-Linebreak, we assume Posix-LineBreaks and convert
       if not ContainsStr(Result, sLineBreak) then
@@ -253,6 +300,17 @@ begin
       Result := 'An error occured while doanloading the license information';
     end;
   end;
+end;
+
+function TDNGitHubPackageProvider.GetPushDateFile: string;
+begin
+  Result := TPath.Combine(GetDelphinusTempFolder(), CPushDates);
+end;
+
+function TDNGitHubPackageProvider.GetReleaseText(const AAuthor,
+  ARepository: string; out AReleases: string): Boolean;
+begin
+  Result := FClient.GetText(Format(CGithubRepoReleases, [AAuthor, ARepository]), AReleases) = HTTPErrorOk;
 end;
 
 procedure TDNGitHubPackageProvider.HandleDownloadProgress(AProgress,
@@ -275,7 +333,7 @@ begin
   LPicStream := TMemoryStream.Create();
   try
     LPictureFile := StringReplace(APictureFile, '\', '/', [rfReplaceAll]);
-    if FClient.Get(Format(CGithubRawReferencedFile, [AAuthor, ARepository, AVersion, LPictureFile]), LPicStream) = HTTPErrorOk then
+    if GetFileStream(AAuthor, ARepository, AVersion, LPictureFile, LPicStream) then
     begin
       case AnsiIndexText(ExtractFileExt(APictureFile), ['.png', '.jpg', '.jpeg']) of
         0: LGraphic := TPngImage.Create();
@@ -315,6 +373,24 @@ begin
     LGraphic.Free;
 end;
 
+procedure TDNGitHubPackageProvider.LoadPushDates;
+var
+  LDates: TStringList;
+  i: Integer;
+begin
+  if not TFile.Exists(GetPushDateFile()) then
+    Exit;
+
+  LDates := TStringList.Create();
+  try
+    LDates.LoadFromFile(GetPushDateFile());
+    for i := 0 to LDates.Count - 1 do
+      FPushDates.Add(LDates.Names[i], LDates.ValueFromIndex[i]);
+  finally
+    LDates.Free;
+  end;
+end;
+
 function TDNGitHubPackageProvider.Reload: Boolean;
 var
   LRoot, LItem: TJSONObject;
@@ -341,6 +417,24 @@ begin
       LRoot.Free;
     end;
     Result := True;
+  end;
+end;
+
+procedure TDNGitHubPackageProvider.SavePushDates;
+var
+  LDates: TStringList;
+  LKeys, LValues: TArray<string>;
+  i: Integer;
+begin
+  LDates := TStringList.Create();
+  try
+    LKeys := FPushDates.Keys.ToArray();
+    LValues := FPushDates.Values.ToArray();
+    for i := 0 to FPushDates.Count - 1 do
+      LDates.Add(LKeys[i] + '=' + LValues[i]);
+    LDates.SaveToFile(GetPushDateFile());
+  finally
+    LDates.Free;
   end;
 end;
 
