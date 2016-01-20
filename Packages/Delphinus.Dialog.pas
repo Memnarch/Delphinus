@@ -506,7 +506,8 @@ var
   LClient: IDNHttpClient;
 begin
   LClient := TDNWinHttpClient.Create();
-  LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
+  if FSettings.OAuthToken <> '' then
+    LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
   FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
 end;
 
