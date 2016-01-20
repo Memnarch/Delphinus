@@ -63,7 +63,7 @@ function TDNHttpClient.GetText(const AUrl: string;
 var
   LText: TStringStream;
 begin
-  LText := TStringStream.Create();
+  LText := TStringStream.Create('', TEncoding.UTF8);
   try
     Result := Get(AUrl, LText);
     if Result = HTTPErrorOk then
