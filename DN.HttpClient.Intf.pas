@@ -29,6 +29,8 @@ type
     function Get(const AUrl: string; AResponse: TStream): Integer;
     function GetText(const AUrl: string; out AResponse: string): Integer;
     function Download(const AUrl, ATargetFile: string): Integer;
+    procedure BeginWork;
+    procedure EndWork;
     property Authentication: string read GetAuthentication write SetAuthentication;
     property Accept: string read GetAccept write SetAccept;
     property LastResponseSource: TResponseSource read GetLastResponseSoure;

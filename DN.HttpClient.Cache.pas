@@ -4,7 +4,9 @@ interface
 
 uses
   Classes,
+  Windows,
   SysUtils,
+  SyncObjs,
   Generics.Collections,
   DN.HttpClient.Cache.Intf;
 
@@ -13,11 +15,16 @@ type
   private
     FEntries: TDictionary<string, IDNHttpCacheEntry>;
     FDirectory: string;
+    FKey: string;
+    FMutex: TMutex;
+    FLockCount: Integer;
     procedure LoadCache;
     procedure SaveCache;
   public
     constructor Create(const ADirectory: string);
     destructor Destroy; override;
+    procedure OpenCache;
+    procedure CloseCache;
     procedure AddCache(const AUrl: string; AData: TStream; const ACacheControl: string; const AETag: string);
     function TryGetCache(const AUrl: string; out AEntry: IDNHttpCacheEntry): Boolean;
   end;
@@ -93,18 +100,35 @@ begin
   LEntry.Store(AData);
 end;
 
+procedure TDNHttpCache.CloseCache;
+begin
+  Dec(FLockCount);
+  if FLockCount = 0 then
+  begin
+    SaveCache();
+    FMutex.Release();
+  end;
+end;
+
 constructor TDNHttpCache.Create(const ADirectory: string);
 begin
   inherited Create();
   FEntries := TDictionary<string, IDNHttpCacheEntry>.Create();
   FDirectory := ADirectory;
   ForceDirectories(FDirectory);
-  LoadCache();
+  FKey := StringReplace(ADirectory, '\', '/', [rfReplaceAll]);
+  FMutex := TMutex.Create(nil, False, FKey);
 end;
 
 destructor TDNHttpCache.Destroy;
 begin
-  SaveCache();
+  //If we are still locked, release ownership
+  if FLockCount > 0 then
+  begin
+    SaveCache();
+    FMutex.Release();
+  end;
+  FMutex.Free;
   FEntries.Free;
   inherited;
 end;
@@ -141,6 +165,16 @@ begin
   finally
     LIni.Free;
   end;
+end;
+
+procedure TDNHttpCache.OpenCache;
+begin
+  if FLockCount = 0 then
+  begin
+    FMutex.Acquire();
+    LoadCache();
+  end;
+  Inc(FLockCount);
 end;
 
 procedure TDNHttpCache.SaveCache;

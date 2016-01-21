@@ -30,6 +30,8 @@ type
     function Get(const AUrl: string; AResponse: TStream): Integer; virtual; abstract;
     function GetText(const AUrl: string; out AResponse: string): Integer; virtual;
     function Download(const AUrl, ATargetFile: string): Integer; virtual;
+    procedure BeginWork; virtual;
+    procedure EndWork; virtual;
     property Authentication: string read GetAuthentication write SetAuthentication;
     property Accept: string read GetAccept write SetAccept;
     property LastResponseSource: TResponseSource read GetLastResponseSoure;
@@ -40,6 +42,11 @@ type
 implementation
 
 { TDNHttpClient }
+
+procedure TDNHttpClient.BeginWork;
+begin
+
+end;
 
 procedure TDNHttpClient.DoProgress(AProgress, AMax: Int64);
 begin
@@ -57,6 +64,11 @@ begin
   finally
     LFile.Free;
   end;
+end;
+
+procedure TDNHttpClient.EndWork;
+begin
+
 end;
 
 function TDNHttpClient.GetAccept: string;

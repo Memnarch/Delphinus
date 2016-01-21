@@ -30,6 +30,8 @@ type
     constructor Create;
     destructor Destroy; override;
     function Get(const AUrl: string; AResponse: TStream): Integer; override;
+    procedure BeginWork; override;
+    procedure EndWork; override;
   end;
 
   TOnResponseStart = procedure(Status: Integer; const ContentType: string) of object;
@@ -81,6 +83,12 @@ begin
     LConnectionPoint.Advise(FEvents, ACookie);
 end;
 
+procedure TDNWinHttpClient.BeginWork;
+begin
+  inherited;
+  FCache.OpenCache();
+end;
+
 constructor TDNWinHttpClient.Create;
 var
   LEvents: TDNWinHttpClientEvents;
@@ -103,6 +111,12 @@ begin
   inherited;
 end;
 
+procedure TDNWinHttpClient.EndWork;
+begin
+  inherited;
+  FCache.CloseCache();
+end;
+
 function TDNWinHttpClient.Get(const AUrl: string; AResponse: TStream): Integer;
 var
   LResponse: IStream;
@@ -122,43 +136,48 @@ begin
   if Accept <> '' then
     FRequest.SetRequestHeader('Accept', Accept);
 
-  if FCache.TryGetCache(AUrl, LEntry) then
-  begin
-    if IgnoreCacheExpiration or not LEntry.IsExpired then
+  FCache.OpenCache();
+  try
+    if FCache.TryGetCache(AUrl, LEntry) then
+    begin
+      if IgnoreCacheExpiration or not LEntry.IsExpired then
+      begin
+        LEntry.Load(AResponse);
+        FLastResponseSource := rsCache;
+        Exit(HTTPErrorOk);
+      end
+      else
+      begin
+        FRequest.SetRequestHeader('If-None-Match', LEntry.ETag);
+      end;
+    end;
+
+    FRequest.Send('');
+    Result := FRequest.Status;
+
+    if (Result = HTTPErrorNotModified) and Assigned(LEntry) then
     begin
       LEntry.Load(AResponse);
+      //if it expired but is still valid revalidate it for its last MaxAge
+      LEntry.LastModified := Now();
       FLastResponseSource := rsCache;
       Exit(HTTPErrorOk);
-    end
-    else
-    begin
-      FRequest.SetRequestHeader('If-None-Match', LEntry.ETag);
     end;
-  end;
 
-  FRequest.Send('');
-  Result := FRequest.Status;
-
-  if (Result = HTTPErrorNotModified) and Assigned(LEntry) then
-  begin
-    LEntry.Load(AResponse);
-    //if it expired but is still valid revalidate it for its last MaxAge
-    LEntry.LastModified := Now();
-    FLastResponseSource := rsCache;
-    Exit(HTTPErrorOk);
-  end;
-
-  if Result = HTTPErrorOk then
-  begin
-    LResponse := IUnknown(FRequest.ResponseStream) as IStream;
-    LAdapter := TStreamAdapter.Create(AResponse);
-    LResponse.CopyTo(LAdapter, High(Int64), LRead, LWritten);
-    if FRequest.GetResponseHeader('ETag', LETag) = S_OK then
+    if Result = HTTPErrorOk then
     begin
-      if not FRequest.GetResponseHeader('cache-control', LCacheControl) = S_OK then
-        LCacheControl := '';
-      FCache.AddCache(AUrl, AResponse, LCacheControl, LETag);
+      LResponse := IUnknown(FRequest.ResponseStream) as IStream;
+      LAdapter := TStreamAdapter.Create(AResponse);
+      LResponse.CopyTo(LAdapter, High(Int64), LRead, LWritten);
+      if FRequest.GetResponseHeader('ETag', LETag) = S_OK then
+      begin
+        if not FRequest.GetResponseHeader('cache-control', LCacheControl) = S_OK then
+          LCacheControl := '';
+        FCache.AddCache(AUrl, AResponse, LCacheControl, LETag);
+      end;
     end;
+  finally
+    FCache.CloseCache();
   end;
 end;
 

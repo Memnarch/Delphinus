@@ -31,6 +31,8 @@ type
 
   IDNHttpCache = interface
     ['{133E667C-96D5-4E23-989A-F9CAAA508E6E}']
+    procedure OpenCache;
+    procedure CloseCache;
     procedure AddCache(const AUrl: string; AData: TStream; const CacheControl: string; const AETag: string);
     function TryGetCache(const AUrl: string; out AEntry: IDNHttpCacheEntry): Boolean;
   end;

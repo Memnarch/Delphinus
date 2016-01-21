@@ -14,6 +14,7 @@ uses
   Types,
   Graphics,
   SysUtils,
+  SyncObjs,
   Generics.Collections,
   DN.Package.Github,
   DN.Package.Intf,
@@ -30,6 +31,7 @@ type
     FClient: IDNHttpClient;
     FProgress: IDNProgress;
     FPushDates: TDictionary<string, string>;
+    FDateMutex: TMutex;
     function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
     procedure AddPackageFromJSon(AJSon: TJSONObject);
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
@@ -93,12 +95,15 @@ begin
 end;
 
 constructor TDNGitHubPackageProvider.Create;
+var
+  LKey: string;
 begin
   inherited Create();
   FClient := AClient;
   FProgress := TDNProgress.Create();
   FPushDates := TDictionary<string, string>.Create();
-  LoadPushDates();
+  LKey := StringReplace(GetPushDateFile(), '\', '/', [rfReplaceAll]);
+  FDateMutex := TMutex.Create(nil, False, LKey);
 end;
 
 function TDNGitHubPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
@@ -170,7 +175,7 @@ end;
 
 destructor TDNGitHubPackageProvider.Destroy;
 begin
-  SavePushDates();
+  FDateMutex.Free();
   FPushDates.Free;
   FClient := nil;
   FProgress := nil;
@@ -378,6 +383,8 @@ var
   LDates: TStringList;
   i: Integer;
 begin
+  FDateMutex.Acquire();
+
   if not TFile.Exists(GetPushDateFile()) then
     Exit;
 
@@ -400,23 +407,33 @@ var
 begin
   Result := False;
   FProgress.SetTasks(['Reolading']);
-  if FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk then
-  begin
-    Packages.Clear();
-    LRoot := TJSONObject.ParseJSONValue(LSearchResponse)as TJSONObject;
+  try
+    LoadPushDates();
+    FClient.BeginWork();
     try
-      LItems := LRoot.GetValue('items') as TJSONArray;
-      for i := 0 to LItems.Count - 1 do
+      if FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk then
       begin
-        LItem := LItems.Items[i] as TJSONObject;
-        FProgress.SetTaskProgress(LItem.GetValue('name').Value, i, LItems.Count);
-        AddPackageFromJSon(LItem);
+        Packages.Clear();
+        LRoot := TJSONObject.ParseJSONValue(LSearchResponse)as TJSONObject;
+        try
+          LItems := LRoot.GetValue('items') as TJSONArray;
+          for i := 0 to LItems.Count - 1 do
+          begin
+            LItem := LItems.Items[i] as TJSONObject;
+            FProgress.SetTaskProgress(LItem.GetValue('name').Value, i, LItems.Count);
+            AddPackageFromJSon(LItem);
+          end;
+          FProgress.Completed();
+        finally
+          LRoot.Free;
+        end;
+        Result := True;
       end;
-      FProgress.Completed();
     finally
-      LRoot.Free;
+      FClient.EndWork();
     end;
-    Result := True;
+  finally
+    SavePushDates();
   end;
 end;
 
@@ -435,6 +452,7 @@ begin
     LDates.SaveToFile(GetPushDateFile());
   finally
     LDates.Free;
+    FDateMutex.Release();
   end;
 end;
 
