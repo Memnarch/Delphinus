@@ -132,8 +132,16 @@ begin
   TThread.Synchronize(nil,
   procedure
   begin
-    LService := BorlandIDEServices as IOTAPackageServices;
-    LResult := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
+    try
+      LService := BorlandIDEServices as IOTAPackageServices;
+      LResult := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
+    except
+      on E: Exception do
+      begin
+        LResult := False;
+        DoMessage(mtError, E.Message);
+      end;
+    end;
   end);
   Result := LResult;
 end;
