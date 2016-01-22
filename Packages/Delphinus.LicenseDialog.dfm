@@ -22,9 +22,9 @@ object LicenseDialog: TLicenseDialog
     Left = 3
     Top = 3
     Width = 548
-    Height = 252
+    Height = 247
     Margins.Bottom = 35
-    Align = alClient
+    Anchors = [akLeft, akTop, akRight, akBottom]
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0

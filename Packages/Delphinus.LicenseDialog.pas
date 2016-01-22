@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  Delphinus.Forms;
 
 type
   TLicenseDialog = class(TForm)

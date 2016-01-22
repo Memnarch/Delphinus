@@ -35,7 +35,7 @@ implementation
 
 procedure TDNProgress.Completed;
 begin
-  DoProgress('', '', Length(FTasks)*FTaskSteps, Length(FTasks)*TaskSteps);
+  DoProgress('Completed', '', Length(FTasks)*FTaskSteps, Length(FTasks)*TaskSteps);
 end;
 
 constructor TDNProgress.Create;

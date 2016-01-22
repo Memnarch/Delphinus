@@ -48,7 +48,7 @@ object SetupDialog: TSetupDialog
         Height = 30
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
-        Caption = 'Pg'
+        Caption = 'Package'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -24
