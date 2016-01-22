@@ -34,9 +34,7 @@ requires
   vclimg,
   dbrtl,
   DbxCommonDriver,
-  IndySystem,
-  IndyProtocols,
-  IndyCore;
+  vcl;
 
 contains
   Delphinus.Main in '..\Delphinus.Main.pas',
@@ -86,7 +84,6 @@ contains
   DN.JSon in '..\..\DN.JSon.pas',
   Delphinus.Forms in '..\Delphinus.Forms.pas',
   Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
-  DN.PackageProvider.GitHub.Authentication in '..\..\DN.PackageProvider.GitHub.Authentication.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
   Delphinus.Settings in '..\Delphinus.Settings.pas',
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
@@ -99,7 +96,15 @@ contains
   DN.PackageFilter in '..\..\DN.PackageFilter.pas',
   Delphinus.Theming in 'Delphinus.Theming.pas',
   DN.Progress in '..\..\DN.Progress.pas',
-  DN.Progress.Intf in '..\..\DN.Progress.Intf.pas';
+  DN.Progress.Intf in '..\..\DN.Progress.Intf.pas',
+  DN.HttpClient.Intf in '..\..\DN.HttpClient.Intf.pas',
+  DN.HttpClient in '..\..\DN.HttpClient.pas',
+  DN.HttpClient.WinHttp in '..\..\DN.HttpClient.WinHttp.pas',
+  DN.Import.WinHttp in '..\..\DN.Import.WinHttp.pas',
+  DN.HttpClient.Cache.Intf in '..\..\DN.HttpClient.Cache.Intf.pas',
+  DN.HttpClient.Cache in '..\..\DN.HttpClient.Cache.pas',
+  DN.Environment in '..\..\DN.Environment.pas',
+  DN.ComCtrls.Helper in '..\..\DN.ComCtrls.Helper.pas';
 
 end.
 

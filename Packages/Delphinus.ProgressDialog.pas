@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
-  Controls, Forms, Dialogs, StdCtrls, ComCtrls;
+  Controls, Forms, Dialogs, StdCtrls, ComCtrls,
+  DN.ComCtrls.Helper;
 
 type
   TProgressDialog = class(TForm)

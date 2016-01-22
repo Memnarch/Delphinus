@@ -70,7 +70,8 @@ uses
   IOUtils,
   StrUtils,
   DN.JSonFile.InstalledInfo,
-  DN.Progress;
+  DN.Progress,
+  DN.Environment;
 
 { TDNSetup }
 
@@ -232,7 +233,7 @@ end;
 
 function TDNSetup.GetSetupTempDir: string;
 begin
-  Result := TPath.Combine(GetEnvironmentVariable('Temp'), 'Delphinus');
+  Result := TPath.Combine(GetDelphinusTempFolder(), 'Setup');
 end;
 
 procedure TDNSetup.HandleProgress(const ATask, AItem: string; AProgress,

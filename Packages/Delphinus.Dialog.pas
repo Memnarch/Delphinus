@@ -89,6 +89,7 @@ type
     function CreateSetup: IDNSetup;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     procedure HandleSelectedPackageChanged(Sender: TObject);
+    procedure HandleAsyncProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     function GetActivePackageSource: TList<IDNPackage>;
     procedure RefreshOverview();
     procedure DoFilter(const AFilter: string);
@@ -121,6 +122,9 @@ uses
   DN.Uninstaller.IDE,
   DN.Setup,
   Delphinus.OptionsDialog,
+  DN.HttpClient.Intf,
+  DN.HttpClient.WinHttp,
+  DN.Progress.Intf,
   StrUtils;
 
 {$R *.dfm}
@@ -154,19 +158,28 @@ procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
   TThread.CreateAnonymousThread(
     procedure
+    var
+      LProgress: IDNProgress;
     begin
-      if FPackageProvider.Reload() then
-      begin
-        FPackages.Clear;
-        FPackages.AddRange(FPackageProvider.Packages);
-      end;
-      TThread.Queue(nil,
-        procedure
+      try
+        if Supports(FPackageProvider, IDNProgress, LProgress) then
+          LProgress.OnProgress := HandleAsyncProgress;
+        if FPackageProvider.Reload() then
         begin
-          FCategoryFilteView.OnlineCount := FPackages.Count;
-          RefreshInstalledPackages();
-          FProgressDialog.ModalResult := mrOk;
-        end);
+          FPackages.Clear;
+          FPackages.AddRange(FPackageProvider.Packages);
+        end;
+      finally
+        if Assigned(LProgress) then
+          LProgress.OnProgress := nil;
+        TThread.Queue(nil,
+          procedure
+          begin
+            FCategoryFilteView.OnlineCount := FPackages.Count;
+            RefreshInstalledPackages();
+            FProgressDialog.ModalResult := mrOk;
+          end);
+      end;
     end).Start;
   FProgressDialog.Caption := 'Delphinus';
   FProgressDialog.Task := 'Refreshing';
@@ -237,7 +250,6 @@ begin
   FCategoryFilteView.Align := alLeft;
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.Parent := Self;
-
 
   LoadSettings(FSettings);
   RecreatePackageProvider();
@@ -427,6 +439,18 @@ begin
   end;
 end;
 
+procedure TDelphinusDialog.HandleAsyncProgress(const ATask, AItem: string;
+  AProgress, AMax: Int64);
+begin
+  TThread.Queue(nil,
+    procedure
+    begin
+      FProgressDialog.Task := AItem;
+      FProgressDialog.Progress := AProgress;
+    end
+  );
+end;
+
 procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject;
   ANewCategory: TPackageCategory);
 begin
@@ -478,8 +502,13 @@ begin
 end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;
+var
+  LClient: IDNHttpClient;
 begin
-  FPackageProvider := TDNGitHubPackageProvider.Create(FSettings.OAuthToken);
+  LClient := TDNWinHttpClient.Create();
+  if FSettings.OAuthToken <> '' then
+    LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
+  FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
