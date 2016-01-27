@@ -32,7 +32,6 @@
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_Locale>1031</VerInfo_Locale>
 			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
 			<GenDll>true</GenDll>
 			<SanitizedProjectName>Delphinus_XE6</SanitizedProjectName>
 			<DesignOnlyPackage>true</DesignOnlyPackage>
@@ -151,6 +150,7 @@
 			<DCCReference Include="..\..\DN.HttpClient.Cache.pas"/>
 			<DCCReference Include="..\..\DN.Environment.pas"/>
 			<DCCReference Include="..\..\DN.ComCtrls.Helper.pas"/>
+			<DCCReference Include="..\..\DN.ActiveX.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

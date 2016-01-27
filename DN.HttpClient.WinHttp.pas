@@ -5,7 +5,7 @@ interface
 uses
   Classes,
   SysUtils,
-  ActiveX,
+  DN.ActiveX,
   DN.HttpClient,
   DN.Import.WinHttp,
   DN.HttpClient.Cache.Intf;
@@ -121,7 +121,7 @@ function TDNWinHttpClient.Get(const AUrl: string; AResponse: TStream): Integer;
 var
   LResponse: IStream;
   LAdapter: IStream;
-  LRead, LWritten: Int64;
+  LRead, LWritten: UInt64;
   LEntry: IDNHttpCacheEntry;
   LETag, LCacheControl: WideString;
 begin
@@ -167,7 +167,7 @@ begin
     if Result = HTTPErrorOk then
     begin
       LResponse := IUnknown(FRequest.ResponseStream) as IStream;
-      LAdapter := TStreamAdapter.Create(AResponse);
+      LAdapter := TStreamAdapter.Create(AResponse) as IStream;
       LResponse.CopyTo(LAdapter, High(Int64), LRead, LWritten);
       if FRequest.GetResponseHeader('ETag', LETag) = S_OK then
       begin
