@@ -209,7 +209,7 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Parameters>
-						<Parameters Name="HostApplication">D:\Program Files (x86)\Embarcadero\RAD Studio\8.0\bin\bds.exe</Parameters>
+						<Parameters Name="HostApplication">$(BDS)\bin\bds.exe</Parameters>
 					</Parameters>
 				</Delphi.Personality>
 				<Deployment/>

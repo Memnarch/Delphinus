@@ -78,7 +78,7 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <Debugger_HostApplication>D:\Program Files (x86)\Embarcadero\Studio\14.0\bin\bds.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>$(BDS)\bin\bds.exe</Debugger_HostApplication>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
