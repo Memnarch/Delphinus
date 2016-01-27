@@ -3,16 +3,20 @@ unit Delphinus.DelphiInstallation.View;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Generics.Collections, ComCtrls, DN.DelphiInstallation.Intf, Vcl.StdCtrls,
-  Vcl.CheckLst;
+  Windows, Messages, SysUtils, Variants, Classes,
+  Graphics, Controls, Forms, Dialogs,
+  Generics.Collections, ComCtrls, DN.DelphiInstallation.Intf, StdCtrls,
+  CheckLst, ExtCtrls;
 
 type
   TDelphiInstallationView = class(TFrame)
     View: TCheckListBox;
+    sLine: TShape;
+    cbAll: TCheckBox;
     procedure ViewDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
+    procedure cbAllClick(Sender: TObject);
+    procedure ViewClickCheck(Sender: TObject);
   private
     { Private declarations }
     FInstallations: TList<IDNDelphiInstallation>;
@@ -32,7 +36,25 @@ const
 
 {$R *.dfm}
 
+type
+  TProtectedCheckBox = class(TCheckBox);
+
 { TDelphiInstallationView }
+
+procedure TDelphiInstallationView.cbAllClick(Sender: TObject);
+begin
+  if cbAll.State = cbGrayed then
+  begin
+    cbAll.State := cbChecked;
+  end
+  else
+  begin
+    if cbAll.Checked then
+      View.CheckAll(cbChecked)
+    else
+      View.CheckAll(cbUnchecked);
+  end;
+end;
 
 constructor TDelphiInstallationView.Create(AOwner: TComponent);
 begin
@@ -65,6 +87,25 @@ begin
   end;
 end;
 
+procedure TDelphiInstallationView.ViewClickCheck(Sender: TObject);
+var
+  LCheckedCount: Integer;
+  i: Integer;
+begin
+  LCheckedCount := 0;
+  for i := 0 to View.Items.Count - 1 do
+    if View.Checked[i] then
+      Inc(LCheckedCount);
+
+  TProtectedCheckBox(cbAll).ClicksDisabled := True;
+  if (LCheckedCount > 0) and (LCheckedCount < View.Items.Count) then
+    cbAll.State := cbGrayed
+  else
+    cbAll.Checked := LCheckedCount = View.Items.Count;
+
+  TProtectedCheckBox(cbAll).ClicksDisabled := False;
+end;
+
 procedure TDelphiInstallationView.ViewDrawItem(Control: TWinControl;
   Index: Integer; Rect: TRect; State: TOwnerDrawState);
 var
@@ -92,7 +133,7 @@ begin
     LName := LInstallation.Directory;
     View.Canvas.TextRect(LTextRect, LName);
   end;
-  if (odSelected in State) or (odFocused in State) then
+  if [odSelected, odFocused] <= State then
     View.Canvas.DrawFocusRect(Rect);
 end;
 
