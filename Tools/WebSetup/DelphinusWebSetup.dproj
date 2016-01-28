@@ -24,6 +24,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_DcuOutput>.\$(Config)\$(Platform)</DCC_DcuOutput>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -60,6 +61,14 @@
 			<DCCReference Include="..\..\DN.DelphiInstallation.pas"/>
 			<DCCReference Include="..\..\DN.DelphiInstallation.Provider.Intf.pas"/>
 			<DCCReference Include="..\..\DN.DelphiInstallation.Provider.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.GitHub.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.Intf.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.GitHubRepo.pas"/>
+			<RcItem Include="..\..\Icons\Package.jpg">
+				<ResourceType>RCDATA</ResourceType>
+				<ResourceId>Jpg_Package</ResourceId>
+			</RcItem>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -94,7 +103,7 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1031</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>

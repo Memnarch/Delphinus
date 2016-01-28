@@ -20,13 +20,16 @@ type
   private
     { Private declarations }
     FInstallations: TList<IDNDelphiInstallation>;
+    FSelectedInstallations: TList<IDNDelphiInstallation>;
     function GetInstallations: TList<IDNDelphiInstallation>;
     procedure HandleInstallationsChanged(Sender: TObject; const Item: IDNDelphiInstallation; Action: TCollectionNotification);
+    function GetSelectedInstallations: TList<IDNDelphiInstallation>;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property Installations: TList<IDNDelphiInstallation> read GetInstallations;
+    property SelectedInstallations: TList<IDNDelphiInstallation> read GetSelectedInstallations;
   end;
 
 implementation
@@ -60,6 +63,7 @@ constructor TDelphiInstallationView.Create(AOwner: TComponent);
 begin
   inherited;
   FInstallations := TList<IDNDelphiInstallation>.Create();
+  FSelectedInstallations := TList<IDNDelphiInstallation>.Create();
   FInstallations.OnNotify := HandleInstallationsChanged;
   View.ItemHeight := CImageDimension + cImageMargin*2;
 end;
@@ -74,6 +78,19 @@ end;
 function TDelphiInstallationView.GetInstallations: TList<IDNDelphiInstallation>;
 begin
   Result := FInstallations;
+end;
+
+function TDelphiInstallationView.GetSelectedInstallations: TList<IDNDelphiInstallation>;
+var
+  i: Integer;
+begin
+  FSelectedInstallations.Clear;
+  for i := 0 to FInstallations.Count - 1 do
+  begin
+    if View.Checked[i] then
+      FSelectedInstallations.Add(FInstallations[i]);
+  end;
+  Result := FSelectedInstallations;
 end;
 
 procedure TDelphiInstallationView.HandleInstallationsChanged(Sender: TObject;

@@ -5,8 +5,9 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, Delphinus.DelphiInstallation.View,
-  DN.DelphiInstallation.Provider.Intf, ExtCtrls, StdCtrls, jpeg, ImgList,
-  Generics.Collections;
+  DN.DelphiInstallation.Provider.Intf, DN.PackageProvider.Intf, ExtCtrls, StdCtrls, jpeg, ImgList,
+  Generics.Collections,
+  DN.Package.Intf;
 
 type
   TDNWebSetupDialog = class(TForm)
@@ -35,6 +36,8 @@ type
   private
     { Private declarations }
     FProvider: IDNDelphiInstallationProvider;
+    FPackageProvider: IDNPackageProvider;
+    FPackage: IDNPackage;
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
     procedure PageChanged;
@@ -44,6 +47,8 @@ type
     procedure DelphiSelectionEnter;
     procedure SettingsEnter;
     procedure ProgressEnter;
+    function DelphiSelectionCanExit: Boolean;
+    function SettingsCanExit: Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -57,7 +62,10 @@ implementation
 
 uses
   IOUtils,
-  DN.DelphiInstallation.Provider;
+  DN.DelphiInstallation.Provider,
+  DN.PackageProvider.GitHubRepo,
+  DN.HttpClient.Intf,
+  DN.HttpClient.WinHttp;
 
 {$R *.dfm}
 
@@ -65,11 +73,8 @@ uses
 
 procedure TDNWebSetupDialog.btnBackClick(Sender: TObject);
 begin
-  if CanExitPage() then
-  begin
-    pcSteps.ActivePageIndex := pcSteps.ActivePageIndex - 1;
-    PageChanged();
-  end;
+  pcSteps.ActivePageIndex := pcSteps.ActivePageIndex - 1;
+  PageChanged();
 end;
 
 procedure TDNWebSetupDialog.btnCacnelClick(Sender: TObject);
@@ -101,6 +106,7 @@ constructor TDNWebSetupDialog.Create(AOwner: TComponent);
 begin
   inherited;
   FProvider := TDNDelphiInstallationProvider.Create();
+  FPackageProvider := TDNGithubRepoPackageProvider.Create(TDNWinHttpClient.Create() as IDNHttpClient, 'Memnarch', 'Delphinus');
   FEnterPage := TDictionary<TTabSheet, TProc>.Create();
   FCanExitPage := TDictionary<TTabSheet, TFunc<Boolean>>.Create();
   InstallationView.Installations.AddRange(FProvider.Installations);
@@ -108,13 +114,27 @@ begin
   FEnterPage.Add(tsDelphiSelection, DelphiSelectionEnter);
   FEnterPage.Add(tsSettings, SettingsEnter);
   FEnterPage.Add(tsProgress, ProgressEnter);
+  FCanExitPage.Add(tsDelphiSelection, DelphiSelectionCanExit);
+  FCanExitPage.Add(tsSettings, SettingsCanExit);
   pcSteps.ActivePageIndex := 0;
   PageChanged();
+end;
+
+function TDNWebSetupDialog.DelphiSelectionCanExit: Boolean;
+begin
+  Result := InstallationView.SelectedInstallations.Count > 0;
+  if not Result then
+    MessageDlg('You must select at least one Delphi-Installation.', mtInformation, [mbOK], 0);
 end;
 
 procedure TDNWebSetupDialog.DelphiSelectionEnter;
 begin
   btnNext.Caption := 'Next';
+  if not Assigned(FPackage) and FPackageProvider.Reload() and (FPackageProvider.Packages.Count = 1) then
+  begin
+    FPackage := FPackageProvider.Packages[0];
+    Image1.Picture := FPackage.Picture;
+  end;
 end;
 
 destructor TDNWebSetupDialog.Destroy;
@@ -151,6 +171,13 @@ begin
   btnBack.Enabled := False;
   btnNext.Enabled := False;
   btnCacnel.Enabled := False;
+end;
+
+function TDNWebSetupDialog.SettingsCanExit: Boolean;
+begin
+  Result := ForceDirectories(edInstallDirectory.Text);
+  if not Result then
+    MessageDlg('Could not create directory. Please check your path and permissions', mtError, [mbOK], 0);
 end;
 
 procedure TDNWebSetupDialog.SettingsEnter;
