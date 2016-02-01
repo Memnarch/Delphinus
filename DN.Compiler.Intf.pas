@@ -10,7 +10,8 @@ unit DN.Compiler.Intf;
 interface
 
 uses
-  Classes;
+  Classes,
+  DN.Types;
 
 type
   TDNCompilerTarget = (ctBuild, ctCompile);
@@ -35,6 +36,8 @@ type
     function GetBPLOutput: string;
     procedure SetBPLOutput(const Value: string);
     function GetLog: TStrings;
+    function GetVersion: TCompilerVersion;
+
     function Compile(const AProjectFile: string): Boolean;
     function ResolveVars(const APath: string): string;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
@@ -45,6 +48,7 @@ type
     property Config: TDNCompilerConfig read GetConfig write SetConfig;
     property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
+    property Version: TCompilerVersion read GetVersion;
   end;
 
 const
