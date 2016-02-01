@@ -15,6 +15,7 @@ type
     function GetApplication: string;
     function GetEdition: string;
 
+    function IsRunning: Boolean;
     property Name: string read GetName;
     property Edition: string read GetEdition;
     property Icon: TIcon read GetIcon;

@@ -62,6 +62,7 @@ implementation
 
 uses
   IOUtils,
+  DN.DelphiInstallation.Intf,
   DN.DelphiInstallation.Provider,
   DN.PackageProvider.GitHubRepo,
   DN.HttpClient.Intf,
@@ -121,10 +122,24 @@ begin
 end;
 
 function TDNWebSetupDialog.DelphiSelectionCanExit: Boolean;
+var
+  LInstallation: IDNDelphiInstallation;
 begin
   Result := InstallationView.SelectedInstallations.Count > 0;
   if not Result then
+  begin
     MessageDlg('You must select at least one Delphi-Installation.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  for LInstallation in InstallationView.SelectedInstallations do
+  begin
+    if LInstallation.IsRunning then
+    begin
+      MessageDlg(LInstallation.Name + ' is running. Please close all running Delphi-Instances before you continue', mtInformation, [mbOK], 0);
+      Exit(False);
+    end;
+  end;
 end;
 
 procedure TDNWebSetupDialog.DelphiSelectionEnter;
