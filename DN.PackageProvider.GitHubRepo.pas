@@ -37,7 +37,6 @@ function TDNGithubRepoPackageProvider.GetRepoList(
   out ARepos: TJSONArray): Boolean;
 var
   LResponse: string;
-  LBranch: TJSONString;
 const
   CRequest = 'https://api.github.com/repos/%s/%s';
 begin
