@@ -2,7 +2,6 @@
 		<PropertyGroup>
 			<ProjectGuid>{0990B172-C221-4312-816E-1E634AF7EE2C}</ProjectGuid>
 			<MainSource>Delphinus.dpk</MainSource>
-			<ProjectVersion>15.4</ProjectVersion>
 			<FrameworkType>None</FrameworkType>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
@@ -12,6 +11,7 @@
 			<Platform>Win32</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<Basis>True</Basis>
+			<ProjectVersion>12.3</ProjectVersion>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -55,8 +55,6 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_DebugInformation>0</DCC_DebugInformation>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="Delphinus.dpk">
