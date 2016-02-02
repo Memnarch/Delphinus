@@ -120,9 +120,11 @@ constructor TDNSetup.Create(const AInstaller: IDNInstaller;
 begin
   inherited Create();
   FInstaller := AInstaller;
-  FInstaller.OnMessage := DoMessage;
+  if Assigned(FInstaller) then
+    FInstaller.OnMessage := DoMessage;
   FUninstaller := AUninstaller;
-  FUninstaller.OnMessage := DoMessage;
+  if Assigned(FUninstaller) then
+    FUninstaller.OnMessage := DoMessage;
   FProvider := APackageProvider;
   FProgress := TDNProgress.Create();
   FProgress.OnProgress := DoProgress;

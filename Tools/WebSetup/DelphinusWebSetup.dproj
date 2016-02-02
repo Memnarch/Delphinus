@@ -65,6 +65,7 @@
 			<DCCReference Include="..\..\DN.PackageProvider.Intf.pas"/>
 			<DCCReference Include="..\..\DN.PackageProvider.pas"/>
 			<DCCReference Include="..\..\DN.PackageProvider.GitHubRepo.pas"/>
+			<DCCReference Include="..\..\DN.Installer.Delphinus.pas"/>
 			<RcItem Include="..\..\Icons\Package.jpg">
 				<ResourceType>RCDATA</ResourceType>
 				<ResourceId>Jpg_Package</ResourceId>

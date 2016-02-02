@@ -13,7 +13,8 @@ uses
   DN.PackageProvider.GitHub in '..\..\DN.PackageProvider.GitHub.pas',
   DN.PackageProvider.Intf in '..\..\DN.PackageProvider.Intf.pas',
   DN.PackageProvider in '..\..\DN.PackageProvider.pas',
-  DN.PackageProvider.GitHubRepo in '..\..\DN.PackageProvider.GitHubRepo.pas';
+  DN.PackageProvider.GitHubRepo in '..\..\DN.PackageProvider.GitHubRepo.pas',
+  DN.Installer.Delphinus in '..\..\DN.Installer.Delphinus.pas';
 
 {$R *.res}
 

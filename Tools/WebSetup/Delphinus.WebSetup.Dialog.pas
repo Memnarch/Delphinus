@@ -7,7 +7,8 @@ uses
   Dialogs, ComCtrls, Delphinus.DelphiInstallation.View,
   DN.DelphiInstallation.Provider.Intf, DN.PackageProvider.Intf, ExtCtrls, StdCtrls, jpeg, ImgList,
   Generics.Collections,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  DN.Types;
 
 type
   TDNWebSetupDialog = class(TForm)
@@ -40,6 +41,7 @@ type
     FPackage: IDNPackage;
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
+    procedure InstallDelphinus;
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
@@ -66,7 +68,13 @@ uses
   DN.DelphiInstallation.Provider,
   DN.PackageProvider.GitHubRepo,
   DN.HttpClient.Intf,
-  DN.HttpClient.WinHttp;
+  DN.HttpClient.WinHttp,
+  DN.Setup.Intf,
+  DN.Setup,
+  DN.Compiler.Intf,
+  DN.Compiler.MSBuild,
+  DN.Installer.Intf,
+  DN.Installer.Delphinus;
 
 {$R *.dfm}
 
@@ -166,6 +174,23 @@ begin
     edInstallDirectory.Text := OpenDialog.FileName;
 end;
 
+procedure TDNWebSetupDialog.InstallDelphinus;
+var
+  LInstallation: IDNDelphiInstallation;
+  LSetup: IDNSetup;
+  LInstaller: IDNInstaller;
+  LCompiler: IDNCompiler;
+begin
+  for LInstallation in InstallationView.SelectedInstallations do
+  begin
+    LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(LInstallation.Directory, 'bin'));
+    LInstaller := TDNDelphinusInstaller.Create(LCompiler, LInstallation.Root);
+    LSetup := TDNSetup.Create(LInstaller, nil, FPackageProvider);
+    LSetup.ComponentDirectory := edInstallDirectory.Text;
+    LSetup.Install(FPackage, nil);
+  end;
+end;
+
 procedure TDNWebSetupDialog.PageChanged;
 begin
   lbTitle.Caption := pcSteps.ActivePage.Caption;
@@ -186,13 +211,14 @@ begin
   btnBack.Enabled := False;
   btnNext.Enabled := False;
   btnCacnel.Enabled := False;
+  TThread.CreateAnonymousThread(InstallDelphinus).Start();
 end;
 
 function TDNWebSetupDialog.SettingsCanExit: Boolean;
 begin
   Result := ForceDirectories(edInstallDirectory.Text);
   if not Result then
-    MessageDlg('Could not create directory. Please check your path and permissions', mtError, [mbOK], 0);
+    MessageDlg('Could not create directory. Please check your path and permissions', Dialogs.mtError, [mbOK], 0);
 end;
 
 procedure TDNWebSetupDialog.SettingsEnter;
