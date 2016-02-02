@@ -272,7 +272,7 @@ begin
   LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
   LCompiler.BPLOutput := GetBPLDirectory();
   LCompiler.DCPOutput := GetDCPDirectory();
-  LInstaller := TDNIDEInstaller.Create(LCompiler, Trunc(CompilerVersion));
+  LInstaller := TDNIDEInstaller.Create(LCompiler);
   LUninstaller := TDNIDEUninstaller.Create();
   Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
   Result.ComponentDirectory := GetComponentDirectory();

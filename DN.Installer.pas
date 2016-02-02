@@ -32,6 +32,7 @@ type
     FPackages: TList<TPackage>;
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
+    FTargetDirectory: string;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
@@ -56,10 +57,15 @@ type
     function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
+    function GetSupportedPlatforms: TDNCompilerPlatforms; virtual; abstract;
+    procedure ConfigureCompiler(const ACompiler: IDNCompiler); virtual;
+    function GetTargetDirectory: string;
+    function GetLibBaseDir: string;
+    function GetBinBaseDir: string;
     //properties for interface redirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
-    constructor Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
+    constructor Create(const ACompiler: IDNCompiler);
     destructor Destroy(); override;
     function Install(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
@@ -76,7 +82,6 @@ uses
   DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
   DN.JSonFile.Info,
-  DN.ToolsApi.Extension.Intf,
   DN.Progress;
 
 const
@@ -121,6 +126,12 @@ end;
 procedure TDNInstaller.BeforeCompile(const AProjectFile: string);
 begin
   DoMessage(mtNotification, 'Compiling ' + ExtractFileName(AProjectFile));
+end;
+
+procedure TDNInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
+begin
+  FCompiler.DCUOutput := TPath.Combine(GetLibBaseDir(), '$(Platform)\$(Config)');
+  FCompiler.ExeOutput := TPath.Combine(GetBinBaseDir(), '$(Platform)\$(Config)');
 end;
 
 procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
@@ -205,11 +216,11 @@ begin
   TFile.Copy(LSourceInstall, LTargetInstall, True);
 end;
 
-constructor TDNInstaller.Create(const ACompiler: IDNCompiler; const ACompilerVersion: Integer);
+constructor TDNInstaller.Create(const ACompiler: IDNCompiler);
 begin
   inherited Create();
   FCompiler := ACompiler;
-  FCompilerVersion := ACompilerVersion;
+  FCompilerVersion := Trunc(ACompiler.Version);
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
 end;
@@ -244,6 +255,16 @@ begin
   end;
 end;
 
+function TDNInstaller.GetBinBaseDir: string;
+begin
+  Result := TPath.Combine(GetTargetDirectory, CBinDir);
+end;
+
+function TDNInstaller.GetLibBaseDir: string;
+begin
+  Result := TPath.Combine(GetTargetDirectory, CLibDir);
+end;
+
 function TDNInstaller.GetOnMessage: TMessageEvent;
 begin
   Result := FOnMessage;
@@ -252,6 +273,11 @@ end;
 function TDNInstaller.GetSourceFolder(const ADirectory: string): string;
 begin
   Result := TPath.Combine(ADirectory, CSourceDir);
+end;
+
+function TDNInstaller.GetTargetDirectory: string;
+begin
+  Result := FTargetDirectory;
 end;
 
 function TDNInstaller.LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
@@ -308,8 +334,13 @@ var
   LInstallerFile, LInfoFile, LLicenseFile: string;
 begin
   Reset();
-  ForceDirectories(ATargetDirectory);
+  if not ForceDirectories(ATargetDirectory) then
+  begin
+    DoMessage(mtError, 'Failed to create directory ' + QuotedStr(ATargetDirectory));
+    Exit(False);
+  end;
   try
+    FTargetDirectory := ATargetDirectory;
     LInfoFile := TPath.Combine(ASourceDirectory, CInfoFile);
     if TFile.Exists(LInfoFile) then
     begin
@@ -398,28 +429,24 @@ function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo; var AProces
 var
   LCompiledPackage: TPackage;
   LPlatform: TDNCompilerPlatform;
-  LService: IDNEnvironmentOptionsService;
-  LOptions: IDNEnvironmentOptions;
 begin
   Result := False;
-  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
   BeforeCompile(AProject.FileName);
   for LPlatform in AProject.SupportedPlatforms do
   begin
-    if LPlatform in LService.SupportedPlatforms then
+    if LPlatform in GetSupportedPlatforms() then
     begin
       DoMessage(mtNotification, TDNCompilerPlatformName[LPlatform]);
-      LOptions := LService.Options[LPlatform];
-      FCompiler.BPLOutput := LOptions.BPLOutput;
-      FCompiler.DCPOutput := LOptions.DCPOutput;
       FCompiler.Platform := LPlatform;
+      ConfigureCompiler(FCompiler);
+
       AProcessedPlatforms := AProcessedPlatforms + [LPlatform];
       Result := FCompiler.Compile(AProject.FileName);
       if Result and AProject.IsPackage then
       begin
         if (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32) then
         begin
-          Result := InstallProject(AProject, FCompiler.ResolveVars(LOptions.BPLOutput));
+          Result := InstallProject(AProject, FCompiler.ResolveVars(FCompiler.BPLOutput));
           if Result then
             DoMessage(mtNotification, 'installed')
           else
@@ -455,15 +482,11 @@ function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const A
 var
   LProject: IDNProjectInfo;
   LProjects: TList<IDNProjectInfo>;
-  LLibBaseDir: string;
   LProcessedPlatforms: TDNCompilerPlatforms;
   LPlatform: TDNCompilerPlatform;
   i: Integer;
 begin
   Result := True;
-  LLibBaseDir := TPath.Combine(ATargetDirectory, CLibDir);
-  FCompiler.DCUOutput := TPath.Combine(LLibBaseDir, '$(Platform)\$(Config)');
-  FCompiler.ExeOutput := TPath.Combine(TPath.Combine(ATargetDirectory, CBinDir), '$(Platform)\$(Config)');
   LProcessedPlatforms := [];
   LProjects := TList<IDNProjectInfo>.Create();
   try
@@ -485,7 +508,7 @@ begin
   if Result then
   begin
     for LPlatform in LProcessedPlatforms do
-      AddSearchPath(TPath.Combine(LLibBaseDir, TDNCompilerPlatformName[LPlatform] + '\' + TDNCompilerConfigName[FCompiler.Config]), [LPlatform]);
+      AddSearchPath(TPath.Combine(GetLibBaseDir(), TDNCompilerPlatformName[LPlatform] + '\' + TDNCompilerConfigName[FCompiler.Config]), [LPlatform]);
   end;
 
 end;
