@@ -14,7 +14,8 @@ uses
   DN.PackageProvider.Intf in '..\..\DN.PackageProvider.Intf.pas',
   DN.PackageProvider in '..\..\DN.PackageProvider.pas',
   DN.PackageProvider.GitHubRepo in '..\..\DN.PackageProvider.GitHubRepo.pas',
-  DN.Installer.Delphinus in '..\..\DN.Installer.Delphinus.pas';
+  DN.Installer.Delphinus in '..\..\DN.Installer.Delphinus.pas',
+  Delphinus.WebSetup in 'Delphinus.WebSetup.pas';
 
 {$R *.res}
 

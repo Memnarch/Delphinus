@@ -30,13 +30,10 @@ uses
 { TDNDelphinusInstaller }
 
 procedure TDNDelphinusInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
-var
-  LSubFolder: string;
 begin
   inherited;
-  LSubFolder := ExtractFileName(ExcludeTrailingPathDelimiter(FRegistryKey));
-  ACompiler.BPLOutput := TPath.Combine(GetTargetDirectory(), LSubFolder);
-  ACompiler.DCPOutput := TPath.Combine(ACompiler.BPLOutput, 'Dcp');
+  ACompiler.BPLOutput := TPath.Combine(GetTargetDirectory(), 'Bpl');
+  ACompiler.DCPOutput := TPath.Combine(GetTargetDirectory(), 'Dcp');
 end;
 
 constructor TDNDelphinusInstaller.Create(const ACompiler: IDNCompiler;

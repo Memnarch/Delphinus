@@ -41,7 +41,7 @@ type
     FPackage: IDNPackage;
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
-    procedure InstallDelphinus;
+    procedure InstallDelphinusAsync;
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
@@ -64,17 +64,18 @@ implementation
 
 uses
   IOUtils,
+  ActiveX,
   DN.DelphiInstallation.Intf,
   DN.DelphiInstallation.Provider,
   DN.PackageProvider.GitHubRepo,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
   DN.Setup.Intf,
-  DN.Setup,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
   DN.Installer.Intf,
-  DN.Installer.Delphinus;
+  DN.Installer.Delphinus,
+  Delphinus.WebSetup;
 
 {$R *.dfm}
 
@@ -140,12 +141,15 @@ begin
     Exit;
   end;
 
-  for LInstallation in InstallationView.SelectedInstallations do
+  if not IsDebuggerPresent then
   begin
-    if LInstallation.IsRunning then
+    for LInstallation in InstallationView.SelectedInstallations do
     begin
-      MessageDlg(LInstallation.Name + ' is running. Please close all running Delphi-Instances before you continue', mtInformation, [mbOK], 0);
-      Exit(False);
+      if LInstallation.IsRunning then
+      begin
+        MessageDlg(LInstallation.Name + ' is running. Please close all running Delphi-Instances before you continue', mtInformation, [mbOK], 0);
+        Exit(False);
+      end;
     end;
   end;
 end;
@@ -174,20 +178,25 @@ begin
     edInstallDirectory.Text := OpenDialog.FileName;
 end;
 
-procedure TDNWebSetupDialog.InstallDelphinus;
+procedure TDNWebSetupDialog.InstallDelphinusAsync;
 var
   LInstallation: IDNDelphiInstallation;
   LSetup: IDNSetup;
   LInstaller: IDNInstaller;
   LCompiler: IDNCompiler;
 begin
-  for LInstallation in InstallationView.SelectedInstallations do
-  begin
-    LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(LInstallation.Directory, 'bin'));
-    LInstaller := TDNDelphinusInstaller.Create(LCompiler, LInstallation.Root);
-    LSetup := TDNSetup.Create(LInstaller, nil, FPackageProvider);
-    LSetup.ComponentDirectory := edInstallDirectory.Text;
-    LSetup.Install(FPackage, nil);
+  CoInitialize(nil);
+  try
+    for LInstallation in InstallationView.SelectedInstallations do
+    begin
+      LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(LInstallation.Directory, 'bin'));
+      LInstaller := TDNDelphinusInstaller.Create(LCompiler, LInstallation.Root);
+      LSetup := TDNDelphinusWebSetup.Create(LInstaller, nil, FPackageProvider, LInstallation.Root);
+      LSetup.ComponentDirectory := edInstallDirectory.Text;
+      LSetup.Install(FPackage, nil);
+    end;
+  finally
+    CoUninitialize();
   end;
 end;
 
@@ -211,7 +220,7 @@ begin
   btnBack.Enabled := False;
   btnNext.Enabled := False;
   btnCacnel.Enabled := False;
-  TThread.CreateAnonymousThread(InstallDelphinus).Start();
+  TThread.CreateAnonymousThread(InstallDelphinusAsync).Start();
 end;
 
 function TDNWebSetupDialog.SettingsCanExit: Boolean;

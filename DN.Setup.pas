@@ -42,8 +42,8 @@ type
     procedure ReportWarning(const AWarning: string);
     procedure ReportError(const AError: string);
     function DownloadPackage(const APackage: IDNPackage; const AVersion: IDNPackageVersion; out AContentDirectory: string): Boolean;
-    function GetInstallDirectoryForPackage(const APackage: IDNPackage): string;
-    function GetInstallDirectoryForDirectory(const ADirectory: string): string;
+    function GetInstallDirectoryForPackage(const APackage: IDNPackage): string; virtual;
+    function GetInstallDirectoryForDirectory(const ADirectory: string): string; virtual;
     function ExtendInfoFile(const APackage: IDNPackage; const AVersion: IDNPackageVersion; const AInstallDirectory: string): Boolean;
     function GetSetupTempDir: string;
     procedure CleanupTemp();
