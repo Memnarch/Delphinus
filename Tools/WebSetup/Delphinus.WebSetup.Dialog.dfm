@@ -27,7 +27,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Left = 142
     Top = 56
     Width = 412
-    Height = 233
+    Height = 177
     ActivePage = tsDelphiSelection
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
@@ -40,7 +40,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
         Left = 3
         Top = 3
         Width = 398
-        Height = 217
+        Height = 161
         Align = alClient
         TabOrder = 0
         ExplicitLeft = 3
@@ -53,7 +53,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
         end
         inherited View: TCheckListBox
           Width = 398
-          Height = 196
+          Height = 140
           ExplicitWidth = 398
           ExplicitHeight = 196
         end
@@ -72,7 +72,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
       TabVisible = False
       DesignSize = (
         404
-        223)
+        167)
       object Label1: TLabel
         Left = 3
         Top = 34
@@ -97,18 +97,47 @@ object DNWebSetupDialog: TDNWebSetupDialog
     object tsProgress: TTabSheet
       ImageIndex = 2
       TabVisible = False
+      DesignSize = (
+        404
+        167)
       object lbTask: TLabel
         Left = 3
         Top = 38
-        Width = 30
+        Width = 398
         Height = 13
-        Caption = 'lbTask'
+        AutoSize = False
       end
-      object psProgress: TProgressBar
+      object pbProgress: TProgressBar
         Left = 3
         Top = 57
         Width = 398
         Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+      end
+      object btnShowLog: TButton
+        Left = 326
+        Top = 80
+        Width = 75
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Show Log'
+        TabOrder = 1
+        Visible = False
+        OnClick = btnShowLogClick
+      end
+    end
+    object tsLog: TTabSheet
+      Caption = 'Log'
+      ImageIndex = 3
+      TabVisible = False
+      object mLog: TMemo
+        Left = 0
+        Top = 0
+        Width = 404
+        Height = 223
+        Align = alClient
+        ScrollBars = ssBoth
         TabOrder = 0
       end
     end
@@ -190,7 +219,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Left = 272
     Top = 152
     Bitmap = {
-      494C010101000800240010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010101000800300010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

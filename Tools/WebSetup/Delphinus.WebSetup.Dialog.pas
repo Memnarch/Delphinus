@@ -8,7 +8,8 @@ uses
   DN.DelphiInstallation.Provider.Intf, DN.PackageProvider.Intf, ExtCtrls, StdCtrls, jpeg, ImgList,
   Generics.Collections,
   DN.Package.Intf,
-  DN.Types;
+  DN.Types,
+  DN.Progress.Intf;
 
 type
   TDNWebSetupDialog = class(TForm)
@@ -28,12 +29,16 @@ type
     Label1: TLabel;
     OpenDialog: TFileOpenDialog;
     tsProgress: TTabSheet;
-    psProgress: TProgressBar;
+    pbProgress: TProgressBar;
     lbTask: TLabel;
+    mLog: TMemo;
+    btnShowLog: TButton;
+    tsLog: TTabSheet;
     procedure btnBackClick(Sender: TObject);
     procedure btnCacnelClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure edInstallDirectoryRightButtonClick(Sender: TObject);
+    procedure btnShowLogClick(Sender: TObject);
   private
     { Private declarations }
     FProvider: IDNDelphiInstallationProvider;
@@ -41,7 +46,13 @@ type
     FPackage: IDNPackage;
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
+    FProgress: IDNProgress;
+    FLog: TStringList;
     procedure InstallDelphinusAsync;
+    procedure InstallationFinished;
+    procedure HandleSetupProgress(const Task, Item: string; Progress, Max: Int64);
+    procedure HandleTotalProgress(const Task, Item: string; Progress, Max: Int64);
+    procedure HandleSetupMessage(AMessageType: TMessageType; const AMessage: string);
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
@@ -75,6 +86,7 @@ uses
   DN.Compiler.MSBuild,
   DN.Installer.Intf,
   DN.Installer.Delphinus,
+  DN.Progress,
   Delphinus.WebSetup;
 
 {$R *.dfm}
@@ -96,11 +108,21 @@ procedure TDNWebSetupDialog.btnNextClick(Sender: TObject);
 begin
   if CanExitPage() then
   begin
-    if pcSteps.ActivePageIndex < pcSteps.PageCount - 1 then
+    if pcSteps.ActivePageIndex < pcSteps.PageCount - 2 then
+    begin
       pcSteps.ActivePageIndex := pcSteps.ActivePageIndex + 1;
-
-    PageChanged();
+      PageChanged();
+    end
+    else
+      Close();
   end;
+end;
+
+procedure TDNWebSetupDialog.btnShowLogClick(Sender: TObject);
+begin
+  mLog.Lines.Assign(FLog);
+  pcSteps.ActivePageIndex := pcSteps.ActivePageIndex + 1;
+  PageChanged();
 end;
 
 function TDNWebSetupDialog.CanExitPage: Boolean;
@@ -127,6 +149,9 @@ begin
   FCanExitPage.Add(tsDelphiSelection, DelphiSelectionCanExit);
   FCanExitPage.Add(tsSettings, SettingsCanExit);
   pcSteps.ActivePageIndex := 0;
+  FProgress := TDNProgress.Create();
+  FProgress.OnProgress := HandleTotalProgress;
+  FLog := TStringList.Create();
   PageChanged();
 end;
 
@@ -168,6 +193,7 @@ destructor TDNWebSetupDialog.Destroy;
 begin
   FEnterPage.Free;
   FCanExitPage.Free;
+  FLog.Free;
   inherited;
 end;
 
@@ -176,6 +202,53 @@ begin
   OpenDialog.DefaultFolder := edInstallDirectory.Text;
   if OpenDialog.Execute() then
     edInstallDirectory.Text := OpenDialog.FileName;
+end;
+
+procedure TDNWebSetupDialog.HandleSetupMessage(AMessageType: TMessageType;
+  const AMessage: string);
+var
+  LPrefix: string;
+begin
+  case AMessageType of
+    mtNotification: LPrefix := '<Info> ';
+    mtWarning: LPrefix := '<Warning> ';
+    mtError: LPrefix := '<Error> ';
+  else
+    LPrefix := '<?> ';
+  end;
+  FLog.Add(LPrefix + AMessage);
+end;
+
+procedure TDNWebSetupDialog.HandleSetupProgress(const Task, Item: string;
+  Progress, Max: Int64);
+begin
+  if Item <> '' then
+    FProgress.SetTaskProgress(Item, Progress, Max)
+  else
+    FProgress.SetTaskProgress(Task, Progress, Max);
+end;
+
+procedure TDNWebSetupDialog.HandleTotalProgress(const Task, Item: string;
+  Progress, Max: Int64);
+begin
+  TThread.Queue(nil,
+    procedure
+    begin
+      pbProgress.Max := Max;
+      pbProgress.Position := Progress;
+      if Item <> '' then
+        lbTask.Caption := Task + ': ' + Item
+      else
+        lbTask.Caption := Task;
+    end
+  );
+end;
+
+procedure TDNWebSetupDialog.InstallationFinished;
+begin
+  btnNext.Caption := 'Finish';
+  btnNext.Enabled := True;
+  btnShowLog.Visible := True;
 end;
 
 procedure TDNWebSetupDialog.InstallDelphinusAsync;
@@ -187,15 +260,25 @@ var
 begin
   CoInitialize(nil);
   try
+    FProgress.SetTasks([]);
+    for LInstallation in InstallationView.SelectedInstallations do
+      FProgress.AddTask(LInstallation.Name);
+
     for LInstallation in InstallationView.SelectedInstallations do
     begin
+      FLog.Add('<Setup> ' + LInstallation.Name);
       LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(LInstallation.Directory, 'bin'));
       LInstaller := TDNDelphinusInstaller.Create(LCompiler, LInstallation.Root);
       LSetup := TDNDelphinusWebSetup.Create(LInstaller, nil, FPackageProvider, LInstallation.Root);
       LSetup.ComponentDirectory := edInstallDirectory.Text;
+      LSetup.OnProgress := HandleSetupProgress;
+      LSetup.OnMessage := HandleSetupMessage;
       LSetup.Install(FPackage, nil);
+      FProgress.NextTask();
     end;
+    FProgress.Completed();
   finally
+    TThread.Queue(nil, InstallationFinished);
     CoUninitialize();
   end;
 end;
@@ -203,7 +286,7 @@ end;
 procedure TDNWebSetupDialog.PageChanged;
 begin
   lbTitle.Caption := pcSteps.ActivePage.Caption;
-  btnBack.Enabled := pcSteps.ActivePageIndex > 0;
+  btnBack.Enabled := (pcSteps.ActivePageIndex > 0) and (pcSteps.ActivePageIndex < tsLog.PageIndex);
   PageEnter();
 end;
 
