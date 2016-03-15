@@ -53,9 +53,9 @@ type
     procedure DetachProgressEvents;
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
-    function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
-    function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
-    function Uninstall(const APackage: IDNPackage): Boolean;
+    function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual;
+    function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual;
+    function Uninstall(const APackage: IDNPackage): Boolean; virtual;
     function InstallDirectory(const ADirectory: string): Boolean;
     function UninstallDirectory(const ADirectory: string): Boolean;
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;

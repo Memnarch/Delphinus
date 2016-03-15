@@ -7,6 +7,8 @@ uses
   DN.Uninstaller.Intf,
   DN.PackageProvider.Intf,
   DN.Package.Intf,
+  DN.Package.Version.Intf,
+  DN.Settings.Intf,
   DN.Setup;
 
 type
@@ -14,6 +16,7 @@ type
   private
     FRootKey: string;
     FSubDir: string;
+    FSettings: IDNElevatedSettings;
   protected
     function GetInstallDirectoryForPackage(const APackage: IDNPackage): string;
       override;
@@ -21,7 +24,11 @@ type
       override;
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller;
-      const APackageProvider: IDNPackageProvider; const ARootKey: string); reintroduce;
+      const APackageProvider: IDNPackageProvider; const ASettings: IDNElevatedSettings;
+      const ARootKey: string); reintroduce;
+    function Install(const APackage: IDNPackage;
+      const AVersion: IDNPackageVersion): Boolean; override;
+    function Uninstall(const APackage: IDNPackage): Boolean; override;
   end;
 
 implementation
@@ -34,9 +41,11 @@ uses
 
 constructor TDNDelphinusWebSetup.Create(const AInstaller: IDNInstaller;
   const AUninstaller: IDNUninstaller;
-  const APackageProvider: IDNPackageProvider; const ARootKey: string);
+  const APackageProvider: IDNPackageProvider; const ASettings: IDNElevatedSettings;
+  const ARootKey: string);
 begin
   inherited Create(AInstaller, AUninstaller, APackageProvider);
+  FSettings := ASettings;
   FRootKey := ARootKey;
   FSubDir := ExtractFileName(ExcludeTrailingPathDelimiter(FRootKey));
 end;
@@ -51,6 +60,24 @@ function TDNDelphinusWebSetup.GetInstallDirectoryForPackage(
   const APackage: IDNPackage): string;
 begin
   Result := TPath.Combine(ComponentDirectory, FSubDir);
+end;
+
+function TDNDelphinusWebSetup.Install(const APackage: IDNPackage;
+  const AVersion: IDNPackageVersion): Boolean;
+begin
+  Result := inherited;
+  if Result then
+    FSettings.InstallationDirectory := ComponentDirectory;
+end;
+
+function TDNDelphinusWebSetup.Uninstall(const APackage: IDNPackage): Boolean;
+begin
+  Result := inherited;
+  if Result and TDirectory.IsEmpty(FSettings.InstallationDirectory) then
+  begin
+    TDirectory.Delete(FSettings.InstallationDirectory);
+    FSettings.Clear();
+  end;
 end;
 
 end.
