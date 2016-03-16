@@ -17,7 +17,8 @@ uses
   DN.Installer.Delphinus in '..\..\DN.Installer.Delphinus.pas',
   Delphinus.WebSetup in 'Delphinus.WebSetup.pas',
   DN.Settings in '..\..\DN.Settings.pas',
-  DN.Settings.Intf in '..\..\DN.Settings.Intf.pas';
+  DN.Settings.Intf in '..\..\DN.Settings.Intf.pas',
+  DN.Uninstaller.Delphinus in '..\..\DN.Uninstaller.Delphinus.pas';
 
 {$R *.res}
 

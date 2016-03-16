@@ -14,10 +14,12 @@ type
     function GetDirectory: string;
     function GetApplication: string;
     function GetEdition: string;
+    function GetBDSVersion: string;
 
     function IsRunning: Boolean;
     property Name: string read GetName;
     property Edition: string read GetEdition;
+    property BDSVersion: string read GetBDSVersion;
     property Icon: TIcon read GetIcon;
     property Root: string read GetRoot;
     property Directory: string read GetDirectory;

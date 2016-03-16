@@ -32,9 +32,71 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 0
+    ExplicitHeight = 183
+    object tsRoutineSelection: TTabSheet
+      Caption = 'Select Action'
+      Enabled = False
+      ImageIndex = 4
+      TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object Image2: TImage
+        Left = 3
+        Top = 16
+        Width = 48
+        Height = 48
+        Picture.Data = {
+          0954506E67496D61676589504E470D0A1A0A0000000D49484452000000300000
+          00300804000000FD0B310C00000002624B474400FF878FCCBF00000009704859
+          7300000B1300000B1301009A9C180000000774494D4507E0030F122B32645600
+          530000009D4944415478DAEDD6510A80201004503D7976728B0CA2727767243F
+          8259E827729EA6C2E65AD3D4CA0204B48F8CF7C8DC040810206014286905863E
+          6BD9C7C12BE0897EBCF38B38C28A77F70027ECF8609331C28B0F4F514CF8F1C0
+          31F589281EBA073611C78317AD4F20F17057F126B078A26DB913683CD5175D04
+          1E4F365E8D60E2E9CEAE9CCF34802F016340E6738EEACD55C018F0650910F003
+          6003CAFC8AD150F1184D0000000049454E44AE426082}
+      end
+      object Image3: TImage
+        Left = 3
+        Top = 80
+        Width = 48
+        Height = 48
+        Picture.Data = {
+          0954506E67496D61676589504E470D0A1A0A0000000D49484452000000300000
+          00300804000000FD0B310C00000002624B474400FF878FCCBF00000009704859
+          7300000B1300000B1301009A9C180000000774494D4507E0030F12302ADE0C53
+          9F0000008B4944415478DAEDD6BD1140501004E07DB944136A5080D8E8468850
+          3502B95809DA3088FDC5F786330FC3EC8617EC7773D19979C6AD310408ECC951
+          08D36C9D3B01E4FAB38408988BE7907625700D7099F700ED996C7B1220408000
+          010204087C1DF03029EA3D0C5A2046AD0012545AA04388FE64BD8F168116D888
+          140DC6C3E34428ADF5BFFEAE093C062C86CE8AD1723C5EB50000000049454E44
+          AE426082}
+      end
+      object rbInstall: TRadioButton
+        Left = 67
+        Top = 32
+        Width = 113
+        Height = 17
+        Caption = 'Install'
+        Checked = True
+        TabOrder = 0
+        TabStop = True
+      end
+      object rbUninstall: TRadioButton
+        Left = 67
+        Top = 100
+        Width = 113
+        Height = 17
+        Caption = 'Uninstall'
+        TabOrder = 1
+      end
+    end
     object tsDelphiSelection: TTabSheet
       Caption = 'Select Delphi-Versions'
       TabVisible = False
+      ExplicitHeight = 173
       inline InstallationView: TDelphiInstallationView
         AlignWithMargins = True
         Left = 3
@@ -46,7 +108,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
         ExplicitLeft = 3
         ExplicitTop = 3
         ExplicitWidth = 398
-        ExplicitHeight = 217
+        ExplicitHeight = 167
         inherited sLine: TShape
           Width = 398
           ExplicitWidth = 398
@@ -55,12 +117,13 @@ object DNWebSetupDialog: TDNWebSetupDialog
           Width = 398
           Height = 140
           ExplicitWidth = 398
-          ExplicitHeight = 196
+          ExplicitHeight = 146
         end
         inherited cbAll: TCheckBox
           Width = 398
           TabStop = False
           AllowGrayed = False
+          Caption = 'Select all'
           ParentCtl3D = False
           ExplicitWidth = 398
         end
@@ -70,6 +133,10 @@ object DNWebSetupDialog: TDNWebSetupDialog
       Caption = 'Settings'
       ImageIndex = 1
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         404
         167)
@@ -97,6 +164,10 @@ object DNWebSetupDialog: TDNWebSetupDialog
     object tsProgress: TTabSheet
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         404
         167)
@@ -131,14 +202,18 @@ object DNWebSetupDialog: TDNWebSetupDialog
       Caption = 'Log'
       ImageIndex = 3
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       object mLog: TMemo
         Left = 0
         Top = 0
         Width = 404
-        Height = 223
+        Height = 173
         Align = alClient
         ScrollBars = ssBoth
         TabOrder = 0
+        ExplicitHeight = 167
       end
     end
   end
@@ -152,6 +227,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Caption = 'pnlButtons'
     ShowCaption = False
     TabOrder = 1
+    ExplicitTop = 254
     DesignSize = (
       554
       41)
@@ -216,10 +292,10 @@ object DNWebSetupDialog: TDNWebSetupDialog
   end
   object ilImages: TImageList
     ColorDepth = cd32Bit
-    Left = 272
-    Top = 152
+    Left = 408
+    Top = 72
     Bitmap = {
-      494C010101000800300010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010101000800480010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -362,7 +438,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoPickFolders]
-    Left = 200
+    Left = 360
     Top = 184
   end
 end

@@ -14,6 +14,7 @@ type
     FDirectory: string;
     FApplication: string;
     FEdition: string;
+    FBDSVersion: string;
     FIcon: TIcon;
     procedure Load;
     function GetIcon: TIcon;
@@ -22,12 +23,14 @@ type
     function GetDirectory: string;
     function GetApplication: string;
     function GetEdition: string;
+    function GetBDSVersion: string;
   public
     constructor Create(const ARoot: string);
     destructor Destroy; override;
     function IsRunning: Boolean;
     property Name: string read GetName;
     property Edition: string read GetEdition;
+    property BDSVersion: string read GetBDSVersion;
     property Icon: TIcon read GetIcon;
     property Root: string read GetRoot;
     property Directory: string read GetDirectory;
@@ -63,6 +66,11 @@ end;
 function TDNDelphInstallation.GetApplication: string;
 begin
   Result := FApplication;
+end;
+
+function TDNDelphInstallation.GetBDSVersion: string;
+begin
+  Result := FBDSVersion;
 end;
 
 function TDNDelphInstallation.GetDirectory: string;
@@ -159,6 +167,7 @@ var
 const
   CDelphiWin32 = 'Delphi.Win32';
 begin
+  FBDSVersion := ExtractFileName(ExcludeTrailingPathDelimiter(FRoot));
   LRegistry := TRegistry.Create();
   try
     LRegistry.Access := LRegistry.Access or KEY_WOW64_64KEY;

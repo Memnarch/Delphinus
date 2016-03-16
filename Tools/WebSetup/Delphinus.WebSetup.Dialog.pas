@@ -9,7 +9,11 @@ uses
   Generics.Collections,
   DN.Package.Intf,
   DN.Types,
-  DN.Progress.Intf;
+  DN.Progress.Intf,
+  DN.Settings.Intf,
+  DN.DelphiInstallation.Intf,
+  DN.Setup.Intf,
+  Buttons, ActnList, System.Actions, Vcl.Imaging.pngimage;
 
 type
   TDNWebSetupDialog = class(TForm)
@@ -34,6 +38,11 @@ type
     mLog: TMemo;
     btnShowLog: TButton;
     tsLog: TTabSheet;
+    tsRoutineSelection: TTabSheet;
+    rbInstall: TRadioButton;
+    rbUninstall: TRadioButton;
+    Image2: TImage;
+    Image3: TImage;
     procedure btnBackClick(Sender: TObject);
     procedure btnCacnelClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
@@ -47,21 +56,29 @@ type
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
     FProgress: IDNProgress;
+    FSettings: IDNElevatedSettings;
     FLog: TStringList;
-    procedure InstallDelphinusAsync;
-    procedure InstallationFinished;
+    procedure LoadPackage;
+    procedure RunSetupAsync;
+    procedure SetupFinished;
     procedure HandleSetupProgress(const Task, Item: string; Progress, Max: Int64);
     procedure HandleTotalProgress(const Task, Item: string; Progress, Max: Int64);
     procedure HandleSetupMessage(AMessageType: TMessageType; const AMessage: string);
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
+    function IsDelphinusInstalled(const ADelphi: IDNDelphiInstallation): Boolean;
+    function CreateSetup(const AInstallation: IDNDelphiInstallation): IDNSetup;
   //PageEventHandlers
+    procedure RoutineSelectionEnter;
     procedure DelphiSelectionEnter;
     procedure SettingsEnter;
     procedure ProgressEnter;
+    function RoutineSelectionCanExit: Boolean;
     function DelphiSelectionCanExit: Boolean;
     function SettingsCanExit: Boolean;
+    function GetNextActivePage: Integer;
+    function GetPreviousActivePage: Integer;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -76,17 +93,18 @@ implementation
 uses
   IOUtils,
   ActiveX,
-  DN.DelphiInstallation.Intf,
   DN.DelphiInstallation.Provider,
   DN.PackageProvider.GitHubRepo,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
-  DN.Setup.Intf,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
   DN.Installer.Intf,
+  DN.Uninstaller.Intf,
   DN.Installer.Delphinus,
+  DN.Uninstaller.Delphinus,
   DN.Progress,
+  DN.Settings,
   Delphinus.WebSetup;
 
 {$R *.dfm}
@@ -95,7 +113,7 @@ uses
 
 procedure TDNWebSetupDialog.btnBackClick(Sender: TObject);
 begin
-  pcSteps.ActivePageIndex := pcSteps.ActivePageIndex - 1;
+  pcSteps.ActivePageIndex := GetPreviousActivePage();;
   PageChanged();
 end;
 
@@ -105,12 +123,15 @@ begin
 end;
 
 procedure TDNWebSetupDialog.btnNextClick(Sender: TObject);
+var
+  LNext: Integer;
 begin
   if CanExitPage() then
   begin
-    if pcSteps.ActivePageIndex < pcSteps.PageCount - 2 then
+    LNext := GetNextActivePage();
+    if LNext < pcSteps.PageCount - 1 then
     begin
-      pcSteps.ActivePageIndex := pcSteps.ActivePageIndex + 1;
+      pcSteps.ActivePageIndex := LNext;
       PageChanged();
     end
     else
@@ -135,24 +156,59 @@ begin
 end;
 
 constructor TDNWebSetupDialog.Create(AOwner: TComponent);
+var
+  LDirectory: string;
 begin
   inherited;
   FProvider := TDNDelphiInstallationProvider.Create();
   FPackageProvider := TDNGithubRepoPackageProvider.Create(TDNWinHttpClient.Create() as IDNHttpClient, 'Memnarch', 'Delphinus');
   FEnterPage := TDictionary<TTabSheet, TProc>.Create();
   FCanExitPage := TDictionary<TTabSheet, TFunc<Boolean>>.Create();
-  InstallationView.Installations.AddRange(FProvider.Installations);
-  edInstallDirectory.Text := TPath.Combine(GetEnvironmentVariable('ProgramFiles'), 'Delphinus');
+
+//  FEnterPage.Add(tsRoutineSelection, DelphiSelectionEnter);
+  FEnterPage.Add(tsRoutineSelection, RoutineSelectionEnter);
   FEnterPage.Add(tsDelphiSelection, DelphiSelectionEnter);
   FEnterPage.Add(tsSettings, SettingsEnter);
   FEnterPage.Add(tsProgress, ProgressEnter);
+  FCanExitPage.Add(tsRoutineSelection, RoutineSelectionCanExit);
   FCanExitPage.Add(tsDelphiSelection, DelphiSelectionCanExit);
   FCanExitPage.Add(tsSettings, SettingsCanExit);
-  pcSteps.ActivePageIndex := 0;
+
   FProgress := TDNProgress.Create();
   FProgress.OnProgress := HandleTotalProgress;
   FLog := TStringList.Create();
+  FSettings := TDNSettings.Create();
+  if FSettings.InstallationDirectory <> '' then
+  begin
+    edInstallDirectory.Text := FSettings.InstallationDirectory;
+    edInstallDirectory.Enabled := False;
+    pcSteps.ActivePageIndex := 0;
+    tsRoutineSelection.Enabled := True;
+  end
+  else
+  begin
+    edInstallDirectory.Text := TPath.Combine(GetEnvironmentVariable('ProgramFiles'), 'Delphinus');
+    pcSteps.ActivePageIndex := 1;
+    tsRoutineSelection.Enabled := False;
+  end;
+  LoadPackage();
   PageChanged();
+end;
+
+function TDNWebSetupDialog.CreateSetup(
+  const AInstallation: IDNDelphiInstallation): IDNSetup;
+var
+  LInstaller: IDNInstaller;
+  LUninstaller: IDNUninstaller;
+  LCompiler: IDNCompiler;
+begin
+  LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(AInstallation.Directory, 'bin'));
+  LInstaller := TDNDelphinusInstaller.Create(LCompiler, AInstallation.Root);
+  LUninstaller := TDNDelphinusUninstaller.Create(AInstallation.Root);
+  Result := TDNDelphinusWebSetup.Create(LInstaller, LUninstaller, FPackageProvider, FSettings, AInstallation.Root);
+  Result.ComponentDirectory := edInstallDirectory.Text;
+  Result.OnProgress := HandleSetupProgress;
+  Result.OnMessage := HandleSetupMessage;
 end;
 
 function TDNWebSetupDialog.DelphiSelectionCanExit: Boolean;
@@ -180,12 +236,20 @@ begin
 end;
 
 procedure TDNWebSetupDialog.DelphiSelectionEnter;
+var
+  LInstallation: IDNDelphiInstallation;
 begin
-  btnNext.Caption := 'Next';
-  if not Assigned(FPackage) and FPackageProvider.Reload() and (FPackageProvider.Packages.Count = 1) then
+  InstallationView.Installations.Clear();
+  if rbInstall.Checked then
   begin
-    FPackage := FPackageProvider.Packages[0];
-    Image1.Picture := FPackage.Picture;
+    btnNext.Caption := 'Next';
+    InstallationView.Installations.AddRange(FProvider.Installations);
+  end
+  else
+  begin
+    for LInstallation in FProvider.Installations do
+      if IsDelphinusInstalled(LInstallation) then
+        InstallationView.Installations.Add(LInstallation);
   end;
 end;
 
@@ -202,6 +266,34 @@ begin
   OpenDialog.DefaultFolder := edInstallDirectory.Text;
   if OpenDialog.Execute() then
     edInstallDirectory.Text := OpenDialog.FileName;
+end;
+
+function TDNWebSetupDialog.GetNextActivePage: Integer;
+var
+  LIndex: Integer;
+begin
+  Result := pcSteps.ActivePageIndex;
+  LIndex := Result;
+  while ((LIndex + 1) < pcSteps.PageCount) do
+  begin
+    Inc(LIndex);
+    if pcSteps.Pages[LIndex].Enabled then
+      Exit(LIndex);
+  end;
+end;
+
+function TDNWebSetupDialog.GetPreviousActivePage: Integer;
+var
+  LIndex: Integer;
+begin
+  Result := pcSteps.ActivePageIndex;
+  LIndex := Result;
+  while LIndex > 0 do
+  begin
+    Dec(LIndex);
+    if pcSteps.Pages[LIndex].Enabled then
+      Exit(LIndex);
+  end;
 end;
 
 procedure TDNWebSetupDialog.HandleSetupMessage(AMessageType: TMessageType;
@@ -244,19 +336,17 @@ begin
   );
 end;
 
-procedure TDNWebSetupDialog.InstallationFinished;
+procedure TDNWebSetupDialog.SetupFinished;
 begin
   btnNext.Caption := 'Finish';
   btnNext.Enabled := True;
   btnShowLog.Visible := True;
 end;
 
-procedure TDNWebSetupDialog.InstallDelphinusAsync;
+procedure TDNWebSetupDialog.RunSetupAsync;
 var
   LInstallation: IDNDelphiInstallation;
   LSetup: IDNSetup;
-  LInstaller: IDNInstaller;
-  LCompiler: IDNCompiler;
 begin
   CoInitialize(nil);
   try
@@ -267,26 +357,40 @@ begin
     for LInstallation in InstallationView.SelectedInstallations do
     begin
       FLog.Add('<Setup> ' + LInstallation.Name);
-      LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(LInstallation.Directory, 'bin'));
-      LInstaller := TDNDelphinusInstaller.Create(LCompiler, LInstallation.Root);
-      LSetup := TDNDelphinusWebSetup.Create(LInstaller, nil, FPackageProvider, LInstallation.Root);
-      LSetup.ComponentDirectory := edInstallDirectory.Text;
-      LSetup.OnProgress := HandleSetupProgress;
-      LSetup.OnMessage := HandleSetupMessage;
-      LSetup.Install(FPackage, nil);
+      LSetup := CreateSetup(LInstallation);
+      if rbInstall.Checked then
+        LSetup.Install(FPackage, nil)
+      else
+        LSetup.Uninstall(FPackage);
       FProgress.NextTask();
     end;
     FProgress.Completed();
   finally
-    TThread.Queue(nil, InstallationFinished);
+    TThread.Queue(nil, SetupFinished);
     CoUninitialize();
+  end;
+end;
+
+function TDNWebSetupDialog.IsDelphinusInstalled(
+  const ADelphi: IDNDelphiInstallation): Boolean;
+begin
+  Result := TDirectory.Exists(TPath.Combine(FSettings.InstallationDirectory, ADelphi.BDSVersion));
+end;
+
+procedure TDNWebSetupDialog.LoadPackage;
+begin
+  if not Assigned(FPackage) and FPackageProvider.Reload() and (FPackageProvider.Packages.Count = 1) then
+  begin
+    FPackage := FPackageProvider.Packages[0];
+    Image1.Picture := FPackage.Picture;
   end;
 end;
 
 procedure TDNWebSetupDialog.PageChanged;
 begin
   lbTitle.Caption := pcSteps.ActivePage.Caption;
-  btnBack.Enabled := (pcSteps.ActivePageIndex > 0) and (pcSteps.ActivePageIndex < tsLog.PageIndex);
+  btnBack.Enabled := (pcSteps.ActivePageIndex > GetPreviousActivePage())
+    and (pcSteps.ActivePageIndex < tsLog.PageIndex);
   PageEnter();
 end;
 
@@ -303,7 +407,20 @@ begin
   btnBack.Enabled := False;
   btnNext.Enabled := False;
   btnCacnel.Enabled := False;
-  TThread.CreateAnonymousThread(InstallDelphinusAsync).Start();
+  TThread.CreateAnonymousThread(RunSetupAsync).Start();
+end;
+
+function TDNWebSetupDialog.RoutineSelectionCanExit: Boolean;
+begin
+  tsSettings.Enabled := rbInstall.Checked;
+  if not tsSettings.Enabled then
+    btnNext.Caption := 'Uninstall';
+  Result := True;
+end;
+
+procedure TDNWebSetupDialog.RoutineSelectionEnter;
+begin
+  btnNext.Caption := 'Next';
 end;
 
 function TDNWebSetupDialog.SettingsCanExit: Boolean;
