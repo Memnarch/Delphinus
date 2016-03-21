@@ -55,20 +55,18 @@ type
     FPackage: IDNPackage;
     FEnterPage: TDictionary<TTabSheet, TProc>;
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
-    FProgress: IDNProgress;
     FSettings: IDNElevatedSettings;
     FLog: TStringList;
     procedure LoadPackage;
     procedure RunSetupAsync;
     procedure SetupFinished;
     procedure HandleSetupProgress(const Task, Item: string; Progress, Max: Int64);
-    procedure HandleTotalProgress(const Task, Item: string; Progress, Max: Int64);
     procedure HandleSetupMessage(AMessageType: TMessageType; const AMessage: string);
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
     function IsDelphinusInstalled(const ADelphi: IDNDelphiInstallation): Boolean;
-    function CreateSetup(const AInstallation: IDNDelphiInstallation): IDNSetup;
+    function CreateSetup(const AInstallations: TArray<IDNDelphiInstallation>): IDNSetup;
   //PageEventHandlers
     procedure RoutineSelectionEnter;
     procedure DelphiSelectionEnter;
@@ -156,8 +154,6 @@ begin
 end;
 
 constructor TDNWebSetupDialog.Create(AOwner: TComponent);
-var
-  LDirectory: string;
 begin
   inherited;
   FProvider := TDNDelphiInstallationProvider.Create();
@@ -174,8 +170,6 @@ begin
   FCanExitPage.Add(tsDelphiSelection, DelphiSelectionCanExit);
   FCanExitPage.Add(tsSettings, SettingsCanExit);
 
-  FProgress := TDNProgress.Create();
-  FProgress.OnProgress := HandleTotalProgress;
   FLog := TStringList.Create();
   FSettings := TDNSettings.Create();
   if FSettings.InstallationDirectory <> '' then
@@ -196,16 +190,25 @@ begin
 end;
 
 function TDNWebSetupDialog.CreateSetup(
-  const AInstallation: IDNDelphiInstallation): IDNSetup;
+  const AInstallations: TArray<IDNDelphiInstallation>): IDNSetup;
 var
-  LInstaller: IDNInstaller;
-  LUninstaller: IDNUninstaller;
+  LInstallers: TArray<IDNInstaller>;
+  LUninstallers: TArray<IDNUninstaller>;
+  LSubFolders: TArray<string>;
   LCompiler: IDNCompiler;
+  i: Integer;
 begin
-  LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(AInstallation.Directory, 'bin'));
-  LInstaller := TDNDelphinusInstaller.Create(LCompiler, AInstallation.Root);
-  LUninstaller := TDNDelphinusUninstaller.Create(AInstallation.Root);
-  Result := TDNDelphinusWebSetup.Create(LInstaller, LUninstaller, FPackageProvider, FSettings, AInstallation.Root);
+  SetLength(LInstallers, Length(AInstallations));
+  SetLength(LUninstallers, Length(AInstallations));
+  SetLength(LSubFolders, Length(AInstallations));
+  for i := 0 to High(LInstallers) do
+  begin
+    LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(AInstallations[i].Directory, 'bin'));
+    LInstallers[i] := TDNDelphinusInstaller.Create(LCompiler, AInstallations[i].Root);
+    LUninstallers[i] := TDNDelphinusUninstaller.Create(AInstallations[i].Root);
+    LSubFolders[i] := AInstallations[i].BDSVersion;
+  end;
+  Result := TDNDelphinusWebSetup.Create(LInstallers, LUninstallers, FPackageProvider, FSettings, LSubFolders);
   Result.ComponentDirectory := edInstallDirectory.Text;
   Result.OnProgress := HandleSetupProgress;
   Result.OnMessage := HandleSetupMessage;
@@ -314,15 +317,6 @@ end;
 procedure TDNWebSetupDialog.HandleSetupProgress(const Task, Item: string;
   Progress, Max: Int64);
 begin
-  if Item <> '' then
-    FProgress.SetTaskProgress(Item, Progress, Max)
-  else
-    FProgress.SetTaskProgress(Task, Progress, Max);
-end;
-
-procedure TDNWebSetupDialog.HandleTotalProgress(const Task, Item: string;
-  Progress, Max: Int64);
-begin
   TThread.Queue(nil,
     procedure
     begin
@@ -345,26 +339,20 @@ end;
 
 procedure TDNWebSetupDialog.RunSetupAsync;
 var
-  LInstallation: IDNDelphiInstallation;
   LSetup: IDNSetup;
 begin
   CoInitialize(nil);
   try
-    FProgress.SetTasks([]);
-    for LInstallation in InstallationView.SelectedInstallations do
-      FProgress.AddTask(LInstallation.Name);
-
-    for LInstallation in InstallationView.SelectedInstallations do
-    begin
-      FLog.Add('<Setup> ' + LInstallation.Name);
-      LSetup := CreateSetup(LInstallation);
+    try
+      LSetup := CreateSetup(InstallationView.SelectedInstallations.ToArray);
       if rbInstall.Checked then
         LSetup.Install(FPackage, nil)
       else
         LSetup.Uninstall(FPackage);
-      FProgress.NextTask();
+    except
+      on E: Exception do
+        HandleSetupMessage(mtError, E.ToString);
     end;
-    FProgress.Completed();
   finally
     TThread.Queue(nil, SetupFinished);
     CoUninitialize();
