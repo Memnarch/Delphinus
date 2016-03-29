@@ -31,6 +31,7 @@ type
     FClient: IDNHttpClient;
     FProgress: IDNProgress;
     FPushDates: TDictionary<string, string>;
+    FExistingIDs: TDictionary<TGUID, Integer>;
     FDateMutex: TMutex;
     function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
     procedure AddPackageFromJSon(AJSon: TJSONObject);
@@ -102,6 +103,7 @@ begin
   FClient := AClient;
   FProgress := TDNProgress.Create();
   FPushDates := TDictionary<string, string>.Create();
+  FExistingIDs := TDictionary<TGUID, Integer>.Create();
   LKey := StringReplace(GetPushDateFile(), '\', '/', [rfReplaceAll]);
   FDateMutex := TMutex.Create(nil, False, LKey);
 end;
@@ -133,8 +135,9 @@ begin
   FClient.IgnoreCacheExpiration := (LPushDate = LOldPushDate) and (FClient.LastResponseSource = rsCache);
   LHeadInfo := TInfoFile.Create();
   try
-    if GetInfoFile(LAuthor, LName, LDefaultBranch, LHeadInfo) then
+    if GetInfoFile(LAuthor, LName, LDefaultBranch, LHeadInfo) and not FExistingIDs.ContainsKey(LHeadInfo.ID) then
     begin
+      FExistingIDs.Add(LHeadInfo.ID, 0);
       LPackage := TDNGitHubPackage.Create();
       LPackage.OnGetLicense := GetLicense;
       LPackage.Description := AItem.GetValue('description').Value;
@@ -176,7 +179,8 @@ end;
 destructor TDNGitHubPackageProvider.Destroy;
 begin
   FDateMutex.Free();
-  FPushDates.Free;
+  FPushDates.Free();
+  FExistingIDs.Free();
   FClient := nil;
   FProgress := nil;
   inherited;
@@ -414,6 +418,7 @@ begin
       if FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk then
       begin
         Packages.Clear();
+        FExistingIDs.Clear();
         LRoot := TJSONObject.ParseJSONValue(LSearchResponse)as TJSONObject;
         try
           LItems := LRoot.GetValue('items') as TJSONArray;
