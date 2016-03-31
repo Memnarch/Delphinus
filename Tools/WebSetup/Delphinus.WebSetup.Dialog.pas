@@ -67,6 +67,7 @@ type
     procedure SetupFinished;
     procedure HandleSetupProgress(const Task, Item: string; Progress, Max: Int64);
     procedure HandleSetupMessage(AMessageType: TMessageType; const AMessage: string);
+    procedure HandleCheckInstalled(const AInstallation: IDNDelphiInstallation; var AIsChecked: Boolean);
     procedure PageChanged;
     procedure PageEnter;
     function CanExitPage: Boolean;
@@ -195,6 +196,7 @@ begin
     pcSteps.ActivePageIndex := 1;
     tsRoutineSelection.Enabled := False;
   end;
+  InstallationView.OnCheckInstalled := HandleCheckInstalled;
   LoadPackage();
   PageChanged();
 end;
@@ -264,6 +266,7 @@ begin
       if IsDelphinusInstalled(LInstallation) then
         InstallationView.Installations.Add(LInstallation);
   end;
+  InstallationView.LockInstalled := rbInstall.Checked;
 end;
 
 destructor TDNWebSetupDialog.Destroy;
@@ -321,6 +324,13 @@ begin
   end;
 end;
 
+procedure TDNWebSetupDialog.HandleCheckInstalled(
+  const AInstallation: IDNDelphiInstallation; var AIsChecked: Boolean);
+begin
+  if not AIsChecked then
+    AIsChecked := IsDelphinusInstalled(AInstallation);
+end;
+
 procedure TDNWebSetupDialog.HandleSetupMessage(AMessageType: TMessageType;
   const AMessage: string);
 var
@@ -329,7 +339,11 @@ begin
   case AMessageType of
     mtNotification: LPrefix := '<Info> ';
     mtWarning: LPrefix := '<Warning> ';
-    mtError: LPrefix := '<Error> ';
+    mtError:
+    begin
+      LPrefix := '<Error> ';
+      pbProgress.State := pbsError;
+    end;
   else
     LPrefix := '<?> ';
   end;
@@ -388,8 +402,11 @@ end;
 
 function TDNWebSetupDialog.IsDelphinusInstalled(
   const ADelphi: IDNDelphiInstallation): Boolean;
+var
+  LDir: string;
 begin
-  Result := TDirectory.Exists(TPath.Combine(FSettings.InstallationDirectory, ADelphi.BDSVersion));
+  LDir := TPath.Combine(FSettings.InstallationDirectory, ADelphi.BDSVersion);
+  Result := TFile.Exists(TPath.Combine(LDir, CUninstallFile));
 end;
 
 procedure TDNWebSetupDialog.LoadPackage;

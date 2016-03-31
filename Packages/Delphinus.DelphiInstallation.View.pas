@@ -9,6 +9,8 @@ uses
   CheckLst, ExtCtrls;
 
 type
+  TCheckInstalled = procedure(const Installation: IDNDelphiInstallation; var IsInstalled: Boolean) of object;
+
   TDelphiInstallationView = class(TFrame)
     View: TCheckListBox;
     sLine: TShape;
@@ -21,15 +23,21 @@ type
     { Private declarations }
     FInstallations: TList<IDNDelphiInstallation>;
     FSelectedInstallations: TList<IDNDelphiInstallation>;
+    FOnCheckInstalled: TCheckInstalled;
+    FLockInstalled: Boolean;
     function GetInstallations: TList<IDNDelphiInstallation>;
     procedure HandleInstallationsChanged(Sender: TObject; const Item: IDNDelphiInstallation; Action: TCollectionNotification);
     function GetSelectedInstallations: TList<IDNDelphiInstallation>;
+    function IsInstalled(const AInstallation: IDNDelphiInstallation): Boolean;
+    procedure SetLockInstalled(const Value: Boolean);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property Installations: TList<IDNDelphiInstallation> read GetInstallations;
     property SelectedInstallations: TList<IDNDelphiInstallation> read GetSelectedInstallations;
+    property OnCheckInstalled: TCheckInstalled read FOnCheckInstalled write FOnCheckInstalled;
+    property LockInstalled: Boolean read FLockInstalled write SetLockInstalled;
   end;
 
 implementation
@@ -55,7 +63,11 @@ begin
     if cbAll.Checked then
       View.CheckAll(cbChecked)
     else
+    begin
       View.CheckAll(cbUnchecked);
+      if FLockInstalled then
+        ViewClickCheck(View);
+    end;
   end;
 end;
 
@@ -100,7 +112,29 @@ begin
     cnAdded:
       View.Items.Add('');
     cnRemoved, cnExtracted:
+    begin
       View.Items.Delete(View.Items.Count - 1);
+      if View.Items.Count = 0 then
+        cbAll.Checked := False;
+    end;
+  end;
+end;
+
+function TDelphiInstallationView.IsInstalled(
+  const AInstallation: IDNDelphiInstallation): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnCheckInstalled) then
+    FOnCheckInstalled(AInstallation, Result);
+end;
+
+procedure TDelphiInstallationView.SetLockInstalled(const Value: Boolean);
+begin
+  if FLockInstalled <> Value then
+  begin
+    FLockInstalled := Value;
+    if FLockInstalled then
+      ViewClickCheck(View);
   end;
 end;
 
@@ -111,14 +145,18 @@ var
 begin
   LCheckedCount := 0;
   for i := 0 to View.Items.Count - 1 do
+  begin
+    if not View.Checked[i] and FLockInstalled then
+      View.Checked[i] := IsInstalled(Installations[i]);
     if View.Checked[i] then
       Inc(LCheckedCount);
+  end;
 
   TProtectedCheckBox(cbAll).ClicksDisabled := True;
   if (LCheckedCount > 0) and (LCheckedCount < View.Items.Count) then
     cbAll.State := cbGrayed
   else
-    cbAll.Checked := LCheckedCount = View.Items.Count;
+    cbAll.Checked := (LCheckedCount > 0) and (LCheckedCount = View.Items.Count);
 
   TProtectedCheckBox(cbAll).ClicksDisabled := False;
 end;
@@ -144,8 +182,10 @@ begin
     View.Canvas.Font.Color := clWindowText;
     View.Canvas.Font.Style := [fsBold];
     LName := LInstallation.Name;
+    if FLockInstalled and View.Checked[Index] and IsInstalled(LInstallation) then
+      LName := LName + ' (Installed)';
     View.Canvas.TextRect(LTextRect, LName);
-    LTextRect.Top := LTextRect.Top + Abs(View.Canvas.Font.Height);
+    LTextRect.Top := LTextRect.Top + View.Canvas.TextHeight('qTp');
     View.Canvas.Font.Style := [];
     LName := LInstallation.Directory;
     View.Canvas.TextRect(LTextRect, LName);

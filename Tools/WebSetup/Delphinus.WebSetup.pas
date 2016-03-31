@@ -34,7 +34,8 @@ implementation
 
 uses
   SysUtils,
-  IOUtils;
+  IOUtils,
+  DN.Types;
 
 { TDNDelphinusWebSetup }
 
@@ -99,8 +100,19 @@ begin
     FProgress.NextTask();
     for i := 0 to High(FInstallers) do
     begin
-      ReportInfo('Installing BDS ' + FSubDirs[i]);
+      ReportInfo('BDS ' + FSubDirs[i]);
       LInstallDir := TPath.Combine(ComponentDirectory, FSubDirs[i]);
+      if TFile.Exists(TPath.Combine(LInstallDir, CUninstallFile)) then
+      begin
+        ReportInfo('Uninstalling');
+        Result := FUninstallers[i].Uninstall(LInstallDir);
+        if not Result then
+        begin
+          ReportError('Failed');
+          Break;
+        end;
+      end;
+      ReportInfo('Installing');
       Result := FInstallers[i].Install(LContentDir, LInstallDir);
       if Result then
       begin
@@ -111,9 +123,10 @@ begin
         end
       end
       else
+      begin
         ReportError('Failed');
-      if not Result then
         Break;
+      end;
       FProgress.NextTask();
     end;
   end;
