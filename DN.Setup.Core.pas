@@ -33,6 +33,7 @@ type
     function GetOnProgress: TDNProgressEvent;
     procedure SetOnProgress(const Value: TDNProgressEvent);
     procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
+    procedure HandleProviderProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     procedure DoProgress(const ATask, AItem: string; AProgress, AMax: Int64);
   protected
     FProgress: IDNProgress;
@@ -100,10 +101,13 @@ begin
 end;
 
 constructor TDNSetupCore.Create(const APackageProvider: IDNPackageProvider);
+var
+  LProgress: IDNProgress;
 begin
   inherited Create();
   FProvider := APackageProvider;
-  RegisterProgressHandler(FProvider);
+  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
+    LProgress.OnProgress := HandleProviderProgress;
   FProgress := TDNProgress.Create();
   FProgress.OnProgress := DoProgress;
 end;
@@ -206,6 +210,12 @@ end;
 function TDNSetupCore.GetSetupTempDir: string;
 begin
   Result := TPath.Combine(GetDelphinusTempFolder(), 'Setup');
+end;
+
+procedure TDNSetupCore.HandleProviderProgress(const ATask, AItem: string;
+  AProgress, AMax: Int64);
+begin
+  FProgress.SetTaskProgress(IfThen(AItem <> '', AItem, 'Archive'), AProgress, AMax);
 end;
 
 procedure TDNSetupCore.HandleProgress(const ATask, AItem: string; AProgress,
