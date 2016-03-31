@@ -28,20 +28,15 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Top = 56
     Width = 412
     Height = 177
-    ActivePage = tsDelphiSelection
+    ActivePage = tsSettings
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsFlatButtons
     TabOrder = 0
-    ExplicitHeight = 183
     object tsRoutineSelection: TTabSheet
       Caption = 'Select Action'
       Enabled = False
       ImageIndex = 4
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Image2: TImage
         Left = 3
         Top = 16
@@ -96,7 +91,6 @@ object DNWebSetupDialog: TDNWebSetupDialog
     object tsDelphiSelection: TTabSheet
       Caption = 'Select Delphi-Versions'
       TabVisible = False
-      ExplicitHeight = 173
       inline InstallationView: TDelphiInstallationView
         AlignWithMargins = True
         Left = 3
@@ -108,7 +102,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
         ExplicitLeft = 3
         ExplicitTop = 3
         ExplicitWidth = 398
-        ExplicitHeight = 167
+        ExplicitHeight = 161
         inherited sLine: TShape
           Width = 398
           ExplicitWidth = 398
@@ -117,7 +111,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
           Width = 398
           Height = 140
           ExplicitWidth = 398
-          ExplicitHeight = 146
+          ExplicitHeight = 140
         end
         inherited cbAll: TCheckBox
           Width = 398
@@ -133,10 +127,6 @@ object DNWebSetupDialog: TDNWebSetupDialog
       Caption = 'Settings'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         404
         167)
@@ -146,6 +136,13 @@ object DNWebSetupDialog: TDNWebSetupDialog
         Width = 153
         Height = 13
         Caption = 'Directory to install Delphinus to:'
+      end
+      object Label2: TLabel
+        Left = 3
+        Top = 80
+        Width = 39
+        Height = 13
+        Caption = 'Version:'
       end
       object edInstallDirectory: TButtonedEdit
         Left = 3
@@ -160,14 +157,27 @@ object DNWebSetupDialog: TDNWebSetupDialog
         Text = 'edInstallDirectory'
         OnRightButtonClick = edInstallDirectoryRightButtonClick
       end
+      object cbVersions: TComboBox
+        Left = 3
+        Top = 99
+        Width = 145
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 1
+      end
+      object cbNoVersion: TCheckBox
+        Left = 3
+        Top = 126
+        Width = 97
+        Height = 17
+        Caption = 'Install from Head'
+        TabOrder = 2
+        OnClick = cbNoVersionClick
+      end
     end
     object tsProgress: TTabSheet
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         404
         167)
@@ -202,18 +212,14 @@ object DNWebSetupDialog: TDNWebSetupDialog
       Caption = 'Log'
       ImageIndex = 3
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
       object mLog: TMemo
         Left = 0
         Top = 0
         Width = 404
-        Height = 173
+        Height = 167
         Align = alClient
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitHeight = 167
       end
     end
   end
@@ -227,7 +233,6 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Caption = 'pnlButtons'
     ShowCaption = False
     TabOrder = 1
-    ExplicitTop = 254
     DesignSize = (
       554
       41)
@@ -295,7 +300,7 @@ object DNWebSetupDialog: TDNWebSetupDialog
     Left = 408
     Top = 72
     Bitmap = {
-      494C010101000800480010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C0101010008004C0010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

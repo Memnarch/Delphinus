@@ -43,11 +43,15 @@ type
     rbUninstall: TRadioButton;
     Image2: TImage;
     Image3: TImage;
+    cbVersions: TComboBox;
+    Label2: TLabel;
+    cbNoVersion: TCheckBox;
     procedure btnBackClick(Sender: TObject);
     procedure btnCacnelClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure edInstallDirectoryRightButtonClick(Sender: TObject);
     procedure btnShowLogClick(Sender: TObject);
+    procedure cbNoVersionClick(Sender: TObject);
   private
     { Private declarations }
     FProvider: IDNDelphiInstallationProvider;
@@ -57,6 +61,7 @@ type
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
     FSettings: IDNElevatedSettings;
     FLog: TStringList;
+    procedure FillVersions;
     procedure LoadPackage;
     procedure RunSetupAsync;
     procedure SetupFinished;
@@ -103,6 +108,7 @@ uses
   DN.Uninstaller.Delphinus,
   DN.Progress,
   DN.Settings,
+  DN.Package.Version.Intf,
   Delphinus.WebSetup;
 
 {$R *.dfm}
@@ -153,6 +159,11 @@ begin
     Result := LFunc();
 end;
 
+procedure TDNWebSetupDialog.cbNoVersionClick(Sender: TObject);
+begin
+  cbVersions.Enabled := not cbNoVersion.Checked;
+end;
+
 constructor TDNWebSetupDialog.Create(AOwner: TComponent);
 begin
   inherited;
@@ -161,7 +172,6 @@ begin
   FEnterPage := TDictionary<TTabSheet, TProc>.Create();
   FCanExitPage := TDictionary<TTabSheet, TFunc<Boolean>>.Create();
 
-//  FEnterPage.Add(tsRoutineSelection, DelphiSelectionEnter);
   FEnterPage.Add(tsRoutineSelection, RoutineSelectionEnter);
   FEnterPage.Add(tsDelphiSelection, DelphiSelectionEnter);
   FEnterPage.Add(tsSettings, SettingsEnter);
@@ -271,6 +281,18 @@ begin
     edInstallDirectory.Text := OpenDialog.FileName;
 end;
 
+procedure TDNWebSetupDialog.FillVersions;
+var
+  LVersion: IDNPackageVersion;
+begin
+  cbVersions.Clear();
+  for LVersion in FPackage.Versions do
+    cbVersions.Items.Add(LVersion.Name);
+  cbVersions.ItemIndex := 0;
+  cbNoVersion.Checked := cbVersions.ItemIndex = -1;
+  cbNoVersion.Enabled := not cbNoVersion.Checked;
+end;
+
 function TDNWebSetupDialog.GetNextActivePage: Integer;
 var
   LIndex: Integer;
@@ -346,7 +368,12 @@ begin
     try
       LSetup := CreateSetup(InstallationView.SelectedInstallations.ToArray);
       if rbInstall.Checked then
-        LSetup.Install(FPackage, nil)
+      begin
+        if cbNoVersion.Checked then
+          LSetup.Install(FPackage, nil)
+        else
+          LSetup.Install(FPackage, FPackage.Versions[cbVersions.ItemIndex]);
+      end
       else
         LSetup.Uninstall(FPackage);
     except
@@ -371,6 +398,7 @@ begin
   begin
     FPackage := FPackageProvider.Packages[0];
     Image1.Picture := FPackage.Picture;
+    FillVersions();
   end;
 end;
 
