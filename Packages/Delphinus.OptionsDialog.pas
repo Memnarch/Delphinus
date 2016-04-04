@@ -13,7 +13,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs,
   Delphinus.Forms, StdCtrls,
-  Delphinus.Settings;
+  DN.Settings.Intf;
 
 type
   TDelphinusOptionsDialog = class(TForm)
@@ -25,13 +25,11 @@ type
     lbResponse: TLabel;
     procedure btnTestClick(Sender: TObject);
   private
-    FSettings: TDelphinusSettings;
-    procedure SetSettings(const Value: TDelphinusSettings);
-    function GetSettings: TDelphinusSettings;
     { Private declarations }
   public
     { Public declarations }
-    property Settings: TDelphinusSettings read GetSettings write SetSettings;
+    procedure LoadSettings(const ASettings: IDNSettings);
+    procedure StoreSettings(const ASettings: IDNSettings);
   end;
 
 var
@@ -57,7 +55,7 @@ var
   LJSon: TJSONObject;
 begin
   LClient := TDNWinHttpClient.Create();
-  LClient.Authentication := Format(CGithubOAuthAuthentication, [Settings.OAuthToken]);
+  LClient.Authentication := Format(CGithubOAuthAuthentication, [Trim(edToken.Text)]);
   LResult := LClient.GetText('https://api.github.com/user', LResponse);
   if LResult = HTTPErrorOk then
   begin
@@ -74,22 +72,14 @@ begin
   end;
 end;
 
-function TDelphinusOptionsDialog.GetSettings: TDelphinusSettings;
+procedure TDelphinusOptionsDialog.LoadSettings(const ASettings: IDNSettings);
 begin
-  Result := FSettings;
-  Result.OAuthToken := Trim(edToken.Text);
+  edToken.Text := ASettings.OAuthToken;
 end;
 
-procedure TDelphinusOptionsDialog.SetSettings(const Value: TDelphinusSettings);
+procedure TDelphinusOptionsDialog.StoreSettings(const ASettings: IDNSettings);
 begin
-  if FSettings <> Value then
-  begin
-    FSettings := Value;
-    if Assigned(FSettings) then
-    begin
-      edToken.Text := FSettings.OAuthToken;
-    end;
-  end;
+  ASettings.OAuthToken := Trim(edToken.Text);
 end;
 
 end.

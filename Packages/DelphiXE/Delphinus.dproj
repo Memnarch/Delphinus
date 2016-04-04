@@ -2,7 +2,6 @@
 		<PropertyGroup>
 			<ProjectGuid>{0990B172-C221-4312-816E-1E634AF7EE2C}</ProjectGuid>
 			<MainSource>Delphinus.dpk</MainSource>
-			<ProjectVersion>15.4</ProjectVersion>
 			<FrameworkType>None</FrameworkType>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
@@ -12,6 +11,7 @@
 			<Platform>Win32</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<Basis>True</Basis>
+			<ProjectVersion>12.3</ProjectVersion>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -55,8 +55,6 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_DebugInformation>0</DCC_DebugInformation>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="Delphinus.dpk">
@@ -127,7 +125,6 @@
 			<DCCReference Include="..\Delphinus.OptionsDialog.pas">
 				<Form>DelphinusOptionsDialog</Form>
 			</DCCReference>
-			<DCCReference Include="..\Delphinus.Settings.pas"/>
 			<DCCReference Include="..\..\DN.Setup.Intf.pas"/>
 			<DCCReference Include="..\..\DN.Setup.pas"/>
 			<DCCReference Include="..\..\DN.Version.pas"/>
@@ -151,10 +148,16 @@
 			<DCCReference Include="..\..\DN.Environment.pas"/>
 			<DCCReference Include="..\..\DN.ComCtrls.Helper.pas"/>
 			<DCCReference Include="..\..\DN.ActiveX.pas"/>
+			<DCCReference Include="..\..\DN.Setup.Core.pas"/>
+			<DCCReference Include="..\..\DN.Settings.Intf.pas"/>
+			<DCCReference Include="..\..\DN.Settings.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>
 			<None Include="..\..\DN.LowHighString.inc"/>
+			<RcCompile Include="..\Delphinus.rc">
+				<Form>Delphinus.res</Form>
+			</RcCompile>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

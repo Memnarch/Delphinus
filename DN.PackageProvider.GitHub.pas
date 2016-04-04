@@ -28,7 +28,6 @@ uses
 type
   TDNGitHubPackageProvider = class(TDNPackageProvider, IDNProgress)
   private
-    FClient: IDNHttpClient;
     FProgress: IDNProgress;
     FPushDates: TDictionary<string, string>;
     FExistingIDs: TDictionary<TGUID, Integer>;
@@ -43,8 +42,10 @@ type
     function GetReleaseText(const AAuthor, ARepository: string; out AReleases: string): Boolean;
     procedure HandleDownloadProgress(AProgress, AMax: Int64);
   protected
+    FClient: IDNHttpClient;
     function GetLicense(const APackage: TDNGitHubPackage): string;
     function GetPushDateFile: string;
+    function GetRepoList(out ARepos: TJSONArray): Boolean; virtual;
     procedure SavePushDates;
     procedure LoadPushDates;
     //properties for interfaceredirection
@@ -322,6 +323,24 @@ begin
   Result := FClient.GetText(Format(CGithubRepoReleases, [AAuthor, ARepository]), AReleases) = HTTPErrorOk;
 end;
 
+function TDNGitHubPackageProvider.GetRepoList(out ARepos: TJSONArray): Boolean;
+var
+  LRoot: TJSONObject;
+  LSearchResponse: string;
+begin
+  Result := FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk;
+  if Result then
+  begin
+    LRoot := TJSONObject.ParseJSONValue(LSearchResponse)as TJSONObject;
+    try
+      ARepos := LRoot.GetValue('items') as TJSONArray;
+      ARepos.Owned := False;
+    finally
+      LRoot.Free;
+    end;
+  end;
+end;
+
 procedure TDNGitHubPackageProvider.HandleDownloadProgress(AProgress,
   AMax: Int64);
 begin
@@ -404,10 +423,9 @@ end;
 
 function TDNGitHubPackageProvider.Reload: Boolean;
 var
-  LRoot, LItem: TJSONObject;
-  LItems: TJSONArray;
+  LRepo: TJSONObject;
+  LRepos: TJSONArray;
   i: Integer;
-  LSearchResponse: string;
 begin
   Result := False;
   FProgress.SetTasks(['Reolading']);
@@ -415,24 +433,22 @@ begin
     LoadPushDates();
     FClient.BeginWork();
     try
-      if FClient.GetText(CGitRepoSearch, LSearchResponse) = HTTPErrorOk then
+      if GetRepoList(LRepos) then
       begin
-        Packages.Clear();
-        FExistingIDs.Clear();
-        LRoot := TJSONObject.ParseJSONValue(LSearchResponse)as TJSONObject;
         try
-          LItems := LRoot.GetValue('items') as TJSONArray;
-          for i := 0 to LItems.Count - 1 do
+          Packages.Clear();
+          FExistingIDs.Clear();
+          for i := 0 to LRepos.Count - 1 do
           begin
-            LItem := LItems.Items[i] as TJSONObject;
-            FProgress.SetTaskProgress(LItem.GetValue('name').Value, i, LItems.Count);
-            AddPackageFromJSon(LItem);
+            LRepo := LRepos.Items[i] as TJSONObject;
+            FProgress.SetTaskProgress(LRepo.GetValue('name').Value, i, LRepos.Count);
+            AddPackageFromJSon(LRepo);
           end;
           FProgress.Completed();
+          Result := True;
         finally
-          LRoot.Free;
+          LRepos.Free;
         end;
-        Result := True;
       end;
     finally
       FClient.EndWork();

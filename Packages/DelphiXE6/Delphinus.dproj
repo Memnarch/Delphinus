@@ -63,11 +63,11 @@
         <DCC_UsePackage>rtl;dbrtl;DbxCommonDriver;IndyCore;IndySystem;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UsePackage>rtl;vclimg;dbrtl;DbxCommonDriver;IndyCore;IndySystem;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;vclimg;dbrtl;DbxCommonDriver;IndyCore;IndySystem;IndyProtocols;vcl;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>rtl;vclimg;dbrtl;DbxCommonDriver;IndyCore;IndySystem;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;vclimg;dbrtl;DbxCommonDriver;IndyCore;IndySystem;IndyProtocols;vcl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -154,7 +154,6 @@
         <DCCReference Include="..\Delphinus.OptionsDialog.pas">
             <Form>DelphinusOptionsDialog</Form>
         </DCCReference>
-        <DCCReference Include="..\Delphinus.Settings.pas"/>
         <DCCReference Include="..\..\DN.Setup.Intf.pas"/>
         <DCCReference Include="..\..\DN.Setup.pas"/>
         <DCCReference Include="..\..\DN.Version.pas"/>
@@ -182,8 +181,14 @@
         <DCCReference Include="..\..\DN.Environment.pas"/>
         <DCCReference Include="..\..\DN.ComCtrls.Helper.pas"/>
         <DCCReference Include="..\..\DN.ActiveX.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Core.pas"/>
+        <DCCReference Include="..\..\DN.Settings.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Settings.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
+        </RcCompile>
+        <RcCompile Include="..\Delphinus.rc">
+            <Form>Delphinus.res</Form>
         </RcCompile>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

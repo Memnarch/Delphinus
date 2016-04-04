@@ -11,6 +11,7 @@ interface
 
 uses
   Classes,
+  DN.Types,
   DN.Compiler.Intf;
 
 type
@@ -39,6 +40,8 @@ type
     function GetLog: TStrings;
     function GetPlatform: TDNCompilerPlatform;
     procedure SetPlatform(const Value: TDNCompilerPlatform);
+  protected
+    function GetVersion: TCompilerVersion; virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -52,6 +55,7 @@ type
     property Config: TDNCompilerConfig read GetConfig write SetConfig;
     property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
+    property Version: TCompilerVersion read GetVersion;
   end;
 
 implementation
@@ -115,6 +119,11 @@ end;
 function TDNCompiler.GetTarget: TDNCompilerTarget;
 begin
   Result := FTarget;
+end;
+
+function TDNCompiler.GetVersion: TCompilerVersion;
+begin
+  Result := 0;
 end;
 
 function TDNCompiler.ResolveVars(const APath: string): string;

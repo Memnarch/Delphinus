@@ -14,6 +14,7 @@ type
     procedure SetTaskSteps(const Value: Int64);
     //public methods and properties
     procedure SetTasks(ATasks: array of string);
+    procedure AddTask(ATask: string);
     procedure SetTaskProgress(const AItem: string; AProgress, AMax: Int64);
     procedure NextTask;
     procedure Reset;

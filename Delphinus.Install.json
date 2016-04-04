@@ -1,0 +1,24 @@
+{
+	"source_folders":
+	[
+		{
+			"folder": ".",
+			"recursive": true,
+			"filter": "*"
+		}
+	],
+	
+	"projects":
+	[
+		{
+			"project": "Packages\\DelphiXE\\Delphinus.dproj",
+			"compiler_min": 22,
+			"compiler_max": 26
+		},
+		
+		{
+			"project": "Packages\\DelphiXE6\\Delphinus.dproj",
+			"compiler_min": 27
+		}
+	]
+}

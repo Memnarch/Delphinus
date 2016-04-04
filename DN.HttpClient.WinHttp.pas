@@ -169,6 +169,7 @@ begin
       LResponse := IUnknown(FRequest.ResponseStream) as IStream;
       LAdapter := TStreamAdapter.Create(AResponse) as IStream;
       LResponse.CopyTo(LAdapter, High(Int64), LRead, LWritten);
+      DoProgress(LWritten, LWritten);
       if FRequest.GetResponseHeader('ETag', LETag) = S_OK then
       begin
         if not FRequest.GetResponseHeader('cache-control', LCacheControl) = S_OK then

@@ -21,6 +21,7 @@ type
   public
     constructor Create;
     procedure SetTasks(ATasks: array of string);
+    procedure AddTask(ATask: string);
     procedure SetTaskProgress(const AItem: string; AProgress, AMax: Int64);
     procedure NextTask;
     procedure Reset;
@@ -32,6 +33,12 @@ type
 implementation
 
 { TProgress }
+
+procedure TDNProgress.AddTask(ATask: string);
+begin
+  SetLength(FTasks, Length(FTasks) + 1);
+  FTasks[High(FTasks)] := ATask;
+end;
 
 procedure TDNProgress.Completed;
 begin

@@ -7,7 +7,6 @@ uses
   Graphics, Controls, Forms, Dialogs, ComCtrls, StdCtrls,
   DN.PackageFilter, Generics.Collections,
   DN.Package.Intf,
-  Delphinus.Settings,
   Delphinus.Forms,
   ExtCtrls,
   ImgList,

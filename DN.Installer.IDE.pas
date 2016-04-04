@@ -22,6 +22,8 @@ type
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); override;
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); override;
     function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; override;
+    function GetSupportedPlatforms: TDNCompilerPlatforms; override;
+    procedure ConfigureCompiler(const ACompiler: IDNCompiler); override;
   public
     function Install(const ASourceDirectory: string;
       const ATargetDirectory: string): Boolean; override;
@@ -108,6 +110,21 @@ begin
   finally
     LLines.Free;
   end;
+end;
+
+procedure TDNIDEInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
+var
+  LOptions: IDNEnvironmentOptions;
+begin
+  inherited;
+  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[ACompiler.Platform];
+  ACompiler.BPLOutput := LOptions.BPLOutput;
+  ACompiler.DCPOutput := LOptions.DCPOutput;
+end;
+
+function TDNIDEInstaller.GetSupportedPlatforms: TDNCompilerPlatforms;
+begin
+  Result := (GDelphinusIDEServices as IDNEnvironmentOptionsService).SupportedPlatforms;
 end;
 
 function TDNIDEInstaller.Install(const ASourceDirectory,
