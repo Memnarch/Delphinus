@@ -44,8 +44,6 @@ begin
   if Result then
   begin
     ARepos := TJSonObject.ParseJSONValue('[' + LResponse + ']') as TJSONArray;
-    //hack as long as we operate in the featurebranch
-    TJSONObject(ARepos.Items[0]).Get('default_branch').JsonValue := TJSONString.Create('feature/WebSetup');
     Result := Assigned(ARepos);
   end;
 end;
