@@ -13,7 +13,8 @@ uses
   DN.Settings.Intf,
   DN.DelphiInstallation.Intf,
   DN.Setup.Intf,
-  Buttons, ActnList, System.Actions, Vcl.Imaging.pngimage;
+  Buttons, ActnList,
+  pngimage;
 
 type
   TDNWebSetupDialog = class(TForm)

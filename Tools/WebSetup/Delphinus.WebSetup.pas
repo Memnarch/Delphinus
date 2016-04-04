@@ -131,7 +131,14 @@ begin
     end;
   end;
   if Result then
+  begin
     FSettings.InstallationDirectory := ComponentDirectory;
+    FSettings.InstallDate := Now();
+    if Assigned(AVersion) then
+      FSettings.Version := AVersion.Name
+    else
+      FSettings.Version := '';
+  end;
   FProgress.Completed();
 end;
 
