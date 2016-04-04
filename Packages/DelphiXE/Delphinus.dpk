@@ -1,5 +1,6 @@
 package Delphinus;
 
+{$R *.res}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -80,7 +81,6 @@ contains
   Delphinus.Forms in '..\Delphinus.Forms.pas',
   Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
-  Delphinus.Settings in '..\Delphinus.Settings.pas',
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
   DN.Setup in '..\..\DN.Setup.pas',
   DN.Version in '..\..\DN.Version.pas',
@@ -100,7 +100,9 @@ contains
   DN.Environment in '..\..\DN.Environment.pas',
   DN.ComCtrls.Helper in '..\..\DN.ComCtrls.Helper.pas',
   DN.ActiveX in '..\..\DN.ActiveX.pas',
-  DN.Setup.Core in '..\..\DN.Setup.Core.pas';
+  DN.Setup.Core in '..\..\DN.Setup.Core.pas',
+  DN.Settings.Intf in '..\..\DN.Settings.Intf.pas',
+  DN.Settings in '..\..\DN.Settings.pas';
 
 end.
 

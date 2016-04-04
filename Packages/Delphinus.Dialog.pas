@@ -20,7 +20,7 @@ uses
   Generics.Collections,
   DN.PackageDetailView,
   Delphinus.Forms,
-  Delphinus.Settings,
+  DN.Settings.Intf,
   DN.Setup.Intf,
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
@@ -64,7 +64,7 @@ type
     FInstalledPackages: TList<IDNPackage>;
     FUpdatePackages: TList<IDNPackage>;
     FDetailView: TPackageDetailView;
-    FSettings: TDelphinusSettings;
+    FSettings: IDNSettings;
     FCategoryFilteView: TCategoryFilterView;
     FCategory: TPackageCategory;
     FProgressDialog: TProgressDialog;
@@ -83,8 +83,6 @@ type
     function GetUpdateVersion(const APackage: IDNPackage): string;
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
-    procedure LoadSettings(out ASettings: TDelphinusSettings);
-    procedure SaveSettings(const ASettings: TDelphinusSettings);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
@@ -125,6 +123,7 @@ uses
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
   DN.Progress.Intf,
+  DN.Settings,
   StrUtils;
 
 {$R *.dfm}
@@ -142,11 +141,10 @@ var
 begin
   LDialog := TDelphinusOptionsDialog.Create(nil);
   try
-    LDialog.Settings := FSettings;
+    LDialog.LoadSettings(FSettings);
     if LDialog.ShowModal = mrOk then
     begin
-      FSettings := LDialog.Settings;
-      SaveSettings(FSettings);
+      LDialog.StoreSettings(FSettings);
       RecreatePackageProvider();
     end;
   finally
@@ -222,7 +220,7 @@ end;
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
-  FSettings := TDelphinusSettings.Create();
+  FSettings := TDNSettings.Create();
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
@@ -251,7 +249,6 @@ begin
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.Parent := Self;
 
-  LoadSettings(FSettings);
   RecreatePackageProvider();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
@@ -280,14 +277,13 @@ end;
 
 destructor TDelphinusDialog.Destroy;
 begin
-  SaveSettings(FSettings);
   FOverView.OnSelectedPackageChanged := nil;
   FPackages.Free;
   FInstalledPackages.Free;
   FUpdatePackages.Free;
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
-  FSettings.Free;
+  FSettings := nil;
   inherited;
 end;
 
@@ -485,22 +481,6 @@ begin
   Result := Assigned(GetInstalledPackage(APackage));
 end;
 
-procedure TDelphinusDialog.LoadSettings(out ASettings: TDelphinusSettings);
-var
-  LRegistry: TRegistry;
-  LBase: string;
-begin
-  LRegistry := TRegistry.Create();
-  try
-    LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
-    LRegistry.RootKey := HKEY_CURRENT_USER;
-    if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), False) then
-      FSettings.OAuthToken := LRegistry.ReadString(COAuthTokenKey);
-  finally
-    LRegistry.Free;
-  end;
-end;
-
 procedure TDelphinusDialog.RecreatePackageProvider;
 var
   LClient: IDNHttpClient;
@@ -535,22 +515,6 @@ procedure TDelphinusDialog.RefreshOverview;
 begin
   GetActiveOverView().Clear;
   GetActiveOverView().Packages.AddRange(GetActivePackageSource());
-end;
-
-procedure TDelphinusDialog.SaveSettings(const ASettings: TDelphinusSettings);
-var
-  LRegistry: TRegistry;
-  LBase: string;
-begin
-  LRegistry := TRegistry.Create();
-  try
-    LBase := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey();
-    LRegistry.RootKey := HKEY_CURRENT_USER;
-    if LRegistry.OpenKey(TPath.Combine(LBase, CDelphinusSubKey), True) then
-      LRegistry.WriteString(COAuthTokenKey, FSettings.OAuthToken);
-  finally
-    LRegistry.Free;
-  end;
 end;
 
 procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
