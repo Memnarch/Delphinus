@@ -155,6 +155,9 @@
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>
 			<None Include="..\..\DN.LowHighString.inc"/>
+			<RcCompile Include="..\Delphinus.rc">
+				<Form>Delphinus.res</Form>
+			</RcCompile>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

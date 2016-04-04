@@ -183,8 +183,12 @@
         <DCCReference Include="..\..\DN.ActiveX.pas"/>
         <DCCReference Include="..\..\DN.Setup.Core.pas"/>
         <DCCReference Include="..\..\DN.Settings.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Settings.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
+        </RcCompile>
+        <RcCompile Include="..\Delphinus.rc">
+            <Form>Delphinus.res</Form>
         </RcCompile>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
