@@ -168,7 +168,6 @@ var
   LService: IOTAServices;
   LReg: TRegistry;
   LBase, LLibraryKey, LPlatformKey: string;
-  LNames: TStringList;
   LOptions: TDNEnvironmentOptions;
   LPlatform: TDNCompilerPlatform;
   LRegistryOptions: TObject;
@@ -176,15 +175,13 @@ begin
   LService := BorlandIDEservices as IOTAServices;
   LBase := LService.GetBaseRegistryKey();
   LReg := TRegistry.Create();
-  LNames := TStringList.Create();
   try
     LReg.RootKey := HKEY_CURRENT_USER;
     LLibraryKey := TPath.Combine(LBase ,CLibraryKey);
     if LReg.OpenKey(LLibraryKey, False) then
     begin
-      LReg.GetValueNames(LNames);
       //we are on a Win32-Only Delphi
-      if LNames.Count > 0 then
+      if CompilerVersion <= 22 then
       begin
         LOptions := TDNOTAEnvironmentOptions.Create(cpWin32);
         LOptions.OnChanged := HandleChanged;
@@ -216,7 +213,6 @@ begin
     end;
   finally
     LReg.Free;
-    LNames.Free;
   end;
 end;
 
