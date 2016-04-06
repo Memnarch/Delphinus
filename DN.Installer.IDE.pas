@@ -21,9 +21,10 @@ type
   protected
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); override;
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); override;
-    function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; override;
+    function InstallBPL(const ABPL: string): Boolean; override;
     function GetSupportedPlatforms: TDNCompilerPlatforms; override;
-    procedure ConfigureCompiler(const ACompiler: IDNCompiler); override;
+    function GetBPLDir(APlatform: TDNCompilerPlatform): string; override;
+    function GetDCPDir(APlatform: TDNCompilerPlatform): string; override;
   public
     function Install(const ASourceDirectory: string;
       const ATargetDirectory: string): Boolean; override;
@@ -112,14 +113,20 @@ begin
   end;
 end;
 
-procedure TDNIDEInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
+function TDNIDEInstaller.GetBPLDir(APlatform: TDNCompilerPlatform): string;
 var
   LOptions: IDNEnvironmentOptions;
 begin
-  inherited;
-  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[ACompiler.Platform];
-  ACompiler.BPLOutput := LOptions.BPLOutput;
-  ACompiler.DCPOutput := LOptions.DCPOutput;
+  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[APlatform];
+  Result := LOptions.BPLOutput;
+end;
+
+function TDNIDEInstaller.GetDCPDir(APlatform: TDNCompilerPlatform): string;
+var
+  LOptions: IDNEnvironmentOptions;
+begin
+  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[APlatform];
+  Result := LOptions.DCPOutput;
 end;
 
 function TDNIDEInstaller.GetSupportedPlatforms: TDNCompilerPlatforms;
@@ -141,7 +148,7 @@ begin
   end;
 end;
 
-function TDNIDEInstaller.InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean;
+function TDNIDEInstaller.InstallBPL(const ABPL: string): Boolean;
 var
   LService: IOTAPackageServices;
   LResult: Boolean;
@@ -151,7 +158,7 @@ begin
   begin
     try
       LService := BorlandIDEServices as IOTAPackageServices;
-      LResult := LService.InstallPackage(TPath.Combine(ABPLDirectory, AProject.BinaryName));
+      LResult := LService.InstallPackage(ABPL);
     except
       on E: Exception do
       begin

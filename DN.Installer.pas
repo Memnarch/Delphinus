@@ -30,17 +30,21 @@ type
     FSearchPathes: string;
     FBrowsingPathes: string;
     FPackages: TList<TPackage>;
+    FRawFiles: TList<string>;
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     FTargetDirectory: string;
-    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
+    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TList<string> = nil);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
-    function ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
+    function ProcessProject(const AProject: IDNProjectInfo): Boolean;
+    function ProcessRawFolders(const ARawFolders: TArray<TRawFolder>; const ASourceDirectory: string): Boolean;
+    function ProcessRawFolder(const ARawFolder, ASourceDirectory: string): Boolean;
+    function RegisterRawDesignBPLs(const ADesignBPLs: TArray<string>): Boolean;
     function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
-
+    procedure ProcessLibPathes;
     procedure SaveUninstall(const ATargetDirectory: string);
     procedure Reset();
     function GetOnMessage: TMessageEvent;
@@ -54,7 +58,7 @@ type
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
-    function InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean; virtual;
+    function InstallBPL(const ABPL: string): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
     function GetSupportedPlatforms: TDNCompilerPlatforms; virtual; abstract;
@@ -62,6 +66,8 @@ type
     function GetTargetDirectory: string;
     function GetLibBaseDir: string;
     function GetBinBaseDir: string;
+    function GetBPLDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
+    function GetDCPDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
     //properties for interface redirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
@@ -82,11 +88,16 @@ uses
   DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
   DN.JSonFile.Info,
-  DN.Progress;
+  DN.Progress,
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler;
 
 const
   CLibDir = 'lib';
   CBinDir = 'bin';
+  CBPLDir = 'bpl';
+  CDCPDir = 'dcp';
+  CDesignBPL = 'DesignBPL';
   CSourceDir = 'source';
 
 
@@ -130,14 +141,16 @@ end;
 
 procedure TDNInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
 begin
-  FCompiler.DCUOutput := TPath.Combine(GetLibBaseDir(), '$(Platform)\$(Config)');
-  FCompiler.ExeOutput := TPath.Combine(GetBinBaseDir(), '$(Platform)\$(Config)');
+  ACompiler.DCUOutput := TPath.Combine(GetLibBaseDir(), '$(Platform)\$(Config)');
+  ACompiler.ExeOutput := TPath.Combine(GetBinBaseDir(), '$(Platform)\$(Config)');
+  ACompiler.BPLOutput := GetBPLDir(ACompiler.Platform);
+  ACompiler.DCPOutput := GetDCPDir(ACompiler.Platform);
 end;
 
-procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False);
+procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TList<string> = nil);
 var
   LDirectories, LFiles: TStringDynArray;
-  LDirectory, LFile, LFileName: string;
+  LDirectory, LFile, LFileName, LTargetFile: string;
   LForcedDirectory: Boolean;
 begin
   LForcedDirectory := False;
@@ -146,7 +159,7 @@ begin
     LDirectories := TDirectory.GetDirectories(ASource);
     for LDirectory in LDirectories do
     begin
-      CopyDirectory(LDirectory, TPath.Combine(ATarget, ExtractFileName(LDirectory)), AFileFilters, ARecursive);
+      CopyDirectory(LDirectory, TPath.Combine(ATarget, ExtractFileName(LDirectory)), AFileFilters, ARecursive, ACopiedFiles);
     end;
   end;
 
@@ -162,7 +175,10 @@ begin
         LForcedDirectory := True;
         ForceDirectories(ATarget);
       end;
-      TFile.Copy(LFile, TPath.Combine(ATarget, LFileName), True);
+      LTargetFile := TPath.Combine(ATarget, LFileName);
+      TFile.Copy(LFile, LTargetFile, True);
+      if Assigned(ACopiedFiles) then
+        ACopiedFiles.Add(LTargetFile);
     end;
   end;
 end;
@@ -223,11 +239,13 @@ begin
   FCompilerVersion := Trunc(ACompiler.Version);
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
+  FRawFiles := TList<string>.Create();
 end;
 
 destructor TDNInstaller.Destroy;
 begin
   FPackages.Free();
+  FRawFiles.Free;
   FProgress := nil;
   inherited;
 end;
@@ -379,17 +397,24 @@ begin
         Result := LInstallInfo.LoadFromFile(LInstallerFile);
         if Result then
         begin
-          FProgress.SetTasks(['Adding Pathes', 'Copy Source', 'Compile Projects']);
-          FProgress.SetTaskProgress('SearchPath', 0, 1);
-          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
-          FProgress.SetTaskProgress('BrowsingPath', 1, 1);
-          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+          FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Pathes']);
+          ProcessRawFolders(LInstallInfo.RawFolders, ASourceDirectory);
           FProgress.NextTask();
+
           ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
           CopyMetaData(ASourceDirectory, ATargetDirectory);
           CopyLicense(ASourceDirectory, ATargetDirectory, LLicenseFile);
           FProgress.NextTask();
+
           Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+          FProgress.NextTask();
+
+          FProgress.SetTaskProgress('Libpath', 0, 2);
+          ProcessLibPathes();
+          FProgress.SetTaskProgress('SearchPath', 1, 2);
+          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
+          FProgress.SetTaskProgress('BrowsingPath', 2, 2);
+          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
           FProgress.Completed();
         end
         else
@@ -409,7 +434,7 @@ begin
   end;
 end;
 
-function TDNInstaller.InstallProject(const AProject: IDNProjectInfo; const ABPLDirectory: string): Boolean;
+function TDNInstaller.InstallBPL(const ABPL: string): Boolean;
 begin
   Result := True;
 end;
@@ -425,10 +450,11 @@ begin
     Result := Result and (FCompilerVersion <= ACompiler_Max);
 end;
 
-function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo; var AProcessedPlatforms: TDNCompilerPlatforms): Boolean;
+function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
 var
   LCompiledPackage: TPackage;
   LPlatform: TDNCompilerPlatform;
+  LResolver: IVariableResolver;
 begin
   Result := False;
   BeforeCompile(AProject.FileName);
@@ -439,14 +465,13 @@ begin
       DoMessage(mtNotification, TDNCompilerPlatformName[LPlatform]);
       FCompiler.Platform := LPlatform;
       ConfigureCompiler(FCompiler);
-
-      AProcessedPlatforms := AProcessedPlatforms + [LPlatform];
+      LResolver := TCompilerVariableResolver.Create(FCompiler.Platform, FCompiler.Config);
       Result := FCompiler.Compile(AProject.FileName);
       if Result and AProject.IsPackage then
       begin
         if (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32) then
         begin
-          Result := InstallProject(AProject, FCompiler.ResolveVars(FCompiler.BPLOutput));
+          Result := InstallBPL(TPath.Combine(LResolver.Resolve(FCompiler.BPLOutput), AProject.BinaryName));
           if Result then
             DoMessage(mtNotification, 'installed')
           else
@@ -455,15 +480,15 @@ begin
 
         if LPlatform = cpOSX32 then
         begin
-          LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), CMacPackagePrefix + AProject.BinaryName);
+          LCompiledPackage.BPLFile := TPath.Combine(LResolver.Resolve(FCompiler.BPLOutput), CMacPackagePrefix + AProject.BinaryName);
           LCompiledPackage.BPLFile := ChangeFileExt(LCompiledPackage.BPLFile, CMacPackageExtension);
         end
         else
         begin
-          LCompiledPackage.BPLFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.BPLOutput), AProject.BinaryName);
+          LCompiledPackage.BPLFile := TPath.Combine(LResolver.Resolve(FCompiler.BPLOutput), AProject.BinaryName);
         end;
 
-        LCompiledPackage.DCPFile := TPath.Combine(FCompiler.ResolveVars(FCompiler.DCPOutput), AProject.DCPName);
+        LCompiledPackage.DCPFile := TPath.Combine(LResolver.Resolve(FCompiler.DCPOutput), AProject.DCPName);
         LCompiledPackage.Installed := (not AProject.IsRuntimeOnlyPackage) and (LPlatform = cpWin32);
         FPackages.Add(LCompiledPackage);
       end;
@@ -482,12 +507,9 @@ function TDNInstaller.ProcessProjects(const AProjects: TArray<TProject>; const A
 var
   LProject: IDNProjectInfo;
   LProjects: TList<IDNProjectInfo>;
-  LProcessedPlatforms: TDNCompilerPlatforms;
-  LPlatform: TDNCompilerPlatform;
   i: Integer;
 begin
   Result := True;
-  LProcessedPlatforms := [];
   LProjects := TList<IDNProjectInfo>.Create();
   try
     if LoadSupportedProjects(GetSourceFolder(ATargetDirectory), AProjects, LProjects) and (LProjects.Count > 0) then
@@ -496,7 +518,7 @@ begin
       begin
         LProject := LProjects[i];
         FProgress.SetTaskProgress(ExtractFileName(LProject.FileName), i, LProjects.Count);
-        Result := ProcessProject(LProject, LProcessedPlatforms);
+        Result := ProcessProject(LProject);
         if not Result then
           Break;
       end;
@@ -504,13 +526,110 @@ begin
   finally
     LProjects.Free;
   end;
+end;
 
-  if Result then
+function TDNInstaller.ProcessRawFolder(const ARawFolder, ASourceDirectory: string): Boolean;
+var
+  LRawFolder, LSourceFolder: string;
+  LSourceLib, LSourceBin, LSourceDCP, LSourceBPL, LSourceDesignBPL: string;
+  LPlatformName, LConfig, LPlatformConfig: string;
+  LPlatform: TDNCompilerPlatform;
+  LDesignBPLs: TList<string>;
+  LBPLFilter: TStringDynArray;
+  LResolver: IVariableResolver;
+begin
+  Result := True;
+  DoMessage(mtNotification, ARawFolder);
+  LRawFolder := TPath.Combine(ASourceDirectory, ARawFolder);
+
+  LSourceLib := TPath.Combine(LRawFolder, CLibDir);
+  LSourceBin := TPath.Combine(LRawFolder, CBinDir);
+  LSourceDCP := TPath.Combine(LRawFolder, CDCPDir);
+  LSourceBPL := TPath.Combine(LRawFolder, CBPLDir);
+  LSourceDesignBPL := TPath.Combine(LRawFolder, CDesignBPL);
+  LConfig := TDNCompilerConfigName[ccRelease];
+
+  for LPlatform in GetSupportedPlatforms() do
   begin
-    for LPlatform in LProcessedPlatforms do
-      AddSearchPath(TPath.Combine(GetLibBaseDir(), TDNCompilerPlatformName[LPlatform] + '\' + TDNCompilerConfigName[FCompiler.Config]), [LPlatform]);
-  end;
+    LPlatformName := TDNCompilerPlatformName[LPlatform];
+    LPlatformConfig := IncludeTrailingPathDelimiter(LPlatformName) + LConfig;
+    LResolver := TCompilerVariableResolver.Create(LPlatform, ccRelease);
 
+    LSourceFolder := TPath.Combine(LSourceLib, LPlatformName);
+    if TDirectory.Exists(LSourceFolder) then
+      CopyDirectory(LSourceFolder, TPath.Combine(GetLibBaseDir(), LPlatformConfig), nil, True);
+
+    LSourceFolder := TPath.Combine(LSourceBin, LPlatformName);
+    if TDirectory.Exists(LSourceFolder) then
+      CopyDirectory(LSourceFolder, TPath.Combine(GetBinBaseDir(), LPlatformConfig), nil, True);
+
+    LSourceFolder := TPath.Combine(LSourceDCP, LPlatformName);
+    if TDirectory.Exists(LSourceFolder) then
+      CopyDirectory(LSourceFolder, LResolver.Resolve(GetDCPDir(LPlatform)), nil, False, FRawFiles);
+
+    LSourceFolder := TPath.Combine(LSourceBPL, LPlatformName);
+    if TDirectory.Exists(LSourceFolder) then
+      CopyDirectory(LSourceFolder, LResolver.Resolve(GetBPLDir(LPlatform)), nil, False, FRawFiles);
+
+    if LPlatform = cpWin32 then
+    begin
+      LDesignBPLs := TList<string>.Create();
+      try
+        SetLength(LBPLFilter, 1);
+        LBPLFilter[0] := '*.bpl';
+        LSourceFolder := TPath.Combine(LSourceDesignBPL, LPlatformName);
+        if TDirectory.Exists(LSourceFolder) then
+        begin
+          CopyDirectory(LSourceFolder, LResolver.Resolve(GetBPLDir(LPlatform)), LBPLFilter, False, LDesignBPLs);
+          Result := RegisterRawDesignBPLs(LDesignBPLs.ToArray);
+          if not Result then
+            Break;
+        end;
+      finally
+        LDesignBPLs.Free;
+      end;
+    end;
+  end;
+end;
+
+function TDNInstaller.ProcessRawFolders(const ARawFolders: TArray<TRawFolder>;
+  const ASourceDirectory: string): Boolean;
+var
+  LFolder: TRawFolder;
+begin
+  Result := True;
+  if Length(ARawFolders) > 0 then
+    DoMessage(mtNotification, 'copying rawfolders:');
+  for LFolder in ARawFolders do
+  begin
+    if IsSupported(LFolder.CompilerMin, LFolder.CompilerMax) then
+      Result := Result and ProcessRawFolder(LFolder.Folder, ASourceDirectory);
+    if not Result then
+      Break;
+  end;
+end;
+
+procedure TDNInstaller.ProcessLibPathes;
+var
+  LPlatform: TDNCompilerPlatform;
+  LSubDirs: TStringDynArray;
+  LPlatformDir, LSubDir: string;
+begin
+  DoMessage(mtNotification, 'Adding Libpathes:');
+  for LPlatform in GetSupportedPlatforms() do
+  begin
+    LPlatformDir := TPath.Combine(GetLibBaseDir(), TDNCompilerPlatformName[LPlatform]);
+    if TDirectory.Exists(LPlatformDir) then
+    begin
+      LSubDirs := TDirectory.GetDirectories(LPlatformDir, TSEarchOption.soAllDirectories, nil);
+      for LSubDir in LSubDirs do
+        if Length(TDirectory.GetFiles(LSubDir)) > 0 then
+        begin
+          DoMessage(mtNotification, LSubDir);
+          AddSearchPath(LSubDir, [LPlatform]);
+        end;
+    end;
+  end;
 end;
 
 procedure TDNInstaller.ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
@@ -588,10 +707,30 @@ begin
   end;
 end;
 
+function TDNInstaller.RegisterRawDesignBPLs(
+  const ADesignBPLs: TArray<string>): Boolean;
+var
+  LBPL: string;
+  LPackage: TPackage;
+begin
+  Result := True;
+  for LBPL in ADesignBPLs do
+  begin
+    LPackage.BPLFile := LBPL;
+    LPackage.Installed := True;
+    FPackages.Add(LPackage);
+    Result := InstallBPL(LBPL);
+    if not Result then
+      Break;
+  end;
+end;
+
 procedure TDNInstaller.Reset;
 begin
   FSearchPathes := '';
+  FBrowsingPathes := '';
   FPackages.Clear();
+  FRawFiles.Clear;
 end;
 
 procedure TDNInstaller.SaveUninstall(const ATargetDirectory: string);
@@ -603,6 +742,7 @@ begin
     LUninstall.SearchPathes := FSearchPathes;
     LUninstall.BrowsingPathes := FBrowsingPathes;
     LUninstall.Packages := FPackages.ToArray;
+    LUninstall.RawFiles := FRawFiles.ToArray;
     LUninstall.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
   finally
     LUninstall.Free;

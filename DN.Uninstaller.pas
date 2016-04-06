@@ -24,6 +24,7 @@ type
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
+    function DeleteRawFiles(const ARawFiles: TArray<string>): Boolean;
     function DeleteFiles(const ADirectory: string): Boolean;
     function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean;
     function RemovePathes(const ASearchPathes: string; APathType: TPathType): Boolean;
@@ -82,6 +83,22 @@ begin
   Result := not TDirectory.Exists(ADirectory);
   if not Result then
     DoMessage(mtError, 'failed to delete directory');
+end;
+
+function TDNUninstaller.DeleteRawFiles(
+  const ARawFiles: TArray<string>): Boolean;
+var
+  LFile: string;
+begin
+  Result := True;
+  if Length(ARawFiles) > 0 then
+    DoMessage(mtNotification, 'Deleting Rawfiles');
+
+  for LFile in ARawFiles do
+    if TFile.Exists(LFile) then
+      TFile.Delete(LFile)
+    else
+      DoMessage(mtWarning, 'File not found: ' + LFile);
 end;
 
 destructor TDNUninstaller.Destroy;
@@ -209,6 +226,7 @@ begin
         FProgress.NextTask();
         Result := Result and ProcessPackages(LUninstall.Packages);
         FProgress.NextTask();
+        Result := Result and DeleteRawFiles(LUninstall.RawFiles);
         Result := Result and DeleteFiles(ADirectory);
         FProgress.Completed();
       end

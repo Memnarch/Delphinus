@@ -39,7 +39,6 @@ type
     function GetVersion: TCompilerVersion;
 
     function Compile(const AProjectFile: string): Boolean;
-    function ResolveVars(const APath: string): string;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
     property ExeOutput: string read GetExeOutput write SetExeOutput;

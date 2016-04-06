@@ -37,7 +37,8 @@ implementation
 
 uses
   IOUtils,
-  ShellApi;
+  ShellApi,
+  DN.VariableResolver.Intf;
 
 { TDNMSBuildCompiler }
 
@@ -89,22 +90,26 @@ begin
 end;
 
 function TDNMSBuildCompiler.GetMSBuildProperties: string;
+var
+  LResolver: IVariableResolver;
 begin
   Result := '/target:' + TDNCompilerTargetName[Target];
   Result := Result + ' /p:config=' + TDNCompilerConfigName[Config];
   Result := Result + ' /P:platform=' + TDNCompilerPlatformName[Platform];
 
+  LResolver := CreateResolver();
+
   if DCUOutput <> '' then
-    Result := Result + ' /p:DCC_DcuOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(DCUOutput)) + '"';
+    Result := Result + ' /p:DCC_DcuOutput="' + LResolver.Resolve(ExcludeTrailingPathDelimiter(DCUOutput)) + '"';
 
   if DCPOutput <> '' then
-    Result := Result + ' /p:DCC_DcpOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(DCPOutput)) + '"';
+    Result := Result + ' /p:DCC_DcpOutput="' + LResolver.Resolve(ExcludeTrailingPathDelimiter(DCPOutput)) + '"';
 
   if EXEOutput <> '' then
-    Result := Result + ' /p:DCC_ExeOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(ExeOutput)) + '"';
+    Result := Result + ' /p:DCC_ExeOutput="' + LResolver.Resolve(ExcludeTrailingPathDelimiter(ExeOutput)) + '"';
 
   if BPLOutput <> '' then
-    Result := Result + ' /p:DCC_BplOutput="' + ResolveVars(ExcludeTrailingPathDelimiter(BPLOutput)) + '"';
+    Result := Result + ' /p:DCC_BplOutput="' + LResolver.Resolve(ExcludeTrailingPathDelimiter(BPLOutput)) + '"';
 end;
 
 function TDNMSBuildCompiler.GetVersion: TCompilerVersion;

@@ -32,6 +32,12 @@ type
     CompilerMax: Integer;
   end;
 
+  TRawFolder = record
+    Folder: string;
+    CompilerMin: Integer;
+    CompilerMax: Integer;
+  end;
+
   TProject = record
     Project: string;
     CompilerMin: Integer;
@@ -44,14 +50,19 @@ type
     FSearchPath: TArray<TSearchPath>;
     FProjects: TArray<TProject>;
     FBrowsingPathes: TArray<TSearchPath>;
+    FRawFolders: TArray<TRawFolder>;
   protected
     procedure LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TArray<TSearchPath>);
     procedure Load(const ARoot: TJSONObject); override;
+    procedure LoadSourceFolders(const AFolders: TJSONArray);
+    procedure LoadRawFolders(const ARawFolders: TJSONArray);
+    procedure LoadProjects(const AProjects: TJSONArray);
     function GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
   public
     property SearchPathes: TArray<TSearchPath> read FSearchPath;
     property BrowsingPathes: TArray<TSearchPath> read FBrowsingPathes;
     property SourceFolders: TArray<TFolder> read FSourceFolders;
+    property RawFolders: TArray<TRawFolder> read FRawFolders;
     property Projects: TArray<TProject> read FProjects;
   end;
 
@@ -92,58 +103,19 @@ end;
 procedure TInstallationFile.Load(const ARoot: TJSONObject);
 var
   LArray: TJSonArray;
-  LItem: TJSONObject;
-  i: Integer;
-  LCompiler: Integer;
 begin
   inherited;
   LoadPathes(ARoot, 'search_pathes', FSearchPath);
   LoadPathes(ARoot, 'browsing_pathes', FBrowsingPathes);
 
   if ReadArray(ARoot, 'source_folders', LArray) then
-  begin
-    SetLength(FSourceFolders, LArray.Count);
-    for i := 0 to Pred(LArray.Count) do
-    begin
-      LItem := LArray.Items[i] as TJSONObject;
-      FSourceFolders[i].Folder := ReadString(LItem, 'folder');
-      FSourceFolders[i].Base := ReadString(LItem, 'base');
-      FSourceFolders[i].Recursive := ReadBoolean(LItem, 'recursive');
-      FSourceFolders[i].Filter := ReadString(LItem, 'filter');
-      LCompiler := ReadInteger(LItem, 'compiler');
-      if LCompiler > 0 then
-      begin
-        FSourceFolders[i].CompilerMin := LCompiler;
-        FSourceFolders[i].CompilerMax := LCompiler;
-      end
-      else
-      begin
-        FSourceFolders[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-        FSourceFolders[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
-      end;
-    end;
-  end;
+    LoadSourceFolders(LArray);
+
+  if ReadArray(ARoot, 'raw_folders', LArray) then
+    LoadRawFolders(LArray);
 
   if ReadArray(ARoot, 'projects', LArray) then
-  begin
-    SetLength(FProjects, LArray.Count);
-    for i := 0 to Pred(LArray.Count) do
-    begin
-      LItem := LArray.Items[i] as TJSONObject;
-      FProjects[i].Project := ReadString(LItem, 'project');
-      LCompiler := ReadInteger(LItem, 'compiler');
-      if LCompiler > 0 then
-      begin
-        FProjects[i].CompilerMin := LCompiler;
-        FProjects[i].CompilerMax := LCompiler;
-      end
-      else
-      begin
-        FProjects[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-        FProjects[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
-      end;
-    end;
-  end;
+    LoadProjects(LArray);
 end;
 
 procedure TInstallationFile.LoadPathes(const ARoot: TJSONObject;
@@ -173,6 +145,84 @@ begin
         APathes[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
       end;
       APathes[i].Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
+    end;
+  end;
+end;
+
+procedure TInstallationFile.LoadProjects(const AProjects: TJSONArray);
+var
+  i: Integer;
+  LItem: TJSONObject;
+  LCompiler: Integer;
+begin
+  SetLength(FProjects, AProjects.Count);
+  for i := 0 to Pred(AProjects.Count) do
+  begin
+    LItem := AProjects.Items[i] as TJSONObject;
+    FProjects[i].Project := ReadString(LItem, 'project');
+    LCompiler := ReadInteger(LItem, 'compiler');
+    if LCompiler > 0 then
+    begin
+      FProjects[i].CompilerMin := LCompiler;
+      FProjects[i].CompilerMax := LCompiler;
+    end
+    else
+    begin
+      FProjects[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
+      FProjects[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+    end;
+  end;
+end;
+
+procedure TInstallationFile.LoadRawFolders(const ARawFolders: TJSONArray);
+var
+  i: Integer;
+  LItem: TJSONObject;
+  LCompiler: Integer;
+begin
+  SetLength(FRawFolders, ARawFolders.Count);
+  for i := 0 to Pred(ARawFolders.Count) do
+  begin
+    LItem := ARawFolders.Items[i] as TJSONObject;
+    FRawFolders[i].Folder := ReadString(LItem, 'folder');
+    LCompiler := ReadInteger(LItem, 'compiler');
+    if LCompiler > 0 then
+    begin
+      FRawFolders[i].CompilerMin := LCompiler;
+      FRawFolders[i].CompilerMax := LCompiler;
+    end
+    else
+    begin
+      FRawFolders[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
+      FRawFolders[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+    end;
+  end;
+end;
+
+procedure TInstallationFile.LoadSourceFolders(const AFolders: TJSONArray);
+var
+  i: Integer;
+  LItem: TJSONObject;
+  LCompiler: Integer;
+begin
+  SetLength(FSourceFolders, AFolders.Count);
+  for i := 0 to Pred(AFolders.Count) do
+  begin
+    LItem := AFolders.Items[i] as TJSONObject;
+    FSourceFolders[i].Folder := ReadString(LItem, 'folder');
+    FSourceFolders[i].Base := ReadString(LItem, 'base');
+    FSourceFolders[i].Recursive := ReadBoolean(LItem, 'recursive');
+    FSourceFolders[i].Filter := ReadString(LItem, 'filter');
+    LCompiler := ReadInteger(LItem, 'compiler');
+    if LCompiler > 0 then
+    begin
+      FSourceFolders[i].CompilerMin := LCompiler;
+      FSourceFolders[i].CompilerMax := LCompiler;
+    end
+    else
+    begin
+      FSourceFolders[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
+      FSourceFolders[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
     end;
   end;
 end;
