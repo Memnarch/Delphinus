@@ -460,11 +460,18 @@ end;
 
 function TDNInstaller.InstallExpert(const AExpert: string;
   AHotReload: Boolean): Boolean;
+var
+  LResult: Boolean;
 begin
   Result := True;
   if Assigned(FExpertService) then
   begin
-    Result := FExpertService.RegisterExpert(AExpert, AHotReload);
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        LResult := FExpertService.RegisterExpert(AExpert, AHotReload);
+      end);
+    Result := LResult;
     FHasPendingChanges := FHasPendingChanges or not AHotReload;
   end;
 end;

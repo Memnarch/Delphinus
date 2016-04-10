@@ -340,11 +340,18 @@ end;
 
 function TDNUninstaller.UninstallExpert(const AExpert: string;
   AHotReload: Boolean): Boolean;
+var
+  LResult: Boolean;
 begin
   Result := True;
   if Assigned(FExpertService) then
   begin
-    Result := FExpertService.UnregisterExpert(AExpert, AHotReload);
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        LResult := FExpertService.UnregisterExpert(AExpert, AHotReload);
+      end);
+    Result := LResult;
     FHasPendingChanges := FHasPendingChanges or not AHotReload;
   end;
 end;
