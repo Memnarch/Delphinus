@@ -310,6 +310,8 @@ begin
   btnCloseProgress.Enabled := True;
   btnShowLog.Enabled := True;
   FSetupIsRunning := False;
+  if FSetup.HasPendingChanges then
+    MessageDlg('Some changes require an IDE restart to take effect', mtInformation, [mbOK], 0);
 end;
 
 end.

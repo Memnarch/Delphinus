@@ -19,11 +19,12 @@ type
   end;
   {$EndIf}
 
-
 implementation
 
 uses
-  Windows, SHFolder;
+  Types,
+  Windows,
+  SHFolder;
 
 { TPathHelper }
 

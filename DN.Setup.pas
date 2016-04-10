@@ -24,6 +24,8 @@ type
   private
     FInstaller: IDNInstaller;
     FUninstaller: IDNUninstaller;
+  protected
+    function GetHasPendingChanges: Boolean; override;
   public
     constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
     destructor Destroy; override;
@@ -64,6 +66,11 @@ begin
   UnregisterProgressHandler(FInstaller);
   UnregisterProgressHandler(FUninstaller);
   inherited;
+end;
+
+function TDNSetup.GetHasPendingChanges: Boolean;
+begin
+  Result := FInstaller.HasPendingChanges or FUninstaller.HasPendingChanges;
 end;
 
 function TDNSetup.Install(const APackage: IDNPackage;

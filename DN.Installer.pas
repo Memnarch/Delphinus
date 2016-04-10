@@ -20,25 +20,30 @@ uses
   DN.ProjectInfo.Intf,
   DN.JSonFile.Installation,
   DN.JSonFile.Uninstallation,
-  DN.Progress.Intf;
+  DN.Progress.Intf,
+  DN.ToolsApi.ExpertService.Intf;
 
 type
   TDNInstaller = class(TInterfacedObject, IDNInstaller, IDNProgress)
   private
     FCompiler: IDNCompiler;
+    FExpertService: IDNExpertService;
     FCompilerVersion: Integer;
     FSearchPathes: string;
     FBrowsingPathes: string;
     FPackages: TList<TPackage>;
+    FExperts: TList<TInstalledExpert>;
     FRawFiles: TList<string>;
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     FTargetDirectory: string;
+    FHasPendingChanges: Boolean;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TList<string> = nil);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
     function ProcessProject(const AProject: IDNProjectInfo): Boolean;
+    function ProcessExperts(const AExperts: TArray<TExpert>): Boolean;
     function ProcessRawFolders(const ARawFolders: TArray<TRawFolder>; const ASourceDirectory: string): Boolean;
     function ProcessRawFolder(const ARawFolder, ASourceDirectory: string): Boolean;
     function RegisterRawDesignBPLs(const ADesignBPLs: TArray<string>): Boolean;
@@ -59,6 +64,7 @@ type
     procedure BeforeCompile(const AProjectFile: string); virtual;
     procedure AfterCompile(const AProjectFile: string; const ALog: TStrings; ASuccessFull: Boolean); virtual;
     function InstallBPL(const ABPL: string): Boolean; virtual;
+    function InstallExpert(const AExpert: string; AHotReload: Boolean): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
     function GetSupportedPlatforms: TDNCompilerPlatforms; virtual; abstract;
@@ -68,13 +74,15 @@ type
     function GetBinBaseDir: string;
     function GetBPLDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
     function GetDCPDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
+    function GetHasPendingChanges: Boolean; virtual;
     //properties for interface redirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
-    constructor Create(const ACompiler: IDNCompiler);
+    constructor Create(const ACompiler: IDNCompiler; const AExpertService: IDNExpertService = nil);
     destructor Destroy(); override;
     function Install(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
+    property HasPendingChanges: Boolean read GetHasPendingChanges;
   end;
 
 implementation
@@ -232,20 +240,23 @@ begin
   TFile.Copy(LSourceInstall, LTargetInstall, True);
 end;
 
-constructor TDNInstaller.Create(const ACompiler: IDNCompiler);
+constructor TDNInstaller.Create(const ACompiler: IDNCompiler; const AExpertService: IDNExpertService);
 begin
   inherited Create();
   FCompiler := ACompiler;
+  FExpertService := AExpertService;
   FCompilerVersion := Trunc(ACompiler.Version);
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
   FRawFiles := TList<string>.Create();
+  FExperts := TList<TInstalledExpert>.Create();
 end;
 
 destructor TDNInstaller.Destroy;
 begin
   FPackages.Free();
-  FRawFiles.Free;
+  FRawFiles.Free();
+  FExperts.Free();
   FProgress := nil;
   inherited;
 end;
@@ -276,6 +287,11 @@ end;
 function TDNInstaller.GetBinBaseDir: string;
 begin
   Result := TPath.Combine(GetTargetDirectory, CBinDir);
+end;
+
+function TDNInstaller.GetHasPendingChanges: Boolean;
+begin
+  Result := FHasPendingChanges;
 end;
 
 function TDNInstaller.GetLibBaseDir: string;
@@ -397,7 +413,7 @@ begin
         Result := LInstallInfo.LoadFromFile(LInstallerFile);
         if Result then
         begin
-          FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Pathes']);
+          FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Experts', 'Adding Pathes']);
           ProcessRawFolders(LInstallInfo.RawFolders, ASourceDirectory);
           FProgress.NextTask();
 
@@ -407,6 +423,9 @@ begin
           FProgress.NextTask();
 
           Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
+          FProgress.NextTask();
+
+          Result := Result and ProcessExperts(LInstallInfo.Experts);
           FProgress.NextTask();
 
           FProgress.SetTaskProgress('Libpath', 0, 2);
@@ -437,6 +456,17 @@ end;
 function TDNInstaller.InstallBPL(const ABPL: string): Boolean;
 begin
   Result := True;
+end;
+
+function TDNInstaller.InstallExpert(const AExpert: string;
+  AHotReload: Boolean): Boolean;
+begin
+  Result := True;
+  if Assigned(FExpertService) then
+  begin
+    Result := FExpertService.RegisterExpert(AExpert, AHotReload);
+    FHasPendingChanges := FHasPendingChanges or not AHotReload;
+  end;
 end;
 
 function TDNInstaller.IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
@@ -609,6 +639,41 @@ begin
   end;
 end;
 
+function TDNInstaller.ProcessExperts(const AExperts: TArray<TExpert>): Boolean;
+var
+  LExpert: TExpert;
+  LBaseDir, LExpertFile: string;
+  LInstalledExpert: TInstalledExpert;
+begin
+  Result := True;
+  if Length(AExperts) > 0 then
+    DoMessage(mtNotification, 'Installing Experts:');
+
+  LBaseDir := TPath.Combine(TPath.Combine(GetBinBaseDir, TDNCompilerPlatformName[cpWin32]), TDNCompilerConfigName[ccRelease]);
+  for LExpert in AExperts do
+  begin
+    if IsSupported(LExpert.CompilerMin, LExpert.CompilerMax) then
+    begin
+      LExpertFile := TPath.Combine(LBaseDir, LExpert.Expert);
+      if TFile.Exists(LExpertFile) then
+      begin
+        DoMessage(mtNotification, LExpert.Expert);
+        LInstalledExpert.Expert := LExpertFile;
+        LInstalledExpert.HotReload := LExpert.HotReload;
+        FExperts.Add(LInstalledExpert);
+        Result := Result and InstallExpert(LExpertFile, LExpert.HotReload);
+      end
+      else
+      begin
+        Result := False;
+        DoMessage(mtError, 'File not found: ' + LExpertFile);
+      end;
+    end;
+    if not Result then
+      Break;
+  end;
+end;
+
 procedure TDNInstaller.ProcessLibPathes;
 var
   LPlatform: TDNCompilerPlatform;
@@ -731,6 +796,7 @@ begin
   FBrowsingPathes := '';
   FPackages.Clear();
   FRawFiles.Clear;
+  FExperts.Clear();
 end;
 
 procedure TDNInstaller.SaveUninstall(const ATargetDirectory: string);
@@ -743,6 +809,7 @@ begin
     LUninstall.BrowsingPathes := FBrowsingPathes;
     LUninstall.Packages := FPackages.ToArray;
     LUninstall.RawFiles := FRawFiles.ToArray;
+    LUninstall.Experts := FExperts.ToArray;
     LUninstall.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
   finally
     LUninstall.Free;

@@ -110,7 +110,11 @@ contains
   DN.Settings in '..\..\DN.Settings.pas',
   DN.VariableResolver.Compiler in '..\..\DN.VariableResolver.Compiler.pas',
   DN.VariableResolver.Intf in '..\..\DN.VariableResolver.Intf.pas',
-  DN.VariableResolver in '..\..\DN.VariableResolver.pas';
+  DN.VariableResolver in '..\..\DN.VariableResolver.pas',
+  DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas',
+  DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
+  DN.FileService in '..\..\DN.FileService.pas',
+  DN.FileService.Intf in '..\..\DN.FileService.Intf.pas';
 
 end.
 

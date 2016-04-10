@@ -22,12 +22,13 @@ uses
   Delphinus.Forms,
   DN.Settings.Intf,
   DN.Setup.Intf,
+  DN.FileService.Intf,
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
   DN.PackageFilter,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions;
 
 type
   TDelphinusDialog = class(TForm)
@@ -69,6 +70,7 @@ type
     FCategory: TPackageCategory;
     FProgressDialog: TProgressDialog;
     FFilter: string;
+    FFileService: IDNFileService;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -124,6 +126,9 @@ uses
   DN.HttpClient.WinHttp,
   DN.Progress.Intf,
   DN.Settings,
+  DN.ToolsApi.ExpertService,
+  DN.ToolsApi.ExpertService.Intf,
+  DN.FileService,
   StrUtils;
 
 {$R *.dfm}
@@ -224,6 +229,7 @@ begin
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
+  FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -258,6 +264,8 @@ begin
   //adjust serachbar to be over the Packagelist
   edSearch.Width := pnlPackages.Width;
   edSearch.Left := pnlPackages.Left;
+
+  FFileService.Cleanup();
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -265,12 +273,14 @@ var
   LCompiler: IDNCompiler;
   LInstaller: IDNInstaller;
   LUninstaller: IDNUninstaller;
+  LExpertService: IDNExpertService;
 begin
   LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
   LCompiler.BPLOutput := GetBPLDirectory();
   LCompiler.DCPOutput := GetDCPDirectory();
-  LInstaller := TDNIDEInstaller.Create(LCompiler);
-  LUninstaller := TDNIDEUninstaller.Create();
+  LExpertService := TDNExpertService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey());
+  LInstaller := TDNIDEInstaller.Create(LCompiler, LExpertService);
+  LUninstaller := TDNIDEUninstaller.Create(LExpertService, FFileService);
   Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
   Result.ComponentDirectory := GetComponentDirectory();
 end;

@@ -44,6 +44,13 @@ type
     CompilerMax: Integer;
   end;
 
+  TExpert = record
+    Expert: string;
+    HotReload: Boolean;
+    CompilerMin: Integer;
+    CompilerMax: Integer;
+  end;
+
   TInstallationFile = class(TJSonFile)
   private
     FSourceFolders: TArray<TFolder>;
@@ -51,12 +58,14 @@ type
     FProjects: TArray<TProject>;
     FBrowsingPathes: TArray<TSearchPath>;
     FRawFolders: TArray<TRawFolder>;
+    FExperts: TArray<TExpert>;
   protected
     procedure LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TArray<TSearchPath>);
     procedure Load(const ARoot: TJSONObject); override;
     procedure LoadSourceFolders(const AFolders: TJSONArray);
     procedure LoadRawFolders(const ARawFolders: TJSONArray);
     procedure LoadProjects(const AProjects: TJSONArray);
+    procedure LoadExperts(const AExperts: TJSonArray);
     function GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
   public
     property SearchPathes: TArray<TSearchPath> read FSearchPath;
@@ -64,6 +73,7 @@ type
     property SourceFolders: TArray<TFolder> read FSourceFolders;
     property RawFolders: TArray<TRawFolder> read FRawFolders;
     property Projects: TArray<TProject> read FProjects;
+    property Experts: TArray<TExpert> read FExperts;
   end;
 
 implementation
@@ -116,6 +126,35 @@ begin
 
   if ReadArray(ARoot, 'projects', LArray) then
     LoadProjects(LArray);
+
+  if ReadArray(ARoot, 'experts', LArray) then
+    LoadExperts(LArray);
+end;
+
+procedure TInstallationFile.LoadExperts(const AExperts: TJSonArray);
+var
+  i: Integer;
+  LItem: TJSONObject;
+  LCompiler: Integer;
+begin
+  SetLength(FExperts, AExperts.Count);
+  for i := 0 to Pred(AExperts.Count) do
+  begin
+    LItem := AExperts.Items[i] as TJSONObject;
+    FExperts[i].Expert := ReadString(LItem, 'expert');
+    FExperts[i].HotReload := ReadBoolean(LItem, 'hot_reload');
+    LCompiler := ReadInteger(LItem, 'compiler');
+    if LCompiler > 0 then
+    begin
+      FExperts[i].CompilerMin := LCompiler;
+      FExperts[i].CompilerMax := LCompiler;
+    end
+    else
+    begin
+      FExperts[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
+      FExperts[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+    end;
+  end;
 end;
 
 procedure TInstallationFile.LoadPathes(const ARoot: TJSONObject;
