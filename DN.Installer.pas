@@ -33,12 +33,12 @@ type
     FBrowsingPathes: string;
     FPackages: TList<TPackage>;
     FExperts: TList<TInstalledExpert>;
-    FRawFiles: TList<string>;
+    FRawFiles: TStringList;
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     FTargetDirectory: string;
     FHasPendingChanges: Boolean;
-    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TList<string> = nil);
+    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
@@ -155,7 +155,7 @@ begin
   ACompiler.DCPOutput := GetDCPDir(ACompiler.Platform);
 end;
 
-procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TList<string> = nil);
+procedure TDNInstaller.CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil);
 var
   LDirectories, LFiles: TStringDynArray;
   LDirectory, LFile, LFileName, LTargetFile: string;
@@ -248,7 +248,7 @@ begin
   FCompilerVersion := Trunc(ACompiler.Version);
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
-  FRawFiles := TList<string>.Create();
+  FRawFiles := TStringList.Create();
   FExperts := TList<TInstalledExpert>.Create();
 end;
 
@@ -564,7 +564,7 @@ var
   LSourceLib, LSourceBin, LSourceDCP, LSourceBPL, LSourceDesignBPL: string;
   LPlatformName, LConfig, LPlatformConfig: string;
   LPlatform: TDNCompilerPlatform;
-  LDesignBPLs: TList<string>;
+  LDesignBPLs: TStringList;
   LBPLFilter: TStringDynArray;
   LResolver: IVariableResolver;
 begin
@@ -603,7 +603,7 @@ begin
 
     if LPlatform = cpWin32 then
     begin
-      LDesignBPLs := TList<string>.Create();
+      LDesignBPLs := TStringList.Create();
       try
         SetLength(LBPLFilter, 1);
         LBPLFilter[0] := '*.bpl';
@@ -611,7 +611,7 @@ begin
         if TDirectory.Exists(LSourceFolder) then
         begin
           CopyDirectory(LSourceFolder, LResolver.Resolve(GetBPLDir(LPlatform)), LBPLFilter, False, LDesignBPLs);
-          Result := RegisterRawDesignBPLs(LDesignBPLs.ToArray);
+          Result := RegisterRawDesignBPLs(LDesignBPLs.ToStringArray);
           if not Result then
             Break;
         end;
@@ -808,7 +808,7 @@ begin
     LUninstall.SearchPathes := FSearchPathes;
     LUninstall.BrowsingPathes := FBrowsingPathes;
     LUninstall.Packages := FPackages.ToArray;
-    LUninstall.RawFiles := FRawFiles.ToArray;
+    LUninstall.RawFiles := FRawFiles.ToStringArray;
     LUninstall.Experts := FExperts.ToArray;
     LUninstall.SaveToFile(TPath.Combine(ATargetDirectory, CUninstallFile));
   finally
