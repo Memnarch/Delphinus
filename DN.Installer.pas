@@ -18,8 +18,10 @@ uses
   DN.Installer.Intf,
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
+  DN.ProjectGroupInfo.Intf,
   DN.JSonFile.Installation,
   DN.JSonFile.Uninstallation,
+  DN.JSonFile.Info,
   DN.Progress.Intf,
   DN.ToolsApi.ExpertService.Intf;
 
@@ -28,17 +30,10 @@ type
   private
     FCompiler: IDNCompiler;
     FExpertService: IDNExpertService;
-    FCompilerVersion: Integer;
-    FSearchPathes: string;
-    FBrowsingPathes: string;
-    FPackages: TList<TPackage>;
-    FExperts: TList<TInstalledExpert>;
-    FRawFiles: TStringList;
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     FTargetDirectory: string;
     FHasPendingChanges: Boolean;
-    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil);
     procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
     procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
     function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
@@ -50,7 +45,6 @@ type
     function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
     procedure ProcessLibPathes;
-    procedure SaveUninstall(const ATargetDirectory: string);
     procedure Reset();
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
@@ -58,7 +52,13 @@ type
     function UndecoratePath(const APath: string): string;
     function LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
   protected
-    procedure DoMessage(AType: TMessageType; const AMessage: string);
+    FSearchPathes: string;
+    FBrowsingPathes: string;
+    FPackages: TList<TPackage>;
+    FExperts: TList<TInstalledExpert>;
+    FRawFiles: TStringList;
+    procedure DoMessage(AType: TMessageType; const AMessage: string); virtual;
+    procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil); virtual;
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
     procedure BeforeCompile(const AProjectFile: string); virtual;
@@ -66,15 +66,24 @@ type
     function InstallBPL(const ABPL: string): Boolean; virtual;
     function InstallExpert(const AExpert: string; AHotReload: Boolean): Boolean; virtual;
     function CopyMetaData(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
-    procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string);
+    procedure CopyLicense(const ASourceDirectory, ATargetDirectory, ALicense: string); virtual;
     function GetSupportedPlatforms: TDNCompilerPlatforms; virtual; abstract;
     procedure ConfigureCompiler(const ACompiler: IDNCompiler); virtual;
-    function GetTargetDirectory: string;
-    function GetLibBaseDir: string;
-    function GetBinBaseDir: string;
+    function GetTargetDirectory: string; virtual;
+    function GetLibBaseDir: string; virtual;
+    function GetBinBaseDir: string; virtual;
     function GetBPLDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
     function GetDCPDir(APlatform: TDNCompilerPlatform): string; virtual; abstract;
     function GetHasPendingChanges: Boolean; virtual;
+    function PrepareInstallationDirectory(const ATargetDirectory: string): Boolean; virtual;
+    function LoadInfo(const ADirectory: string; AInfo: TInfoFile): Boolean; virtual;
+    function ValidateInfoAndGetLicenceFile(const ADirectory: string; out ALicenceFile: string): Boolean; virtual;
+    function LoadInstallation(const ADirectory: string; AInstallation: TInstallationFile): Boolean; virtual;
+    function ProcessInstallation(AInstallation: TInstallationFile;
+      const ASourceDirectory, ATargetDirectory, ALicenceFile: string): Boolean; virtual;
+    procedure SaveUninstall(const ATargetDirectory: string); virtual;
+    function LoadProject(const AProjectFile: string; out AProject: IDNProjectInfo): Boolean; virtual;
+    function LoadProjectGroup(const AGroupFile: string; out AGroup: IDNProjectGroupInfo): Boolean; virtual;
     //properties for interface redirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
@@ -93,9 +102,7 @@ uses
   Masks,
   DN.ProjectInfo,
   DN.ProjectGroupInfo,
-  DN.ProjectGroupInfo.Intf,
   DN.Uninstaller.Intf,
-  DN.JSonFile.Info,
   DN.Progress,
   DN.VariableResolver.Intf,
   DN.VariableResolver.Compiler;
@@ -245,7 +252,6 @@ begin
   inherited Create();
   FCompiler := ACompiler;
   FExpertService := AExpertService;
-  FCompilerVersion := Trunc(ACompiler.Version);
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
   FRawFiles := TStringList.Create();
@@ -314,6 +320,73 @@ begin
   Result := FTargetDirectory;
 end;
 
+function TDNInstaller.LoadInfo(const ADirectory: string;
+  AInfo: TInfoFile): Boolean;
+var
+  LInfoFile: string;
+begin
+  LInfoFile := TPath.Combine(ADirectory, CInfoFile);
+  if TFile.Exists(LInfoFile) then
+  begin
+    Result := AInfo.LoadFromFile(LInfoFile);
+    if not Result then
+    begin
+      DoMessage(mtError, CInfoFile + ' seems to be corrupt');
+      Exit(False);
+    end;
+  end
+  else
+  begin
+    DoMessage(mtError, 'no info-file provided');
+    Exit(False);
+  end;
+end;
+
+function TDNInstaller.LoadInstallation(const ADirectory: string;
+  AInstallation: TInstallationFile): Boolean;
+var
+  LInstallerFile: string;
+begin
+  Result := False;
+  LInstallerFile := TPath.Combine(ADirectory, CInstallFile);
+  if TFile.Exists(LInstallerFile) then
+  begin
+    Result := AInstallation.LoadFromFile(LInstallerFile);
+    if not Result then
+    begin
+      DoMessage(mtError, CInstallFile + ' seems to be invalid json');
+    end;
+  end
+  else
+  begin
+    DoMessage(mtError, 'No installation file');
+  end;
+end;
+
+function TDNInstaller.LoadProject(const AProjectFile: string;
+  out AProject: IDNProjectInfo): Boolean;
+begin
+  AProject := TDNProjectInfo.Create();
+  Result := AProject.LoadFromFile(AProjectFile);
+  if not  Result then
+  begin
+    DoMessage(mtError, 'Failed to load project ' + AProjectFile);
+    DoMessage(mtError, AProject.LoadingError);
+  end;
+end;
+
+function TDNInstaller.LoadProjectGroup(const AGroupFile: string;
+  out AGroup: IDNProjectGroupInfo): Boolean;
+begin
+  AGroup := TDNProjectGroupInfo.Create();
+  Result := AGroup.LoadFromFile(AGroupFile);
+  if not Result then
+  begin
+    DoMessage(mtError, 'Failed to load group ' + AGroupFile);
+    DoMessage(mtError, AGroup.LoadingError);
+  end;
+end;
+
 function TDNInstaller.LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
 var
   LProject: TProject;
@@ -331,25 +404,26 @@ begin
       case AnsiIndexText(ExtractFileExt(LProject.Project), [CProject, CGroup]) of
         0:
         begin
-          LInfo := TDNProjectInfo.Create();
-          if not LInfo.LoadFromFile(TPath.Combine(ABaseDirectory, LProject.Project)) then
+          if LoadProject(TPath.Combine(ABaseDirectory, LProject.Project), LInfo) then
           begin
-            DoMessage(mtError, 'Failed to load project ' + LProject.Project);
-            DoMessage(mtError, LInfo.LoadingError);
-            Break;
-          end;
-          ASupportedProjects.Add(LInfo);
+            if ((GetSupportedPlatforms * LInfo.SupportedPlatforms) <> []) then
+              ASupportedProjects.Add(LInfo);
+          end
+          else
+            Exit(False);
         end;
         1:
         begin
-          LGroup := TDNProjectGroupInfo.Create();
-          if not LGroup.LoadFromFile(TPath.Combine(ABaseDirectory, LProject.Project)) then
+          if LoadProjectGroup(TPath.Combine(ABaseDirectory,  LProject.Project), LGroup) then
           begin
-            DoMessage(mtError, 'Failed to load group ' + LProject.Project);
-            DoMessage(mtError, LGroup.LoadingError);
-            Break;
-          end;
-          ASupportedProjects.AddRange(LGroup.Projects);
+            for LInfo in LGroup.Projects do
+            begin
+              if ((GetSupportedPlatforms * LInfo.SupportedPlatforms) <> [])  then
+                ASupportedProjects.AddRange(LGroup.Projects);
+            end;
+          end
+          else
+            Exit(False)
         end
         else
         begin
@@ -364,90 +438,25 @@ function TDNInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
   LInstallInfo: TInstallationFile;
-  LInfo: TInfoFile;
-  LInstallerFile, LInfoFile, LLicenseFile: string;
+  LLicenseFile: string;
 begin
   Reset();
-  if not ForceDirectories(ATargetDirectory) then
-  begin
-    DoMessage(mtError, 'Failed to create directory ' + QuotedStr(ATargetDirectory));
-    Exit(False);
-  end;
+  Result := False;
+  if not PrepareInstallationDirectory(ATargetDirectory) then
+    Exit;
   try
     FTargetDirectory := ATargetDirectory;
-    LInfoFile := TPath.Combine(ASourceDirectory, CInfoFile);
-    if TFile.Exists(LInfoFile) then
-    begin
-      LInfo := TInfoFile.Create();
-      try
-        Result := LInfo.LoadFromFile(LInfoFile);
-        if Result then
-        begin
-          if LInfo.ID = TGuid.Empty then
-          begin
-            DoMessage(mtError, 'no ID provided');
-            Exit(False);
-          end;
-          if LInfo.LicenseType <> '' then
-            LLicenseFile := LInfo.LicenseFile;
-        end
-        else
-        begin
-          DoMessage(mtError, CInfoFile + ' seems to be corrupt');
-          Exit(False);
-        end;
-      finally
-        LInfo.Free;
-      end;
-    end
-    else
-    begin
-      DoMessage(mtError, 'no info-file provided');
-      Exit(False);
+    if not ValidateInfoAndGetLicenceFile(ASourceDirectory, LLicenseFile) then
+      Exit;
+
+    LInstallInfo := TInstallationFile.Create();
+    try
+      if LoadInstallation(ASourceDirectory, LInstallInfo) then
+        Result := ProcessInstallation(LInstallInfo, ASourceDirectory, ATargetDirectory, LLicenseFile);
+    finally
+      LInstallInfo.Free;
     end;
-    LInstallerFile := TPath.Combine(ASourceDirectory, CInstallFile);
-    if TFile.Exists(LInstallerFile) then
-    begin
-      LInstallInfo := TInstallationFile.Create();
-      try
-        Result := LInstallInfo.LoadFromFile(LInstallerFile);
-        if Result then
-        begin
-          FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Experts', 'Adding Pathes']);
-          ProcessRawFolders(LInstallInfo.RawFolders, ASourceDirectory);
-          FProgress.NextTask();
 
-          ProcessSourceFolders(LInstallInfo.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
-          CopyMetaData(ASourceDirectory, ATargetDirectory);
-          CopyLicense(ASourceDirectory, ATargetDirectory, LLicenseFile);
-          FProgress.NextTask();
-
-          Result := ProcessProjects(LInstallInfo.Projects, ATargetDirectory);
-          FProgress.NextTask();
-
-          Result := Result and ProcessExperts(LInstallInfo.Experts);
-          FProgress.NextTask();
-
-          FProgress.SetTaskProgress('Libpath', 0, 2);
-          ProcessLibPathes();
-          FProgress.SetTaskProgress('SearchPath', 1, 2);
-          ProcessPathes(LInstallInfo.SearchPathes, ATargetDirectory, tpSearchPath);
-          FProgress.SetTaskProgress('BrowsingPath', 2, 2);
-          ProcessPathes(LInstallInfo.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
-          FProgress.Completed();
-        end
-        else
-        begin
-          DoMessage(mtError, CInstallFile + ' seems to be corrupt');
-        end;
-      finally
-        LInstallInfo.Free;
-      end;
-    end
-    else
-    begin
-      DoMessage(mtError, 'No installation file');
-    end;
   finally
     SaveUninstall(ATargetDirectory);
   end;
@@ -463,16 +472,24 @@ function TDNInstaller.InstallExpert(const AExpert: string;
 var
   LResult: Boolean;
 begin
-  Result := True;
-  if Assigned(FExpertService) then
+  Result := TFile.Exists(AExpert);
+  if Result then
   begin
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        LResult := FExpertService.RegisterExpert(AExpert, AHotReload);
-      end);
-    Result := LResult;
-    FHasPendingChanges := FHasPendingChanges or not AHotReload;
+    DoMessage(mtNotification, AExpert);
+    if Assigned(FExpertService) then
+    begin
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          LResult := FExpertService.RegisterExpert(AExpert, AHotReload);
+        end);
+      Result := LResult;
+      FHasPendingChanges := FHasPendingChanges or not AHotReload;
+    end;
+  end
+  else
+  begin
+    DoMessage(mtError, 'File not found: ' + AExpert);
   end;
 end;
 
@@ -481,10 +498,10 @@ begin
   Result := True;
 
   if ACompiler_Min > 0 then
-    Result := Result and (FCompilerVersion >= ACompiler_Min);
+    Result := Result and (Trunc(FCompiler.Version) >= ACompiler_Min);
 
   if ACompiler_Max > 0 then
-    Result := Result and (FCompilerVersion <= ACompiler_Max);
+    Result := Result and (Trunc(FCompiler.Version) <= ACompiler_Max);
 end;
 
 function TDNInstaller.ProcessProject(const AProject: IDNProjectInfo): Boolean;
@@ -546,10 +563,10 @@ var
   LProjects: TList<IDNProjectInfo>;
   i: Integer;
 begin
-  Result := True;
   LProjects := TList<IDNProjectInfo>.Create();
   try
-    if LoadSupportedProjects(GetSourceFolder(ATargetDirectory), AProjects, LProjects) and (LProjects.Count > 0) then
+    Result := LoadSupportedProjects(GetSourceFolder(ATargetDirectory), AProjects, LProjects);
+    if Result then
     begin
       for i := 0 to LProjects.Count - 1 do
       begin
@@ -646,6 +663,14 @@ begin
   end;
 end;
 
+function TDNInstaller.PrepareInstallationDirectory(
+  const ATargetDirectory: string): Boolean;
+begin
+  Result := ForceDirectories(ATargetDirectory);
+  if not Result then
+    DoMessage(mtError, 'Failed to create directory ' + QuotedStr(ATargetDirectory));
+end;
+
 function TDNInstaller.ProcessExperts(const AExperts: TArray<TExpert>): Boolean;
 var
   LExpert: TExpert;
@@ -662,23 +687,41 @@ begin
     if IsSupported(LExpert.CompilerMin, LExpert.CompilerMax) then
     begin
       LExpertFile := TPath.Combine(LBaseDir, LExpert.Expert);
-      if TFile.Exists(LExpertFile) then
-      begin
-        DoMessage(mtNotification, LExpert.Expert);
-        LInstalledExpert.Expert := LExpertFile;
-        LInstalledExpert.HotReload := LExpert.HotReload;
-        FExperts.Add(LInstalledExpert);
-        Result := Result and InstallExpert(LExpertFile, LExpert.HotReload);
-      end
-      else
-      begin
-        Result := False;
-        DoMessage(mtError, 'File not found: ' + LExpertFile);
-      end;
+      LInstalledExpert.Expert := LExpertFile;
+      LInstalledExpert.HotReload := LExpert.HotReload;
+      FExperts.Add(LInstalledExpert);
+      Result := InstallExpert(LExpertFile, LExpert.HotReload);
     end;
     if not Result then
       Break;
   end;
+end;
+
+function TDNInstaller.ProcessInstallation(AInstallation: TInstallationFile;
+  const ASourceDirectory, ATargetDirectory, ALicenceFile: string): Boolean;
+begin
+  FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Experts', 'Adding Pathes']);
+  ProcessRawFolders(AInstallation.RawFolders, ASourceDirectory);
+  FProgress.NextTask();
+
+  ProcessSourceFolders(AInstallation.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
+  CopyMetaData(ASourceDirectory, ATargetDirectory);
+  CopyLicense(ASourceDirectory, ATargetDirectory, ALicenceFile);
+  FProgress.NextTask();
+
+  Result := ProcessProjects(AInstallation.Projects, ATargetDirectory);
+  FProgress.NextTask();
+
+  Result := Result and ProcessExperts(AInstallation.Experts);
+  FProgress.NextTask();
+
+  FProgress.SetTaskProgress('Libpath', 0, 2);
+  ProcessLibPathes();
+  FProgress.SetTaskProgress('SearchPath', 1, 2);
+  ProcessPathes(AInstallation.SearchPathes, ATargetDirectory, tpSearchPath);
+  FProgress.SetTaskProgress('BrowsingPath', 2, 2);
+  ProcessPathes(AInstallation.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+  FProgress.Completed();
 end;
 
 procedure TDNInstaller.ProcessLibPathes;
@@ -709,6 +752,7 @@ var
   LPathes: TStringDynArray;
   LPath: TSearchPath;
   LRelPath, LBasePath, LFullPath: string;
+  LPlatforms: TDNCompilerPlatforms;
 begin
   if Length(APathes) > 0 then
   begin
@@ -722,7 +766,8 @@ begin
     LBasePath := TPath.Combine(ARootDirectory, CSourceDir);
     for LPath in APathes do
     begin
-      if IsSupported(LPath.CompilerMin, LPath.CompilerMax) then
+      LPlatforms := LPath.Platforms * GetSupportedPlatforms();
+      if IsSupported(LPath.CompilerMin, LPath.CompilerMax) and (LPlatforms <> []) then
       begin
         LPathes := SplitString(LPath.Path, ';');
         for LRelPath in LPathes do
@@ -730,10 +775,9 @@ begin
           DoMessage(mtNotification, LRelPath);
           LFullPath := TPath.Combine(LBasePath, UndecoratePath(LRelPath));
           case APathType of
-            tpSearchPath: AddSearchPath(LFullPath, LPath.Platforms);
-            tpBrowsingPath: AddBrowsingPath(LFullPath, LPath.Platforms);
+            tpSearchPath: AddSearchPath(LFullPath, LPlatforms);
+            tpBrowsingPath: AddBrowsingPath(LFullPath, LPlatforms);
           end;
-
         end;
       end;
     end;
@@ -763,7 +807,10 @@ begin
           LBase := IncludeTrailingPathDelimiter(LFolder.Base);
           LRelTargetPath := IncludeTrailingPathDelimiter(LFolder.Folder);
           if StartsText(LBase, LRelTargetPath) then
-            LRelTargetPath := Copy(LRelTargetPath, Length(LBase) + 1, Length(LRelTargetPath))
+          begin
+            LRelTargetPath := Copy(LRelTargetPath, Length(LBase) + 1, Length(LRelTargetPath));
+            LRelTargetPath := ExcludeTrailingPathDelimiter(LRelTargetPath);
+          end
           else
             DoMessage(mtError, 'base must be exactly overlapping with folder string to remove it');
         end;
@@ -839,6 +886,31 @@ begin
 
   if StartsStr('\', Result) then
     Result := Copy(Result, 2, Length(Result));
+end;
+
+function TDNInstaller.ValidateInfoAndGetLicenceFile(const ADirectory: string;
+  out ALicenceFile: string): Boolean;
+var
+  LInfo: TInfoFile;
+begin
+  LInfo := TInfoFile.Create();
+  try
+    Result := LoadInfo(ADirectory, LInfo);
+    if Result then
+    begin
+      if LInfo.ID = TGuid.Empty then
+      begin
+        DoMessage(mtError, 'no ID provided');
+        Exit(False);
+      end;
+      if LInfo.LicenseType <> '' then
+        ALicenceFile := LInfo.LicenseFile
+      else
+        ALicenceFile := '';
+    end;
+  finally
+    LInfo.Free;
+  end;
 end;
 
 end.

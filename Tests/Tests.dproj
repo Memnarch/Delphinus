@@ -96,6 +96,56 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Tests.VariableResolver.pas"/>
+        <DCCReference Include="Tests.Installer.pas"/>
+        <DCCReference Include="Tests.Installer.Interceptor.pas"/>
+        <DCCReference Include="Tests.Mocks.Compiler.pas"/>
+        <DCCReference Include="Tests.Data.pas"/>
+        <DCCReference Include="Tests.Mocks.Projects.pas"/>
+        <RcItem Include="TestData\BasicInfo.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>BasicInfo</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\EmptyJSon.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>EmptyJSon</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InvalidJson.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InvalidJson</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallSearchPath.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallSearchPath</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallBrowsingPath.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallBrowsingPath</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallProject.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallProject</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallMissingProject.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallMissingProject</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallSourceFolder.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallSourceFolder</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\InstallExpert.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>InstallExpert</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

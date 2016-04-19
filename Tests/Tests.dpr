@@ -16,9 +16,16 @@ program Tests;
   {$ENDIF}
 {$ENDIF}
 
+{$R *.dres}
+
 uses
   TestInsight.DUnit,
-  Tests.VariableResolver in 'Tests.VariableResolver.pas';
+  Tests.VariableResolver in 'Tests.VariableResolver.pas',
+  Tests.Installer in 'Tests.Installer.pas',
+  Tests.Installer.Interceptor in 'Tests.Installer.Interceptor.pas',
+  Tests.Mocks.Compiler in 'Tests.Mocks.Compiler.pas',
+  Tests.Data in 'Tests.Data.pas',
+  Tests.Mocks.Projects in 'Tests.Mocks.Projects.pas';
 
 {$R *.RES}
 

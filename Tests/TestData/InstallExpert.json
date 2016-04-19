@@ -1,0 +1,19 @@
+{
+	"experts":
+	[
+		{
+			"expert": "Foo.dll"
+		},
+		
+		{
+			"expert": "FooXE2.dll",
+			"compiler": 23
+		},
+		
+		{
+			"expert": "FooHotReload.dll",
+			"hot_reload": true
+		}
+		
+	]
+}

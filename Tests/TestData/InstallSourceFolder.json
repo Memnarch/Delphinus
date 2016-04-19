@@ -1,0 +1,18 @@
+{
+	"source_folders":
+    [
+        {
+            "folder": "FolderAll",
+            "recursive": true,
+            "filter": "*;*.*"
+        },
+		{
+			"folder": "FolderXE2",
+			"compiler": 23
+		},
+		{
+			"folder": "Base\\Folder",
+			"base": "Base"
+		}
+    ]
+}
