@@ -3,10 +3,12 @@ unit Tests.Installer;
 interface
 
 uses
+  Generics.Collections,
   TestFramework,
   DN.JSonFile.Uninstallation,
   DN.JsonFile.Installation,
   DN.ProjectInfo.Intf,
+  DN.ProjectGroupInfo.Intf,
   Tests.Installer.Interceptor,
   Tests.Mocks.Compiler;
 
@@ -20,6 +22,7 @@ type
     function BuildSearchPath(const APath: string): string;
     function BuildSearchPathes(APathes: array of string): string;
     procedure CheckPackage(const APackage: TPackage; const AProject: IDNProjectInfo);
+    procedure CheckPackages(const APackages: TArray<TPackage>; const AProjects: TArray<IDNProjectInfo>);
     procedure CheckFolder(const AExpected, AFolder: TMockedDirectory);
     procedure CheckExpert(const AExpected, AExpert: TInstalledExpert);
     //mocked directories
@@ -30,6 +33,9 @@ type
     function MockedExpert: TInstalledExpert;
     function MockedExpertXE2: TInstalledExpert;
     function MockedExpertHotReload: TInstalledExpert;
+    //mocked groupprojects
+    function MockedGroupProj: IDNProjectGroupInfo;
+    function MockedGroupProjXE2: IDNProjectGroupInfo;
   published
     //tests for Delphinus.Info.json
     procedure Install_DelphinusInfo_IsInvalid_Expect_Failure;
@@ -52,6 +58,9 @@ type
     procedure Install_Projects_XE2_Expect_Package_DesignPackage_PackageXE2;
     procedure Install_Projects_Win64_Expect_PackageWin64;
     procedure Install_Projects_Missing_ExpectFailure;
+    //projectgroups
+    procedure Install_ProjectGroup_Expect_ProjectA_Project_B;
+    procedure Install_ProjectGroupXE2_Expect_ProjectA_ProjectB_ProjectXE2;
     //sourcefolders
     procedure Install_SourceFolder_XE__Expect_FolderAll_FolderBase;
     procedure Install_SourceFolder_XE2_Expect_FolderAll_FolderXE2_FolderBase;
@@ -66,7 +75,6 @@ uses
   SysUtils,
   IOUtils,
   DN.Compiler.Intf,
-  DN.ProjectGroupInfo.Intf,
   Tests.Data,
   Tests.Mocks.Projects;
 
@@ -82,6 +90,8 @@ const
   CDesignPackage = 'DesignPackage';
   CPackageXE2 = 'PackageXE2';
   CPackageWin64 = 'PackageWin64';
+  CGroup = 'Group';
+  CGroupXE2 = 'GroupXE2';
 
 { TVariableResolverTest }
 
@@ -129,6 +139,16 @@ begin
   CheckEquals('BPLDIR\' + AProject.BinaryName, APackage.BPLFile, 'Binary');
   CheckEquals('DCPDIR\' + AProject.DCPName, APackage.DCPFile, 'DCP');
   CheckEquals(not AProject.IsRuntimeOnlyPackage, APackage.Installed, 'Installed');
+end;
+
+procedure TInstallerTest.CheckPackages(const APackages: TArray<TPackage>;
+  const AProjects: TArray<IDNProjectInfo>);
+var
+  i: Integer;
+begin
+  CheckEquals(Length(AProjects), Length(APackages), 'Packages.Length');
+  for i := 0 to High(APackages) do
+    CheckPackage(APackages[i], AProjects[i]);
 end;
 
 procedure TInstallerTest.Install_BrowsingPath_XE2Win64_Expect_Win64Path;
@@ -213,6 +233,35 @@ begin
   CheckEquals(2, FSut.Experts.Count);
   CheckExpert(MockedExpert, FSut.Experts[0]);
   CheckExpert(MockedExpertHotReload, FSut.Experts[1]);
+end;
+
+procedure TInstallerTest.Install_ProjectGroupXE2_Expect_ProjectA_ProjectB_ProjectXE2;
+var
+  LProjects: TList<IDNProjectInfo>;
+begin
+  LProjects := TList<IDNProjectInfo>.Create();
+  try
+    FSut.InfoResourceName := CJSonBasicInfo;
+    FSut.InstallResourceName := CJSonInstallProjectGroup;
+    FCompiler.Version := CCompilerXE2;
+    FSut.MockedGroupProjects.Add(TPath.Combine(CTargetDir, 'source\' + CGroup + '.groupproj'), MockedGroupProj);
+    FSut.MockedGroupProjects.Add(TPath.Combine(CTargetDir, 'source\' + CGroupXE2 + '.groupproj'), MockedGroupProjXE2);
+    LProjects.AddRange(MockedGroupProj.Projects);
+    LProjects.AddRange(MockedGroupProjXE2.Projects);
+    CheckTrue(FSut.Install(CSourceDir, CTargetDir));
+    CheckPackages(FSut.Packages.ToArray, LProjects.ToArray);
+  finally
+    LProjects.Free;
+  end;
+end;
+
+procedure TInstallerTest.Install_ProjectGroup_Expect_ProjectA_Project_B;
+begin
+  FSut.InfoResourceName := CJSonBasicInfo;
+  FSut.InstallResourceName := CJSonInstallProjectGroup;
+  FSut.MockedGroupProjects.Add(TPath.Combine(CTargetDir, 'source\' + CGroup + '.groupproj'), MockedGroupProj);
+  CheckTrue(FSut.Install(CSourceDir, CTargetDir));
+  CheckPackages(FSut.Packages.ToArray, MockedGroupProj.Projects.ToArray);
 end;
 
 procedure TInstallerTest.Install_Projects_Missing_ExpectFailure;
@@ -366,6 +415,25 @@ function TInstallerTest.MockedFolderXE2: TMockedDirectory;
 begin
   Result.Source := TPath.Combine(CSourceDir, 'FolderXE2');
   Result.Target := TPath.Combine(CTargetDir, 'source\FolderXE2');
+end;
+
+function TInstallerTest.MockedGroupProj: IDNProjectGroupInfo;
+var
+  LGroup: TMockedGroupProjectInfo;
+begin
+  LGroup := TMockedGroupProjectInfo.Create();
+  LGroup.Projects.Add(MockProjectBPL('ProjectA', [cpWin32], False));
+  LGroup.Projects.Add(MockProjectBPL('ProjectB', [cpWin32], True));
+  Result := LGroup;
+end;
+
+function TInstallerTest.MockedGroupProjXE2: IDNProjectGroupInfo;
+var
+  LGroup: TMockedGroupProjectInfo;
+begin
+  LGroup := TMockedGroupProjectInfo.Create();
+  LGroup.Projects.Add(MockProjectBPL('ProjectXE2', [cpWin32], False));
+  Result := LGroup;
 end;
 
 procedure TInstallerTest.SetUp;

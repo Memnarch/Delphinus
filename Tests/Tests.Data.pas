@@ -9,6 +9,7 @@ const
   CJSonInstallSearchPath = 'InstallSearchPath';
   CJsonInstallBrowsingPath = 'InstallBrowsingPath';
   CJSonInstallProject = 'InstallProject';
+  CJSonInstallProjectGroup = 'InstallProjectGroup';
   CJSonInstallMissingProject = 'InstallMissingProject';
   CJSonInstallSourceFolder = 'InstallSourceFolder';
   CJSonInstallExpert = 'InstallExpert';

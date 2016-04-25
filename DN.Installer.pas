@@ -419,7 +419,7 @@ begin
             for LInfo in LGroup.Projects do
             begin
               if ((GetSupportedPlatforms * LInfo.SupportedPlatforms) <> [])  then
-                ASupportedProjects.AddRange(LGroup.Projects);
+                ASupportedProjects.Add(LInfo);
             end;
           end
           else
