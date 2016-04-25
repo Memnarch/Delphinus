@@ -1,0 +1,12 @@
+{
+	"raw_files":
+	[
+		{
+			"file": "Foo.txt"
+		},
+		
+		{
+			"file": "Folder\\FooB.txt"
+		}
+	]
+}

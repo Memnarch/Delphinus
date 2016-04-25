@@ -101,6 +101,8 @@
         <DCCReference Include="Tests.Mocks.Compiler.pas"/>
         <DCCReference Include="Tests.Data.pas"/>
         <DCCReference Include="Tests.Mocks.Projects.pas"/>
+        <DCCReference Include="Tests.Uninstaller.Interceptor.pas"/>
+        <DCCReference Include="Tests.Uninstaller.pas"/>
         <RcItem Include="TestData\BasicInfo.json">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
@@ -145,6 +147,31 @@
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>InstallExpert</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\UninstallSearchPathes.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>UninstallSearchPathes</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\UninstallBrowsingPathes.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>UninstallBrowsingPathes</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\UninstallRawFiles.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>UninstallRawFiles</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\UninstallPackages.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>UninstallPackages</ResourceId>
+        </RcItem>
+        <RcItem Include="TestData\UninstallExperts.json">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>UninstallExperts</ResourceId>
         </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -1,0 +1,22 @@
+{
+	"packages":
+	[
+		{
+			"bpl_file": "Foo.bpl",
+			"dcp_file": "Foo.dcp",
+			"installed": false
+		},
+		
+		{
+			"bpl_file": "Installed.bpl",
+			"dcp_file": "Installed.dcp",
+			"installed": true
+		},
+		
+		{
+			"bpl_file": "Mac.dylib",
+			"dcp_file": "Mac.dcp",
+			"installed": false
+		}
+	]
+}

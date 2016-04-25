@@ -1,0 +1,13 @@
+{
+	"experts":
+	[
+		{
+			"expert": "Foo.dll"
+		},
+		
+		{
+			"expert": "Hot.dll",
+			"hot_reload": true
+		}
+	]
+}

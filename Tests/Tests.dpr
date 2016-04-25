@@ -25,7 +25,9 @@ uses
   Tests.Installer.Interceptor in 'Tests.Installer.Interceptor.pas',
   Tests.Mocks.Compiler in 'Tests.Mocks.Compiler.pas',
   Tests.Data in 'Tests.Data.pas',
-  Tests.Mocks.Projects in 'Tests.Mocks.Projects.pas';
+  Tests.Mocks.Projects in 'Tests.Mocks.Projects.pas',
+  Tests.Uninstaller.Interceptor in 'Tests.Uninstaller.Interceptor.pas',
+  Tests.Uninstaller in 'Tests.Uninstaller.pas';
 
 {$R *.RES}
 

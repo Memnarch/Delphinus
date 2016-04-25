@@ -13,6 +13,12 @@ const
   CJSonInstallSourceFolder = 'InstallSourceFolder';
   CJSonInstallExpert = 'InstallExpert';
 
+  CJSonUninstallSearchPathes = 'UninstallSearchPathes';
+  CJSonUninstallBrowsingPathes = 'UninstallBrowsingPathes';
+  CJSonUninstallRawFiles = 'UninstallRawFiles';
+  CJSonUninstalllPackages = 'UninstallPackages';
+  CJSonUninstallExperts = 'UninstallExperts';
+
 implementation
 
 end.
