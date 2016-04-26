@@ -1,0 +1,20 @@
+{    "projects":
+    [
+        {
+            "project": "Package.dproj"
+        },
+		
+		{
+            "project": "DesignPackage.dproj"
+        },
+		
+		{
+            "project": "PackageXE2.dproj",
+			"compiler": 23
+        },
+		
+		{
+            "project": "PackageWin64.dproj"
+        }
+    ]
+}

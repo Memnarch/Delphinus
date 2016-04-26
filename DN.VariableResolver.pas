@@ -38,6 +38,8 @@ begin
   inherited Create();
   FVariables := OpenToDynamicArray(AVariables);
   FValues := OpenToDynamicArray(AValues);
+  if Length(FVariables) <> Length(FValues) then
+    raise EArgumentException.Create('Number of elements in Variables argument does not match number of elements in Values argument');
 end;
 
 function TVariableResolver.Resolve(const AText: string): string;

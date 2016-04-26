@@ -1,0 +1,3 @@
+{
+	"search_pathes": "TargetDir\\PathA;TargetDir\\PathB\\SubFolder"
+}

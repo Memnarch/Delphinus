@@ -30,14 +30,15 @@ type
     FHasPendingChanges: Boolean;
     function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
     function ProcessExperts(const AExperts: TArray<TInstalledExpert>): Boolean;
-    function DeleteRawFiles(const ARawFiles: TArray<string>): Boolean;
-    function DeleteFiles(const ADirectory: string): Boolean;
-    function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean;
     function RemovePathes(const ASearchPathes: string; APathType: TPathType): Boolean;
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
     function GenerateNewName(const ADirName: string): string;
   protected
+    function LoadUninstall(const ADirectory: string; AUninstall: TUninstallationFile): Boolean; virtual;
+    function DeleteFiles(const ADirectory: string): Boolean; virtual;
+    function DeleteRawFiles(const ARawFiles: TArray<string>): Boolean; virtual;
+    function DeleteComponentFile(const AFile: string; const AWarningWhenMissing: Boolean = True): Boolean; virtual;
     function UninstallPackage(const ABPLFile: string): Boolean; virtual;
     function UninstallExpert(const AExpert: string; AHotReload: Boolean): Boolean; virtual;
     function RemoveSearchPath(const ASearchPath: string): Boolean; virtual;
@@ -191,6 +192,25 @@ begin
   Result := FOnMessage;
 end;
 
+function TDNUninstaller.LoadUninstall(const ADirectory: string;
+  AUninstall: TUninstallationFile): Boolean;
+var
+  LUninstallFile: string;
+begin
+  LUninstallFile := TPath.Combine(ADirectory, CUninstallFile);
+  if TFile.Exists(LUninstallFile) then
+  begin
+    Result := AUninstall.LoadFromFile(LUninstallFile);
+    if not Result then
+      DoMessage(mtError, 'uninstallation file is invalid json');
+  end
+  else
+  begin
+    Result := False;
+    DoMessage(mtError, 'No uninstallation file');
+  end;
+end;
+
 function TDNUninstaller.ProcessExperts(
   const AExperts: TArray<TInstalledExpert>): Boolean;
 var
@@ -296,45 +316,32 @@ end;
 
 function TDNUninstaller.Uninstall(const ADirectory: string): Boolean;
 var
-  LUninstallFile: string;
   LUninstall: TUninstallationFile;
 begin
   Result := False;
-  LUninstallFile := TPath.Combine(ADirectory, CUninstallFile);
-  if TFile.Exists(LUninstallFile) then
-  begin
-    LUninstall := TUninstallationFile.Create();
-    try
-      if LUninstall.LoadFromFile(LUninstallFile) then
-      begin
-        //remove searchpathes first, because it's less criticall
-        //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
-        //them manually from disk, than removing individual searchpathes manually from IDE
-        FProgress.SetTasks(['Removing Pathes', 'Removing Experts', 'Remove Packages', 'Delete Files']);
-        FProgress.SetTaskProgress('SearchPath', 0, 1);
-        Result :=  RemovePathes(LUninstall.SearchPathes, tpSearchPath);
-        FProgress.SetTaskProgress('Browsing Path', 1, 1);
-        Result := Result and RemovePathes(LUninstall.BrowsingPathes, tpBrowsingPath);
-        FProgress.NextTask();
-        Result := Result and ProcessExperts(LUninstall.Experts);
-        FProgress.NextTask();
-        Result := Result and ProcessPackages(LUninstall.Packages);
-        FProgress.NextTask();
-        Result := Result and DeleteRawFiles(LUninstall.RawFiles);
-        Result := Result and DeleteFiles(ADirectory);
-        FProgress.Completed();
-      end
-      else
-      begin
-        DoMessage(mtError, 'uninstallation file is corrupt');
-      end;
-    finally
-      LUninstall.Free;
+  LUninstall := TUninstallationFile.Create();
+  try
+    if LoadUninstall(ADirectory, LUninstall) then
+    begin
+      //remove searchpathes first, because it's less criticall
+      //in case something goes wrong with uninstalling packages or deleting files, it's simpler to remove
+      //them manually from disk, than removing individual searchpathes manually from IDE
+      FProgress.SetTasks(['Removing Pathes', 'Removing Experts', 'Remove Packages', 'Delete Files']);
+      FProgress.SetTaskProgress('SearchPath', 0, 1);
+      Result :=  RemovePathes(LUninstall.SearchPathes, tpSearchPath);
+      FProgress.SetTaskProgress('Browsing Path', 1, 1);
+      Result := Result and RemovePathes(LUninstall.BrowsingPathes, tpBrowsingPath);
+      FProgress.NextTask();
+      Result := Result and ProcessExperts(LUninstall.Experts);
+      FProgress.NextTask();
+      Result := Result and ProcessPackages(LUninstall.Packages);
+      FProgress.NextTask();
+      Result := Result and DeleteRawFiles(LUninstall.RawFiles);
+      Result := Result and DeleteFiles(ADirectory);
+      FProgress.Completed();
     end;
-  end
-  else
-  begin
-    DoMessage(mtError, 'No uninstallation file');
+  finally
+    LUninstall.Free;
   end;
 end;
 

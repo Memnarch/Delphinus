@@ -1,0 +1,12 @@
+{    "projects":
+    [
+        {
+            "project": "Group.groupproj"
+        },
+		
+		{
+            "project": "GroupXE2.groupproj",
+			"compiler": 23
+        }
+    ]
+}

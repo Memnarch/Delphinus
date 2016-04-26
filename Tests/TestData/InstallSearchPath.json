@@ -1,0 +1,17 @@
+{
+        "search_pathes": 
+    [
+        {
+            "pathes": "TestPathAll"
+        },
+		{
+            "pathes": "TestPath23",
+            "compiler": 23
+        },
+		
+		{
+            "pathes": "TestPathWin64",
+            "platforms": "Win64"
+        }
+    ]
+}
