@@ -44,6 +44,7 @@ type
     function DownloadPackage(const APackage: IDNPackage; const AVersion: IDNPackageVersion; out AContentDirectory: string): Boolean;
     function GetInstallDirectoryForPackage(const APackage: IDNPackage): string; virtual;
     function GetInstallDirectoryForDirectory(const ADirectory: string): string; virtual;
+    function GetHasPendingChanges: Boolean; virtual;
     function ExtendInfoFile(const APackage: IDNPackage; const AVersion: IDNPackageVersion; const AInstallDirectory: string): Boolean;
     function GetSetupTempDir: string;
     procedure CleanupTemp();
@@ -61,6 +62,7 @@ type
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
     property OnProgress: TDNProgressEvent read GetOnProgress write SetOnProgress;
+    property HasPendingChanges: Boolean read GetHasPendingChanges;
   end;
 
 implementation
@@ -184,6 +186,11 @@ end;
 function TDNSetupCore.GetComponentDirectory: string;
 begin
   Result := FComponentDirectory;
+end;
+
+function TDNSetupCore.GetHasPendingChanges: Boolean;
+begin
+  Result := False;
 end;
 
 function TDNSetupCore.GetInstallDirectoryForDirectory(

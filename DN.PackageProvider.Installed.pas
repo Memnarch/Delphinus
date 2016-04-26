@@ -149,7 +149,10 @@ begin
     LDirectories := TDirectory.GetDirectories(FComponentDirectory);
     for LDirectory in LDirectories do
     begin
-      if TFile.Exists(TPath.Combine(LDirectory, CUninstallFile)) then
+      if TFile.Exists(TPath.Combine(LDirectory, CUninstallFile))
+        //when uninstalling we rename directories for delete on reboot with a ~
+        //exclude them here!
+        and (Pos('~', ExtractFileName(ExcludeTrailingPathDelimiter(LDirectory))) < 1) then
       begin
         LPackage := TDNPackage.Create();
         LPackage.Name := ExtractFileName(LDirectory);

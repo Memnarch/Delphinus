@@ -102,7 +102,14 @@ contains
   DN.ActiveX in '..\..\DN.ActiveX.pas',
   DN.Setup.Core in '..\..\DN.Setup.Core.pas',
   DN.Settings.Intf in '..\..\DN.Settings.Intf.pas',
-  DN.Settings in '..\..\DN.Settings.pas';
+  DN.Settings in '..\..\DN.Settings.pas',
+  DN.FileService.Intf in '..\..\DN.FileService.Intf.pas',
+  DN.FileService in '..\..\DN.FileService.pas',
+  DN.VariableResolver.Compiler in '..\..\DN.VariableResolver.Compiler.pas',
+  DN.VariableResolver.Intf in '..\..\DN.VariableResolver.Intf.pas',
+  DN.VariableResolver in '..\..\DN.VariableResolver.pas',
+  DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
+  DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas';
 
 end.
 

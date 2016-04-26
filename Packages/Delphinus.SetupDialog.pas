@@ -126,6 +126,7 @@ end;
 procedure TSetupDialog.Execute;
 var
   LThread: TThread;
+  LError: string;
 begin
   FSetupIsRunning := True;
   mLog.Clear;
@@ -143,9 +144,13 @@ begin
           sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
           sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
         end;
-      finally
-        TThread.Synchronize(nil, SetupFinished);
+      except
+        on E: Exception do
+          LError := E.ToString;
       end;
+      if LError <> '' then
+        TThread.Synchronize(nil, procedure begin HandleLogMessage(mtError, LError) end);
+      TThread.Synchronize(nil, SetupFinished);
     end);
   LThread.Start;
 end;
@@ -305,6 +310,8 @@ begin
   btnCloseProgress.Enabled := True;
   btnShowLog.Enabled := True;
   FSetupIsRunning := False;
+  if FSetup.HasPendingChanges then
+    MessageDlg('Some changes require an IDE restart to take effect', mtInformation, [mbOK], 0);
 end;
 
 end.

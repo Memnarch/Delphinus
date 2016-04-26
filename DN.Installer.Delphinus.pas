@@ -12,10 +12,10 @@ type
   private
     FRegistryKey: string;
   protected
-    function InstallProject(const AProject: IDNProjectInfo;
-      const ABPLDirectory: string): Boolean; override;
+    function InstallBPL(const ABPL: string): Boolean; override;
     function GetSupportedPlatforms: TDNCompilerPlatforms; override;
-    procedure ConfigureCompiler(const ACompiler: IDNCompiler); override;
+    function GetBPLDir(APlatform: TDNCompilerPlatform): string; override;
+    function GetDCPDir(APlatform: TDNCompilerPlatform): string; override;
   public
     constructor Create(const ACompiler: IDNCompiler; const ARegistryKey: string); reintroduce;
   end;
@@ -29,13 +29,6 @@ uses
 
 { TDNDelphinusInstaller }
 
-procedure TDNDelphinusInstaller.ConfigureCompiler(const ACompiler: IDNCompiler);
-begin
-  inherited;
-  ACompiler.BPLOutput := TPath.Combine(GetTargetDirectory(), 'Bpl');
-  ACompiler.DCPOutput := TPath.Combine(GetTargetDirectory(), 'Dcp');
-end;
-
 constructor TDNDelphinusInstaller.Create(const ACompiler: IDNCompiler;
   const ARegistryKey: string);
 begin
@@ -43,13 +36,24 @@ begin
   FRegistryKey := ARegistryKey;
 end;
 
+function TDNDelphinusInstaller.GetBPLDir(
+  APlatform: TDNCompilerPlatform): string;
+begin
+  Result := TPath.Combine(GetTargetDirectory(), 'Bpl');
+end;
+
+function TDNDelphinusInstaller.GetDCPDir(
+  APlatform: TDNCompilerPlatform): string;
+begin
+  Result := TPath.Combine(GetTargetDirectory(), 'Dcp');
+end;
+
 function TDNDelphinusInstaller.GetSupportedPlatforms: TDNCompilerPlatforms;
 begin
   Result := [cpWin32];
 end;
 
-function TDNDelphinusInstaller.InstallProject(const AProject: IDNProjectInfo;
-  const ABPLDirectory: string): Boolean;
+function TDNDelphinusInstaller.InstallBPL(const ABPL: string): Boolean;
 var
   LRegistry: TRegistry;
 begin
@@ -58,7 +62,7 @@ begin
     Result := LRegistry.OpenKey(TPath.Combine(FRegistryKey, 'Known Packages'), False);
     if Result then
     begin
-      LRegistry.WriteString(TPath.Combine(ABPLDirectory, AProject.BinaryName), AProject.BinaryName);
+      LRegistry.WriteString(ABPL, ExtractFileName(ABPL));
     end;
   finally
     LRegistry.Free;

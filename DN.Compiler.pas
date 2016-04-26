@@ -12,7 +12,8 @@ interface
 uses
   Classes,
   DN.Types,
-  DN.Compiler.Intf;
+  DN.Compiler.Intf,
+  DN.VariableResolver.Intf;
 
 type
   TDNCompiler = class(TInterfacedObject, IDNCompiler)
@@ -42,11 +43,11 @@ type
     procedure SetPlatform(const Value: TDNCompilerPlatform);
   protected
     function GetVersion: TCompilerVersion; virtual;
+    function CreateResolver: IVariableResolver;
   public
     constructor Create();
     destructor Destroy(); override;
     function Compile(const AProjectFile: string): Boolean; virtual; abstract;
-    function ResolveVars(const APath: string): string;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
     property DCPOutput: string read GetDCPOutput write SetDCPOutput;
     property EXEOutput: string read GetEXEOutput write SetEXEOutput;
@@ -62,7 +63,8 @@ implementation
 
 uses
   SysUtils,
-  StrUtils;
+  StrUtils,
+  DN.VariableResolver.Compiler;
 
 { TDNCompiler }
 
@@ -78,6 +80,11 @@ begin
   FTarget := ctBuild;
   FConfig := ccRelease;
   FPlatform := cpWin32;
+end;
+
+function TDNCompiler.CreateResolver: IVariableResolver;
+begin
+  Result := TCompilerVariableResolver.Create(Platform, Config);
 end;
 
 destructor TDNCompiler.Destroy;
@@ -124,13 +131,6 @@ end;
 function TDNCompiler.GetVersion: TCompilerVersion;
 begin
   Result := 0;
-end;
-
-function TDNCompiler.ResolveVars(const APath: string): string;
-begin
-  Result := ReplaceText(APath, '$(Platform)', TDNCompilerPlatformName[Platform]);
-  Result := ReplaceText(Result, '$(Config)', TDNCompilerConfigName[Config]);
-  Result := ReplaceText(Result, '$(BDSCOMMONDIR)', GetEnvironmentVariable('BDSCommonDir'));
 end;
 
 procedure TDNCompiler.SetEXEOutput(const Value: string);

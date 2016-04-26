@@ -24,6 +24,7 @@ type
     procedure SetOnMessage(const Value: TMessageEvent);
     function GetOnProgress: TDNProgressEvent;
     procedure SetOnProgress(const Value: TDNProgressEvent);
+    function GetHasPendingChanges: Boolean;
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
     function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
     function Uninstall(const APackage: IDNPackage): Boolean;
@@ -32,6 +33,7 @@ type
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
     property OnProgress: TDNProgressEvent read GetOnProgress write SetOnProgress;
+    property HasPendingChanges: Boolean read GetHasPendingChanges;
   end;
 
 implementation
