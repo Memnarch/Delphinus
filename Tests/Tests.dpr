@@ -27,7 +27,9 @@ uses
   Tests.Data in 'Tests.Data.pas',
   Tests.Mocks.Projects in 'Tests.Mocks.Projects.pas',
   Tests.Uninstaller.Interceptor in 'Tests.Uninstaller.Interceptor.pas',
-  Tests.Uninstaller in 'Tests.Uninstaller.pas';
+  Tests.Uninstaller in 'Tests.Uninstaller.pas',
+  Tests.Version in 'Tests.Version.pas',
+  DN.Version in '..\DN.Version.pas';
 
 {$R *.RES}
 

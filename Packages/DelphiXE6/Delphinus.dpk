@@ -87,7 +87,7 @@ contains
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
   DN.Setup in '..\..\DN.Setup.pas',
-  DN.Version in '..\..\DN.Version.pas',
+  Delphinus.Version in '..\Delphinus.Version.pas',
   DN.IOUtils in '..\..\DN.IOUtils.pas',
   Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
   Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas' {CategoryFilterView: TFrame},
