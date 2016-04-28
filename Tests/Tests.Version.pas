@@ -22,6 +22,12 @@ type
     procedure Compare_E_Expect_LeftIsBigger;
     procedure Compare_F_Expect_LeftIsBigger;
     procedure Compare_G_Expect_LeftIsSmaller;
+
+    procedure Compare_StableA_UnstableB_Expect_StableAIsBigger;
+    procedure Compare_UnstableB_StableA_Expect_StableAIsBigger;
+
+    procedure IsStable_VersionA_Expect_True;
+    procedure IsStable_VersionB_Expect_False;
   end;
 
 implementation
@@ -92,6 +98,26 @@ end;
 procedure TVersionTest.Compare_G_Expect_LeftIsSmaller;
 begin
   CheckTrue(CLeftG.Compare(CRightG) < 0);
+end;
+
+procedure TVersionTest.Compare_StableA_UnstableB_Expect_StableAIsBigger;
+begin
+  CheckTrue(CVersionA.Compare(CVersionB) > 0);
+end;
+
+procedure TVersionTest.Compare_UnstableB_StableA_Expect_StableAIsBigger;
+begin
+  CheckTrue(CVersionB.Compare(CVersionA) < 0);
+end;
+
+procedure TVersionTest.IsStable_VersionA_Expect_True;
+begin
+  CheckTrue(CVersionA.IsStable);
+end;
+
+procedure TVersionTest.IsStable_VersionB_Expect_False;
+begin
+  CheckFalse(CVersionB.IsStable);
 end;
 
 procedure TVersionTest.Parse_VersionAText_Expect_VersionA;

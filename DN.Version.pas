@@ -41,7 +41,16 @@ begin
     if Result <> 0 then
       Exit;
   end;
-  Result := CompareText(PreReleaseLabel, AVersion.PreReleaseLabel);
+
+  if PreReleaseLabel <> AVersion.PreReleaseLabel then
+  begin
+    if PreReleaseLabel = '' then
+      Exit(1)
+    else if AVersion.PreReleaseLabel = '' then
+      Exit(-1);
+
+    Result := CompareText(PreReleaseLabel, AVersion.PreReleaseLabel);
+  end;
 end;
 
 class operator TDNVersion.Equal(const ALeft, ARight: TDNVersion): Boolean;
@@ -51,7 +60,7 @@ end;
 
 function TDNVersion.GetIsStable: Boolean;
 begin
-  Result := PreReleaseLabel <> '';
+  Result := PreReleaseLabel = '';
 end;
 
 class operator TDNVersion.GreaterThan(const ALeft, ARight: TDNVersion): Boolean;
