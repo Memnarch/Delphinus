@@ -15,12 +15,12 @@ uses
   DN.Types,
   DN.Package.Intf,
   DN.Controls,
-  DN.Controls.Button,
+  DN.Version,
   Delphinus.Forms,
   ImgList;
 
 type
-  TGetExtendedPackageInformation = function(const APackage: IDNPackage): string of object;
+  TGetPackageVersion = function(const APackage: IDNPackage): TDNVersion of object;
 
   TPackageDetailView = class(TFrame)
     imgRepo: TImage;
@@ -52,11 +52,11 @@ type
   private
     FCanvas: TControlCanvas;
     FPackage: IDNPackage;
-    FOnGetInstalledVersion: TGetExtendedPackageInformation;
-    FOnGetOnlineVersion: TGetExtendedPackageInformation;
+    FOnGetInstalledVersion: TGetPackageVersion;
+    FOnGetOnlineVersion: TGetPackageVersion;
     procedure SetPackage(const Value: IDNPackage);
-    function GetInstalledVersion(const APackage: IDNPackage): string;
-    function GetOnlineVersion(const APackage: IDNPackage): string;
+    function GetInstalledVersion(const APackage: IDNPackage): TDNVersion;
+    function GetOnlineVersion(const APackage: IDNPackage): TDNVersion;
     { Private declarations }
   protected
     procedure OpenUrl(const AUrl: string);
@@ -65,8 +65,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
-    property OnGetInstalledVersion: TGetExtendedPackageInformation read FOnGetInstalledVersion write FOnGetInstalledVersion;
-    property OnGetOnlineVersion: TGetExtendedPackageInformation read FOnGetOnlineVersion write FOnGetOnlineVersion;
+    property OnGetInstalledVersion: TGetPackageVersion read FOnGetInstalledVersion write FOnGetInstalledVersion;
+    property OnGetOnlineVersion: TGetPackageVersion read FOnGetOnlineVersion write FOnGetOnlineVersion;
   end;
 
 implementation
@@ -182,23 +182,23 @@ begin
 end;
 
 function TPackageDetailView.GetInstalledVersion(
-  const APackage: IDNPackage): string;
+  const APackage: IDNPackage): TDNVersion;
 begin
   if Assigned(FOnGetInstalledVersion) then
     Result := FOnGetInstalledVersion(APackage)
   else
-    Result := '';
+    Result := TDNVersion.Create();
 end;
 
 function TPackageDetailView.GetOnlineVersion(
-  const APackage: IDNPackage): string;
+  const APackage: IDNPackage): TDNVersion;
 begin
   if Assigned(FOnGetOnlineVersion) then
     Result := FOnGetOnlineVersion(APackage)
   else
-    Result := '';
+    Result := TDNVersion.Create();
 
-  if Result = '' then
+  if Result.IsEmpty then
     Result := GetInstalledVersion(APackage);
 end;
 
@@ -217,8 +217,8 @@ begin
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     imgRepo.Picture := FPackage.Picture;
     lbLicense.Caption := FPackage.LicenseType;
-    lbVersion.Caption := GetOnlineVersion(FPackage);
-    lbInstalled.Caption := GetInstalledVersion(FPackage);
+    lbVersion.Caption := GetOnlineVersion(FPackage).ToString;
+    lbInstalled.Caption := GetInstalledVersion(FPackage).ToString;
     lbPlatforms.Caption := GeneratePlatformString(FPackage.Platforms);
     btnHome.Enabled := FPackage.HomepageUrl <> '';
     btnProject.Enabled := FPackage.ProjectUrl <> '';

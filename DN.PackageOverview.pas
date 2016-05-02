@@ -21,10 +21,11 @@ uses
   ImgList,
   DN.Package.Intf,
   DN.Preview,
-  DN.PackageFilter;
+  DN.PackageFilter,
+  DN.Version;
 
 type
-  TCheckIsPackageInstalled = reference to function(const APackage: IDNPackage): string;
+  TCheckIsPackageInstalled = reference to function(const APackage: IDNPackage): TDNVersion;
   TPackageEvent = reference to procedure(const APackage: IDNPackage);
 
   TPackageOverView = class(TScrollBox)
@@ -49,8 +50,8 @@ type
     procedure HandlePreviewClicked(Sender: TObject);
     procedure ChangeSelectedPackage(const APackage: IDNPackage);
     function GetPreviewForPackage(const APackage: IDNPackage): TPreview;
-    function GetInstalledVersion(const APackage: IDNPackage): string;
-    function GetUpdateVersion(const APackage: IDNPackage): string;
+    function GetInstalledVersion(const APackage: IDNPackage): TDNVersion;
+    function GetUpdateVersion(const APackage: IDNPackage): TDNVersion;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UninstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -193,7 +194,7 @@ begin
   ChangeSelectedPackage((Sender as TPreview).Package);
 end;
 
-function TPackageOverView.GetUpdateVersion(const APackage: IDNPackage): string;
+function TPackageOverView.GetUpdateVersion(const APackage: IDNPackage): TDNVersion;
 begin
   if Assigned(FOnCheckHasPackageUpdate) then
   begin
@@ -201,7 +202,7 @@ begin
   end
   else
   begin
-    Result := '';
+    Result := TDNVersion.Create();
   end;
 end;
 
@@ -241,7 +242,7 @@ begin
 end;
 
 function TPackageOverView.GetInstalledVersion(
-  const APackage: IDNPackage): string;
+  const APackage: IDNPackage): TDNVersion;
 begin
   if Assigned(FOnCheckIsPackageInstalled) then
   begin
@@ -249,7 +250,7 @@ begin
   end
   else
   begin
-    Result := '';
+    Result := TDNVersion.Create();
   end;
 end;
 

@@ -9,9 +9,12 @@ type
   TDNVersion = record
   private
     function GetIsStable: Boolean;
+    function GetIsEmpty: Boolean;
   public
     Digits: array[0..2] of Word;
     PreReleaseLabel: string;
+    class function Create: TDNVersion; overload; static;
+    class function Create(AMajor, AMinor, APatch: Word; const APreReleaseLabel: string): TDNVersion; overload; static;
     class function TryParse(const AText: string; out AVersion: TDNVersion): Boolean; static;
     class function Parse(const AText: string): TDNVersion; static;
     class operator Equal(const ALeft, ARight: TDNVersion): Boolean;
@@ -23,6 +26,7 @@ type
     property Minor: Word read Digits[1];
     property Patch: Word read Digits[2];
     property IsStable: Boolean read GetIsStable;
+    property IsEmpty: Boolean read GetIsEmpty;
   end;
 
   EVersionParseError = Exception;
@@ -53,9 +57,31 @@ begin
   end;
 end;
 
+class function TDNVersion.Create: TDNVersion;
+begin
+  Result.Digits[0] := 0;
+  Result.Digits[1] := 0;
+  Result.Digits[2] := 0;
+  Result.PreReleaseLabel := '';
+end;
+
+class function TDNVersion.Create(AMajor, AMinor, APatch: Word;
+  const APreReleaseLabel: string): TDNVersion;
+begin
+  Result.Digits[0] := AMajor;
+  Result.Digits[1] := AMinor;
+  Result.Digits[2] := APatch;
+  Result.PreReleaseLabel := APreReleaseLabel;
+end;
+
 class operator TDNVersion.Equal(const ALeft, ARight: TDNVersion): Boolean;
 begin
   Result := ALeft.Compare(ARight) = 0;
+end;
+
+function TDNVersion.GetIsEmpty: Boolean;
+begin
+  Result := (Major = 0) and (Minor = 0) and (Patch = 0) and IsStable;
 end;
 
 function TDNVersion.GetIsStable: Boolean;
@@ -86,10 +112,18 @@ const
   CStable = '%d.%d.%d';
   CUnstable = CStable + '-%s';
 begin
+  if IsEmpty then
+    Exit('');
+
   if IsStable then
     Result := Format(CStable, [Major, Minor, Patch])
   else
-    Result := Format(CUnstable, [Major, Minor, Patch, PreReleaseLabel]);
+  begin
+    if (Major + Minor + Patch) > 0 then
+      Result := Format(CUnstable, [Major, Minor, Patch, PreReleaseLabel])
+    else
+      Result := PreReleaseLabel;
+  end;
 end;
 
 class function TDNVersion.TryParse(const AText: string;

@@ -191,6 +191,7 @@
         <DCCReference Include="..\..\DN.ToolsApi.ExpertService.Intf.pas"/>
         <DCCReference Include="..\..\DN.FileService.pas"/>
         <DCCReference Include="..\..\DN.FileService.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Version.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

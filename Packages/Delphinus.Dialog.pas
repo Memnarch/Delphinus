@@ -26,6 +26,7 @@ uses
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
   DN.PackageFilter,
+  DN.Version,
   ExtCtrls,
   StdCtrls,
   Registry;
@@ -81,8 +82,8 @@ type
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
     function GetOnlinePackage(const APackage: IDNPackage): IDNPackage;
-    function GetInstalledVersion(const APackage: IDNPackage): string;
-    function GetUpdateVersion(const APackage: IDNPackage): string;
+    function GetInstalledVersion(const APackage: IDNPackage): TDNVersion;
+    function GetUpdateVersion(const APackage: IDNPackage): TDNVersion;
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
     procedure RecreatePackageProvider();
@@ -399,18 +400,18 @@ begin
 end;
 
 function TDelphinusDialog.GetInstalledVersion(
-  const APackage: IDNPackage): string;
+  const APackage: IDNPackage): TDNVersion;
 var
   LPackage: IDNPackage;
 begin
-  Result := '';
+  Result := TDNVersion.Create();
   LPackage := GetInstalledPackage(APackage);
   if Assigned(LPackage) then
   begin
     if LPackage.Versions.Count > 0 then
-      Result := LPackage.Versions[0].Name
+      Result := LPackage.Versions[0].Value
     else
-      Result := 'none';
+      Result := TDNVersion.Create(0, 0, 0, 'none');
   end;
 end;
 
@@ -430,18 +431,18 @@ begin
   end
 end;
 
-function TDelphinusDialog.GetUpdateVersion(const APackage: IDNPackage): string;
+function TDelphinusDialog.GetUpdateVersion(const APackage: IDNPackage): TDNVersion;
 var
-  LVersion: string;
+  LVersion: TDNVersion;
   LPackage: IDNPackage;
 begin
-  Result := '';
+  Result := TDNVersion.Create();
   LVersion := GetInstalledVersion(APackage);
   LPackage := GetOnlinePackage(APackage);
-  if Assigned(LPackage) and (LVersion <> '') then
+  if Assigned(LPackage)and not LVersion.IsEmpty then
   begin
-    if (LPackage.Versions.Count > 0) and (LPackage.Versions[0].Name <> LVersion) then
-      Result := LPackage.Versions[0].Name;
+    if (LPackage.Versions.Count > 0) and (LPackage.Versions[0].Value > LVersion) then
+      Result := LPackage.Versions[0].Value;
   end;
 end;
 
@@ -513,7 +514,7 @@ begin
     FUpdatePackages.Clear();
     for LInstalledPackage in FInstalledPackages do
     begin
-      if GetUpdateVersion(LInstalledPackage) <> '' then
+      if not GetUpdateVersion(LInstalledPackage).IsEmpty then
         FUpdatePackages.Add(LInstalledPackage);
     end;
     FCategoryFilteView.UpdatesCount := FUpdatePackages.Count;

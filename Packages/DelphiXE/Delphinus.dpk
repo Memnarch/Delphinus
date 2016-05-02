@@ -109,7 +109,8 @@ contains
   DN.VariableResolver in '..\..\DN.VariableResolver.pas',
   DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
   DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas',
-  Delphinus.Version in '..\Delphinus.Version.pas';
+  Delphinus.Version in '..\Delphinus.Version.pas',
+  DN.Version in '..\..\DN.Version.pas';
 
 end.
 
