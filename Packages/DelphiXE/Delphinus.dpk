@@ -83,7 +83,6 @@ contains
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
   DN.Setup in '..\..\DN.Setup.pas',
-  DN.Version in '..\..\DN.Version.pas',
   DN.IOUtils in '..\..\DN.IOUtils.pas',
   Delphinus.LicenseDialog in '..\Delphinus.LicenseDialog.pas' {LicenseDialog},
   Delphinus.CategoryFilterView in '..\Delphinus.CategoryFilterView.pas',
@@ -109,7 +108,9 @@ contains
   DN.VariableResolver.Intf in '..\..\DN.VariableResolver.Intf.pas',
   DN.VariableResolver in '..\..\DN.VariableResolver.pas',
   DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
-  DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas';
+  DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas',
+  Delphinus.Version in '..\Delphinus.Version.pas',
+  DN.Version in '..\..\DN.Version.pas';
 
 end.
 

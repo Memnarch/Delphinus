@@ -75,15 +75,16 @@ begin
         APackage.ProjectUrl := LInfo.ProjectUrl;
         APackage.HomepageUrl := LInfo.HomepageUrl;
         APackage.ReportUrl := LInfo.ReportUrl;
-        LVersion := TDNPackageVersion.Create();
         if LInfo.Version <> '' then
-          LVersion.Name := LInfo.Version
-        else
-          LVersion.Name := 'No version';
+        begin
+          LVersion := TDNPackageVersion.Create();
+          if LInfo.Version <> '' then
+            LVersion.Name := LInfo.Version;
 
-        LVersion.CompilerMin := LInfo.CompilerMin;
-        LVersion.CompilerMax := LInfo.CompilerMax;
-        APackage.Versions.Add(LVersion);
+          LVersion.CompilerMin := LInfo.CompilerMin;
+          LVersion.CompilerMax := LInfo.CompilerMax;
+          APackage.Versions.Add(LVersion);
+        end;
         if LInfo.Picture <> '' then
         begin
           LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LInfo.Picture);

@@ -38,7 +38,7 @@ implementation
 
 uses
   ToolsApi,
-  DN.Version,
+  Delphinus.Version,
   Delphinus.ResourceNames;
 
 const

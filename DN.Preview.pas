@@ -19,6 +19,7 @@ uses
   Graphics,
   Math,
   DN.Package.Intf,
+  DN.Version,
   ImgList,
   StdCtrls;
 
@@ -32,16 +33,16 @@ type
     FSelected: Boolean;
     FButton: TButton;
     FUpdateButton: TButton;
-    FInstalledVersion: string;
-    FUpdateVersion: string;
+    FInstalledVersion: TDNVersion;
+    FUpdateVersion: TDNVersion;
     FOnUpdate: TNotifyEvent;
     FOnInstall: TNotifyEvent;
     FOnUninstall: TNotifyEvent;
     FOSImages: TImageList;
     procedure SetSelected(const Value: Boolean);
     procedure SetPackage(const Value: IDNPackage);
-    procedure SetInstalledVersion(const Value: string);
-    procedure SetUpdateVersion(const Value: string);
+    procedure SetInstalledVersion(const Value: TDNVersion);
+    procedure SetUpdateVersion(const Value: TDNVersion);
     procedure DoInstall();
     procedure DoUninstall();
     procedure DoUpdate();
@@ -58,8 +59,8 @@ type
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
     property Selected: Boolean read FSelected write SetSelected;
-    property InstalledVersion: string read FInstalledVersion write SetInstalledVersion;
-    property UpdateVersion: string read FUpdateVersion write SetUpdateVersion;
+    property InstalledVersion: TDNVersion read FInstalledVersion write SetInstalledVersion;
+    property UpdateVersion: TDNVersion read FUpdateVersion write SetUpdateVersion;
     property OnClick;
     property OnInstall: TNotifyEvent read FOnInstall write FOnInstall;
     property OnUninstall: TNotifyEvent read FOnUninstall write FOnUninstall;
@@ -151,7 +152,7 @@ procedure TPreview.HandleButtonClick(Sender: TObject);
 begin
   if Sender = FButton then
   begin
-    if InstalledVersion <> '' then
+    if not InstalledVersion.IsEmpty then
     begin
       DoUninstall();
     end
@@ -199,12 +200,12 @@ begin
     Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height))*2, LLicenseType);
     Canvas.Font.Style := [];
 
-    if InstalledVersion <> '' then
+    if not InstalledVersion.IsEmpty then
     begin
-      LVersionString := InstalledVersion;
-      if UpdateVersion <> '' then
+      LVersionString := InstalledVersion.ToString;
+      if not UpdateVersion.IsEmpty then
       begin
-        LVersionString := LVersionString + ' -> ' + UpdateVersion;
+        LVersionString := LVersionString + ' -> ' + UpdateVersion.ToString;
       end;
       Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height))*3, LVersionString);
     end;
@@ -248,10 +249,10 @@ begin
   UpdateControls();
 end;
 
-procedure TPreview.SetUpdateVersion(const Value: string);
+procedure TPreview.SetUpdateVersion(const Value: TDNVersion);
 begin
   FUpdateVersion := Value;
-  FUpdateButton.Visible := FUpdateVersion <> '';
+  FUpdateButton.Visible := not FUpdateVersion.IsEmpty;
   UpdateControls();
   InvalidateRect(Handle, Rect(Left, Top, Width, Height), False);
 end;
@@ -262,10 +263,10 @@ begin
   FUpdateButton.Left := Width - FUpdateButton.Width - CMargin;
 end;
 
-procedure TPreview.SetInstalledVersion(const Value: string);
+procedure TPreview.SetInstalledVersion(const Value: TDNVersion);
 begin
   FInstalledVersion := Value;
-  if FInstalledVersion <> '' then
+  if not FInstalledVersion.IsEmpty then
   begin
     FButton.Caption := 'Uninstall';
   end
