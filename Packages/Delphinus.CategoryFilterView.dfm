@@ -22,6 +22,7 @@ object CategoryFilterView: TCategoryFilterView
     Indent = 19
     ParentColor = True
     ParentFont = False
+    ReadOnly = True
     RowSelect = True
     ShowButtons = False
     ShowLines = False
