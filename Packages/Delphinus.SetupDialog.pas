@@ -23,7 +23,8 @@ uses
   Delphinus.Forms,
   ComCtrls,
   ExtCtrls,
-  DN.ComCtrls.Helper;
+  DN.ComCtrls.Helper,
+  ImgList;
 
 const
   CStart = WM_USER + 1;
@@ -51,6 +52,7 @@ type
     btnCloseProgress: TButton;
     lbAction: TLabel;
     btnShowLog: TButton;
+    ilButtons: TImageList;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
@@ -91,7 +93,9 @@ uses
   IOUtils,
   StrUtils,
   DN.JSonFile.InstalledInfo,
-  Delphinus.LicenseDialog;
+  Delphinus.LicenseDialog,
+  Delphinus.Resources.Names,
+  Delphinus.Resources;
 
 {$R *.dfm}
 
@@ -121,6 +125,8 @@ begin
   FSetup := ASetup;
   FSetup.OnMessage := HandleLogMessage;
   FSetup.OnProgress := HandleProgress;
+  btnLicense.ImageIndex := AddIconToImageList(ilButtons, Ico_Agreement);
+  btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
 end;
 
 procedure TSetupDialog.Execute;

@@ -39,7 +39,7 @@ implementation
 uses
   ToolsApi,
   Delphinus.Version,
-  Delphinus.ResourceNames;
+  Delphinus.Resources.Names;
 
 const
   CToolsMenu = 'ToolsMenu';
@@ -54,7 +54,7 @@ begin
   inherited;
   FIcon := TIcon.Create();
   FIcon.SetSize(16, 16);
-  FIcon.Handle := LoadImage(HInstance, CIconDelphinus, IMAGE_ICON, 0, 0, 0);
+  FIcon.Handle := LoadImage(HInstance, Ico_Delphinus, IMAGE_ICON, 0, 0, 0);
   LBitmap := TBitmap.Create();
   try
     LBitmap.SetSize(24, 24);

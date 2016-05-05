@@ -52,10 +52,10 @@ type
     procedure PaintOsImages;
   protected
     procedure Paint; override;
-    procedure SetupControls;
+    procedure SetupControls(AImages: TImageList);
     procedure Resize; override;
   public
-    constructor Create(AOwner: TComponent; AOsImages: TImageList); reintroduce;
+    constructor Create(AOwner: TComponent; AOsImages: TImageList; AButtonImages: TImageList); reintroduce;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
     property Selected: Boolean read FSelected write SetSelected;
@@ -85,7 +85,7 @@ uses
 
 { TPreview }
 
-constructor TPreview.Create(AOwner: TComponent; AOsImages: TImageList);
+constructor TPreview.Create(AOwner: TComponent; AOsImages: TImageList; AButtonImages: TImageList);
 begin
   inherited Create(AOwner);
   FOSImages := AOsImages;
@@ -93,7 +93,8 @@ begin
   FTarget.PixelFormat := pf32bit;
   Width := CPreviewWidth;
   Height := CPreviewHeight + CPadding * 2;
-  SetupControls();
+  ShowHint := True;
+  SetupControls(AButtonImages);
 end;
 
 destructor TPreview.Destroy;
@@ -268,11 +269,13 @@ begin
   FInstalledVersion := Value;
   if not FInstalledVersion.IsEmpty then
   begin
-    FButton.Caption := 'Uninstall';
+    FButton.Hint := 'Uninstall';
+    FButton.ImageIndex := 1;
   end
   else
   begin
-    FButton.Caption := 'Install';
+    FButton.Hint := 'Install';
+    FButton.ImageIndex := 0;
   end;
 end;
 
@@ -292,17 +295,24 @@ begin
   end;
 end;
 
-procedure TPreview.SetupControls;
+procedure TPreview.SetupControls(AImages: TImageList);
 begin
   FButton := TButton.Create(Self);
+  FButton.Width := 38;
+  FButton.Height := 38;
   FButton.Top := Height - FButton.Height - CMargin;
   FButton.OnClick := HandleButtonClick;
+  FButton.Images := AImages;
   FButton.Parent := Self;
 
   FUpdateButton := TButton.Create(Self);
+  FUpdateButton.Width := 38;
+  FUpdateButton.Height := 38;
   FUpdateButton.Top := Height - FUpdateButton.Height*2 - CMargin*2;
   FUpdateButton.Visible := False;
-  FUpdateButton.Caption := 'Update';
+  FUpdateButton.Hint := 'Update';
+  FUpdateButton.Images := AImages;
+  FUpdateButton.ImageIndex := 2;
   FUpdateButton.OnClick := HandleButtonClick;
   FUpdateButton.Parent := Self;
 end;

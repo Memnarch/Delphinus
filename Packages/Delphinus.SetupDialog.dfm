@@ -14,6 +14,7 @@ object SetupDialog: TSetupDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  ShowHint = True
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
   PixelsPerInch = 96
@@ -119,10 +120,11 @@ object SetupDialog: TSetupDialog
       end
       object btnLicense: TButton
         Left = 375
-        Top = 56
-        Width = 75
-        Height = 25
-        Caption = 'Show License'
+        Top = 50
+        Width = 38
+        Height = 38
+        Hint = 'Show License'
+        Images = ilButtons
         TabOrder = 3
         OnClick = btnLicenseClick
       end
@@ -189,5 +191,12 @@ object SetupDialog: TSetupDialog
         WordWrap = False
       end
     end
+  end
+  object ilButtons: TImageList
+    ColorDepth = cd32Bit
+    Height = 32
+    Width = 32
+    Left = 216
+    Top = 88
   end
 end

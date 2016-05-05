@@ -41,16 +41,15 @@ type
     ToolButton2: TToolButton;
     btnInstallFolder: TToolButton;
     dlgSelectInstallFile: TOpenDialog;
-    btnUninstall: TToolButton;
     dlgSelectUninstallFile: TOpenDialog;
     actOptions: TAction;
     pnlPackages: TPanel;
     edSearch: TButtonedEdit;
     ilSmall: TImageList;
     pnlToolBar: TPanel;
+    actInstallFolder: TAction;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
-    procedure btnUninstallClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -95,6 +94,7 @@ type
     procedure RefreshOverview();
     procedure DoFilter(const AFilter: string);
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
+    procedure LoadIcons;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -130,6 +130,8 @@ uses
   DN.ToolsApi.ExpertService,
   DN.ToolsApi.ExpertService.Intf,
   DN.FileService,
+  Delphinus.Resources.Names,
+  Delphinus.Resources,
   StrUtils;
 
 {$R *.dfm}
@@ -207,22 +209,6 @@ begin
   end;
 end;
 
-procedure TDelphinusDialog.btnUninstallClick(Sender: TObject);
-var
-  LDialog: TSetupDialog;
-begin
-  if dlgSelectUninstallFile.Execute() then
-  begin
-    LDialog := TSetupDialog.Create(CreateSetup());
-    try
-      if LDialog.ExecuteUninstallationFromDirectory(ExtractFilePath(dlgSelectUninstallFile.FileName)) then
-        RefreshInstalledPackages();
-    finally
-      LDialog.Free;
-    end;
-  end;
-end;
-
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
@@ -265,6 +251,8 @@ begin
   //adjust serachbar to be over the Packagelist
   edSearch.Width := pnlPackages.Width;
   edSearch.Left := pnlPackages.Left;
+
+  LoadIcons();
 
   FFileService.Cleanup();
 end;
@@ -490,6 +478,15 @@ function TDelphinusDialog.IsPackageInstalled(
   const APackage: IDNPackage): Boolean;
 begin
   Result := Assigned(GetInstalledPackage(APackage));
+end;
+
+procedure TDelphinusDialog.LoadIcons;
+begin
+  actRefresh.ImageIndex := AddIconToImageList(ilMenu, Ico_Refresh);
+  actOptions.ImageIndex := AddIconToImageList(ilMenu, Ico_Options);
+  actInstallFolder.ImageIndex := AddIconToImageList(ilMenu, Ico_Folder);
+  edSearch.LeftButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Search);
+  edSearch.RightButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Close);
 end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;

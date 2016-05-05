@@ -83,7 +83,7 @@ contains
   Delphinus.UiTypes in '..\Delphinus.UiTypes.pas',
   DN.JSon in '..\..\DN.JSon.pas',
   Delphinus.Forms in '..\Delphinus.Forms.pas',
-  Delphinus.ResourceNames in '..\Delphinus.ResourceNames.pas',
+  Delphinus.Resources.Names in '..\Delphinus.Resources.Names.pas',
   Delphinus.OptionsDialog in '..\Delphinus.OptionsDialog.pas' {DelphinusOptionsDialog},
   DN.Setup.Intf in '..\..\DN.Setup.Intf.pas',
   DN.Setup in '..\..\DN.Setup.pas',
@@ -115,7 +115,8 @@ contains
   DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
   DN.FileService in '..\..\DN.FileService.pas',
   DN.FileService.Intf in '..\..\DN.FileService.Intf.pas',
-  DN.Version in '..\..\DN.Version.pas';
+  DN.Version in '..\..\DN.Version.pas',
+  Delphinus.Resources in '..\Delphinus.Resources.pas';
 
 end.
 

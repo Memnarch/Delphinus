@@ -150,7 +150,7 @@
         <DCCReference Include="..\Delphinus.UiTypes.pas"/>
         <DCCReference Include="..\..\DN.JSon.pas"/>
         <DCCReference Include="..\Delphinus.Forms.pas"/>
-        <DCCReference Include="..\Delphinus.ResourceNames.pas"/>
+        <DCCReference Include="..\Delphinus.Resources.Names.pas"/>
         <DCCReference Include="..\Delphinus.OptionsDialog.pas">
             <Form>DelphinusOptionsDialog</Form>
         </DCCReference>
@@ -192,6 +192,7 @@
         <DCCReference Include="..\..\DN.FileService.pas"/>
         <DCCReference Include="..\..\DN.FileService.Intf.pas"/>
         <DCCReference Include="..\..\DN.Version.pas"/>
+        <DCCReference Include="..\Delphinus.Resources.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

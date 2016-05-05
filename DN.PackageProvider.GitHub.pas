@@ -74,13 +74,13 @@ uses
   DN.Package.Version,
   DN.Package.Version.Intf,
   DN.Progress,
-  DN.Environment;
+  DN.Environment,
+  Delphinus.Resources.Names;
 
 const
   CGithubFileContent = 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s';//user/repo filepath/branch
   CGitRepoSearch = 'https://api.github.com/search/repositories?q="Delphinus-Support"+in:readme&per_page=100';
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
-  CJpg_Package = 'Jpg_Package';
   CMediaTypeRaw = 'application/vnd.github.v3.raw';
   CPushDates = 'PushDates.ini';
 
@@ -386,9 +386,9 @@ begin
 
   if not LIsValid then
   begin
-    LResStream := TResourceStream.Create(HInstance, CJpg_Package, RT_RCDATA);
+    LResStream := TResourceStream.Create(HInstance, Png_Package, RT_RCDATA);
     try
-      LGraphic := TJPEGImage.Create();
+      LGraphic := TPngImage.Create();
       LGraphic.LoadFromStream(LResStream);
     finally
       LResStream.Free;

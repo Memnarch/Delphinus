@@ -43,6 +43,7 @@ type
     FColumns: Integer;
     FOnFilter: TPackageFilter;
     FOSIcons: TImageList;
+    FButtonIcons: TImageList;
     FRemovedSelectedPackage: TGUID;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
@@ -84,7 +85,8 @@ implementation
 { TPackageOverView }
 
 uses
-  Delphinus.ResourceNames;
+  Delphinus.Resources.Names,
+  Delphinus.Resources;
 
 const
   CColumns = 1;
@@ -99,7 +101,7 @@ begin
     if FUnusedPreviews.Count > 0 then
       LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
     else
-      LPreview := TPreview.Create(nil, FOSIcons);
+      LPreview := TPreview.Create(nil, FOSIcons, FButtonIcons);
     LPreview.Package := APackage;
     LPreview.Parent := Self;
     SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
@@ -151,6 +153,10 @@ begin
   FOSIcons.Width := 32;
   FOSIcons.Height := 32;
   FOSIcons.ColorDepth := cd32Bit;
+  FButtonIcons := TImageList.Create(Self);
+  FButtonIcons.Width := 32;
+  FButtonIcons.Height := 32;
+  FButtonIcons.ColorDepth := cd32Bit;
   LoadIcons();
   ParentColor := False;
   Color := clWindow;
@@ -220,25 +226,14 @@ begin
 end;
 
 procedure TPackageOverView.LoadIcons;
-var
-  LIcon: TIcon;
 begin
-  LIcon := TIcon.Create();
-  try
-    LIcon.LoadFromResourceName(HInstance, CIconWindows);
-    FOSIcons.AddIcon(LIcon);
-
-    LIcon.LoadFromResourceName(HInstance, CIconMac);
-    FOSIcons.AddIcon(LIcon);
-
-    LIcon.LoadFromResourceName(HInstance, CIconAndroid);
-    FOSIcons.AddIcon(LIcon);
-
-    LIcon.LoadFromResourceName(HInstance, CIconIOS);
-    FOSIcons.AddIcon(LIcon);
-  finally
-    LIcon.Free;
-  end;
+  AddIconToImageList(FOSIcons, Ico_Windows);
+  AddIconToImageList(FOSIcons, Ico_Mac);
+  AddIconToImageList(FOSIcons, Ico_Android);
+  AddIconToImageList(FOSIcons, Ico_IOS);
+  AddIconToImageList(FButtonIcons, Ico_Install);
+  AddIconToImageList(FButtonIcons, Ico_Delete);
+  AddIconToImageList(FButtonIcons, Ico_Update);
 end;
 
 function TPackageOverView.GetInstalledVersion(

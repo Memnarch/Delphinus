@@ -37,7 +37,7 @@ type
     lbLicense: TLabel;
     btnLicense: TButton;
     btnHome: TButton;
-    ImageList1: TImageList;
+    ilButtons: TImageList;
     btnProject: TButton;
     btnReport: TButton;
     Label5: TLabel;
@@ -54,6 +54,7 @@ type
     FPackage: IDNPackage;
     FOnGetInstalledVersion: TGetPackageVersion;
     FOnGetOnlineVersion: TGetPackageVersion;
+    procedure LoadIcons;
     procedure SetPackage(const Value: IDNPackage);
     function GetInstalledVersion(const APackage: IDNPackage): TDNVersion;
     function GetOnlineVersion(const APackage: IDNPackage): TDNVersion;
@@ -73,6 +74,8 @@ implementation
 
 uses
   Delphinus.LicenseDialog,
+  Delphinus.Resources.Names,
+  Delphinus.Resources,
   ShellAPi,
   DN.Compiler.Intf;
 
@@ -173,6 +176,7 @@ begin
   FCanvas := TControlCanvas.Create();
   TControlCanvas(FCanvas).Control := Self;
   Package := nil;
+  LoadIcons();
 end;
 
 destructor TPackageDetailView.Destroy;
@@ -202,6 +206,18 @@ begin
     Result := GetInstalledVersion(APackage);
 end;
 
+procedure TPackageDetailView.LoadIcons;
+begin
+  btnLicense.ImageIndex := AddIconToImageList(ilButtons, Ico_Agreement);
+  btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
+  btnHome.ImageIndex := AddIconToImageList(ilButtons, Ico_Home);
+  btnHome.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Home_Disabled);
+  btnProject.ImageIndex := AddIconToImageList(ilButtons, Ico_Github);
+  btnProject.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Github_Disabled);
+  btnReport.ImageIndex := AddIconToImageList(ilButtons, Ico_Bug);
+  btnReport.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Bug_Disabled);
+end;
+
 procedure TPackageDetailView.OpenUrl(const AUrl: string);
 begin
   ShellExecute(0, 'OPEN', PChar(AUrl), '', '', SW_SHOWNORMAL);
@@ -221,6 +237,7 @@ begin
     lbInstalled.Caption := GetInstalledVersion(FPackage).ToString;
     lbPlatforms.Caption := GeneratePlatformString(FPackage.Platforms);
     btnHome.Enabled := FPackage.HomepageUrl <> '';
+    btnHome.Hint := FPackage.HomepageUrl;
     btnProject.Enabled := FPackage.ProjectUrl <> '';
     btnReport.Enabled := FPackage.ReportUrl <> '';
   end

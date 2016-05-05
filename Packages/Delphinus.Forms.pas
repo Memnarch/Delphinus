@@ -32,14 +32,14 @@ type
 implementation
 
 uses
-  Delphinus.ResourceNames;
+  Delphinus.Resources.Names;
 
 { TDelphinusForm }
 
 constructor TForm.Create(AOwner: TComponent);
 begin
   inherited;
-  Icon.Handle := LoadImage(HInstance, CIconDelphinus, IMAGE_ICON, 0, 0, 0);
+  Icon.Handle := LoadImage(HInstance, Ico_Delphinus, IMAGE_ICON, 0, 0, 0);
 end;
 
 { TDelphinusFrame }
