@@ -111,7 +111,8 @@ contains
   Delphinus.Version in '..\Delphinus.Version.pas',
   DN.Version in '..\..\DN.Version.pas',
   Delphinus.Resources.Names in '..\Delphinus.Resources.Names.pas',
-  Delphinus.Resources in '..\Delphinus.Resources.pas';
+  Delphinus.Resources in '..\Delphinus.Resources.pas',
+  Delphinus.About in '..\Delphinus.About.pas' {AboutDialog};
 
 end.
 

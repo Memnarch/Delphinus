@@ -116,7 +116,8 @@ contains
   DN.FileService in '..\..\DN.FileService.pas',
   DN.FileService.Intf in '..\..\DN.FileService.Intf.pas',
   DN.Version in '..\..\DN.Version.pas',
-  Delphinus.Resources in '..\Delphinus.Resources.pas';
+  Delphinus.Resources in '..\Delphinus.Resources.pas',
+  Delphinus.About in '..\Delphinus.About.pas' {AboutDialog};
 
 end.
 

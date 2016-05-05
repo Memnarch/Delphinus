@@ -10,11 +10,14 @@ unit Delphinus.Resources.Names;
 interface
 
 const
+  Ico_About = 'Ico_About';
   Ico_Agreement = 'Ico_Agreement';
   Ico_Agreement_Disabled = 'Ico_Agreement_Disabled';
   Ico_Close = 'Ico_Close';
   Ico_Delete = 'Ico_Delete';
   Ico_Delphinus = 'Ico_Dolphin16';
+  Ico_Delphinus32 = 'Ico_Dolphin32';
+  Ico_Icons8 = 'Ico_Icons8';
   Ico_Install = 'Ico_Install';
   Ico_Search = 'Ico_Search';
   Ico_Update = 'Ico_Update';

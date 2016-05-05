@@ -45,7 +45,7 @@ object DelphinusDialog: TDelphinusDialog
     object ToolBar1: TToolBar
       Left = 0
       Top = 0
-      Width = 93
+      Width = 124
       Align = alLeft
       AutoSize = True
       ButtonHeight = 30
@@ -71,6 +71,11 @@ object DelphinusDialog: TDelphinusDialog
         Left = 62
         Top = 0
         Action = actInstallFolder
+      end
+      object btnAbout: TToolButton
+        Left = 93
+        Top = 0
+        Action = actAbout
       end
     end
     object edSearch: TButtonedEdit
@@ -117,6 +122,11 @@ object DelphinusDialog: TDelphinusDialog
     object actInstallFolder: TAction
       Hint = 'Install from Folder'
       OnExecute = btnInstallFolderClick
+    end
+    object actAbout: TAction
+      Caption = 'About'
+      Hint = 'About'
+      OnExecute = actAboutExecute
     end
   end
   object dlgSelectInstallFile: TOpenDialog

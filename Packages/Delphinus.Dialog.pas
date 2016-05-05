@@ -48,6 +48,8 @@ type
     ilSmall: TImageList;
     pnlToolBar: TPanel;
     actInstallFolder: TAction;
+    actAbout: TAction;
+    btnAbout: TToolButton;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
@@ -56,6 +58,7 @@ type
     procedure edSearchKeyPress(Sender: TObject; var Key: Char);
     procedure edSearchRightButtonClick(Sender: TObject);
     procedure edSearchLeftButtonClick(Sender: TObject);
+    procedure actAboutExecute(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -132,6 +135,7 @@ uses
   DN.FileService,
   Delphinus.Resources.Names,
   Delphinus.Resources,
+  Delphinus.About,
   StrUtils;
 
 {$R *.dfm}
@@ -142,6 +146,18 @@ const
   COAuthTokenKey = 'OAuthToken';
 
 { TDelphinusDialog }
+
+procedure TDelphinusDialog.actAboutExecute(Sender: TObject);
+var
+  LDialog: TAboutDialog;
+begin
+  LDialog := TAboutDialog.Create(nil);
+  try
+    LDialog.ShowModal();
+  finally
+    LDialog.Free;
+  end;
+end;
 
 procedure TDelphinusDialog.actOptionsExecute(Sender: TObject);
 var
@@ -485,6 +501,7 @@ begin
   actRefresh.ImageIndex := AddIconToImageList(ilMenu, Ico_Refresh);
   actOptions.ImageIndex := AddIconToImageList(ilMenu, Ico_Options);
   actInstallFolder.ImageIndex := AddIconToImageList(ilMenu, Ico_Folder);
+  actAbout.ImageIndex := AddIconToImageList(ilMenu, Ico_About);
   edSearch.LeftButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Search);
   edSearch.RightButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Close);
 end;
