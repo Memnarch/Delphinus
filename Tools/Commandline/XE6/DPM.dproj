@@ -81,7 +81,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
-        <Debugger_RunParams>MyCom Par1 Par2 -Delphi &quot;XE2..XE3&quot;</Debugger_RunParams>
+        <Debugger_RunParams>help</Debugger_RunParams>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -99,6 +99,11 @@
         <DCCReference Include="..\DN.Command.Argument.Parser.Intf.pas"/>
         <DCCReference Include="..\DN.Command.Argument.pas"/>
         <DCCReference Include="..\DN.Command.Argument.Intf.pas"/>
+        <DCCReference Include="..\DN.Command.pas"/>
+        <DCCReference Include="..\DN.Command.Switch.pas"/>
+        <DCCReference Include="..\DN.Command.Dispatcher.pas"/>
+        <DCCReference Include="..\DN.Command.Dispatcher.Intf.pas"/>
+        <DCCReference Include="..\DN.Command.Help.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

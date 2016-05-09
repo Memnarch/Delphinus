@@ -2,11 +2,19 @@ unit DN.DPM;
 
 interface
 
+uses
+  Generics.Collections,
+  DN.Command,
+  DN.Command.Dispatcher.Intf;
+
 type
   TDPM = class
   private
+    FDispatcher: IDNCommandDispatcher;
     function GetCommandLine: string;
+    function GetKnownCommands: TArray<TDNCommandClass>;
   public
+    constructor Create;
     procedure Run;
   end;
 
@@ -17,9 +25,17 @@ uses
   DN.Command.Argument.Parser,
   DN.Command.Argument.Parser.Intf,
   DN.Command.Argument,
-  DN.Command.Argument.Intf;
+  DN.Command.Argument.Intf,
+  DN.Command.Dispatcher,
+  DN.Command.Help;
 
 { TDPM }
+
+constructor TDPM.Create;
+begin
+  inherited;
+  FDispatcher := TDNCommandDispatcher.Create(GetKnownCommands());
+end;
 
 function TDPM.GetCommandLine: string;
 var
@@ -30,28 +46,24 @@ begin
     Result := Result + ' "' + ParamStr(i) + '"';
 end;
 
+function TDPM.GetKnownCommands: TArray<TDNCommandClass>;
+var
+  LCommands: TList<TDNCommandClass>;
+begin
+  LCommands := TList<TDNCommandClass>.Create();
+  LCommands.Add(TDNCommandHelp);
+  Result := LCommands.ToArray;
+  TDNCommandHelp.KnownCommands := Result;
+end;
+
 procedure TDPM.Run;
 var
-  LLine: string;
   LParser: IDNCommandArgumentParser;
   LCommand: IDNCommandArgument;
-  LSwitch: IDNCommandSwitchArgument;
-  i: Integer;
 begin
-  LLine := GetCommandLine();
   LParser := TDNCommandArgumentParser.Create();
-  LCommand := LParser.FromText(LLine);
-
-  WriteLn('Name: ' + LCommand.Name);
-  for i := 0 to High(LCommand.Parameters) do
-    WriteLn('P' + IntToStr(i) + ': ' + LCommand.Parameters[i]);
-
-  for LSwitch in LCommand.Switches do
-  begin
-    WriteLn('Name: ' + LSwitch.Name);
-    for i := 0 to High(LSwitch.Parameters) do
-      WriteLn('P' + IntToStr(i) + ': ' + LSwitch.Parameters[i]);
-  end;
+  LCommand := LParser.FromText(GetCommandLine());
+  FDispatcher.Execute(LCommand);
 end;
 
 end.
