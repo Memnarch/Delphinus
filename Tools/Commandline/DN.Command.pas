@@ -12,6 +12,7 @@ type
   TDNCommand = class(TDNCommandSwitch)
   private
     FSwitches: TList<TDNCommandSwitch>;
+    FEnvironment: IInterface;
   protected
     function GetSwitch<T: TDNCommandSwitch>: T;
   public
@@ -19,6 +20,7 @@ type
     destructor Destroy; override;
     procedure Initialize(const AArgument: IDNCommandArgument); reintroduce;
     procedure Execute; virtual; abstract;
+    property Environment: IInterface read FEnvironment write FEnvironment;
     class procedure Validate(const AArgument: IDNCommandArgument); reintroduce;
     class function SwitchClassCount: Integer; virtual;
     class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; virtual;

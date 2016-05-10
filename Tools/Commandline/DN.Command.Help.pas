@@ -13,10 +13,11 @@ type
     procedure ShowCommandHelp(const ACommand: string);
     procedure ShowCommandSwitchHelp(const ACommand, ASwitch: string);
     procedure PrintCommandHelp(ACommand: TDNCommandClass);
+    procedure PrintDetailedCommandHelp(ACommand: TDNCommandClass);
     procedure PrintCommandSwitchHelp(ACommand: TDNCommandClass; ASwitch: TDNCommandSwitchClass);
     function GetCommand(const AName: string): TDNCommandClass;
+    function GetParameterString(ASwitch: TDNCommandSwitchClass): string;
   public
-    class var KnownCommands: TArray<TDNCommandClass>;
     procedure Execute; override;
     class function Name: string; override;
     class function ParameterCount: Integer; override;
@@ -28,18 +29,21 @@ type
 implementation
 
 uses
-  SysUtils;
+  SysUtils,
+  DN.Command.Environment.Intf;
 
 const
   CCommand = 'Command';
   CSwitch = 'Switch';
   CIdent = '  ';
+  CIdent2 = CIdent + CIdent;
+  CIdent3 = CIdent2 + CIdent;
 
 { TDNCommandHelp }
 
 class function TDNCommandHelp.Description: string;
 begin
-  Result := 'Displays help for a command or its switch';
+  Result := 'Displays detailed help for a command or its switch and an overview if nothing is specified';
 end;
 
 procedure TDNCommandHelp.Execute;
@@ -54,20 +58,43 @@ end;
 function TDNCommandHelp.GetCommand(const AName: string): TDNCommandClass;
 var
   LCommand: TDNCommandClass;
+  LEnvironment: IDNCommandEnvironment;
 begin
-  for LCommand in KnownCommands do
+  LEnvironment := Environment as IDNCommandEnvironment;
+  for LCommand in LEnvironment.KnownCommands do
     if SameText(AName, LCommand.Name) then
       Exit(LCommand);
 
   raise ENotSupportedException.Create('Unknown command ' + AName);
 end;
 
+function TDNCommandHelp.GetParameterString(ASwitch: TDNCommandSwitchClass): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to ASwitch.ParameterCount - 1 do
+  begin
+    if (ASwitch.OptionalParameterCount > 0) and (i = ASwitch.ParameterCount - ASwitch.OptionalParameterCount) then
+      Result := Result + ' [';
+    if i > 0 then
+      Result := Result + ', ' + ASwitch.Parameter(i)
+    else
+      Result := Result + ASwitch.Parameter(i);
+  end;
+  if ASwitch.OptionalParameterCount > 0 then
+    Result := Result + ']';
+end;
+
 procedure TDNCommandHelp.ListAllCommand;
 var
   LCommand: TDNCommandClass;
 begin
-  for LCommand in KnownCommands do
-    PrintCommandHelp(LCommand);;
+  for LCommand in (Environment as IDNCommandEnvironment).KnownCommands do
+  begin
+    PrintCommandHelp(LCommand);
+    Writeln('');
+  end;
 end;
 
 class function TDNCommandHelp.Name: string;
@@ -97,7 +124,10 @@ end;
 
 procedure TDNCommandHelp.PrintCommandHelp(ACommand: TDNCommandClass);
 begin
-  Writeln(ACommand.Name);
+  if ACommand.Name <> '' then
+    Writeln(ACommand.Name + ' ' + GetParameterString(ACommand))
+  else
+    Writeln('<no command> ' + GetParameterString(ACommand));
   Writeln(CIdent + ACommand.Description);
 end;
 
@@ -107,9 +137,26 @@ begin
   Writeln(CIdent, ASwitch.Description);
 end;
 
+procedure TDNCommandHelp.PrintDetailedCommandHelp(ACommand: TDNCommandClass);
+var
+  i: Integer;
+begin
+  PrintCommandHelp(ACommand);
+  if ACommand.ParameterCount > 0 then
+  begin
+    Writeln(' ');
+    Writeln('Parameters:');
+    for i := 0 to ACommand.ParameterCount - 1 do
+    begin
+      Writeln(CIdent2 + ACommand.Parameter(i));
+      Writeln(CIdent3 + ACommand.ParameterDescription(i));
+    end;
+  end;
+end;
+
 procedure TDNCommandHelp.ShowCommandHelp(const ACommand: string);
 begin
-  PrintCommandHelp(GetCommand(ACommand));
+  PrintDetailedCommandHelp(GetCommand(ACommand));
 end;
 
 procedure TDNCommandHelp.ShowCommandSwitchHelp(const ACommand, ASwitch: string);

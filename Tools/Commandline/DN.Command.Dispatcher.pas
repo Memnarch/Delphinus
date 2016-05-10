@@ -5,15 +5,16 @@ interface
 uses
   DN.Command,
   DN.Command.Argument.Intf,
-  DN.Command.Dispatcher.Intf;
+  DN.Command.Dispatcher.Intf,
+  DN.Command.Environment.Intf;
 
 type
   TDNCommandDispatcher = class(TInterfacedObject, IDNCommandDispatcher)
   private
-    FCommands: TArray<TDNCommandClass>;
+    FEnvironment: IDNCommandEnvironment;
     function TryGetCommandClass(const AName: string; out ACommandClass: TDNCommandClass): Boolean;
   public
-    constructor Create(const ACommands: TArray<TDNCommandClass>);
+    constructor Create(const AEnvironment: IDNCommandEnvironment);
     procedure Execute(const ACommand: IDNCommandArgument);
   end;
 
@@ -25,10 +26,10 @@ uses
 { TDNCommandDispatcher }
 
 constructor TDNCommandDispatcher.Create(
-  const ACommands: TArray<TDNCommandClass>);
+  const AEnvironment: IDNCommandEnvironment);
 begin
   inherited Create();
-  FCommands := ACommands;
+  FEnvironment := AEnvironment;
 end;
 
 procedure TDNCommandDispatcher.Execute(const ACommand: IDNCommandArgument);
@@ -41,6 +42,7 @@ begin
     LClass.Validate(ACommand);
     LCommand := LClass.Create();
     try
+      LCommand.Environment := FEnvironment;
       LCommand.Initialize(ACommand);
       LCommand.Execute();
     finally
@@ -59,7 +61,7 @@ var
   LClass: TDNCommandClass;
 begin
   Result := False;
-  for LClass in FCommands do
+  for LClass in FEnvironment.KnownCommands do
     if SameText(AName, LClass.Name) then
     begin
       ACommandClass := LClass;

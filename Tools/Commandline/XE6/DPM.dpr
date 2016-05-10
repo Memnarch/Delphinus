@@ -15,7 +15,12 @@ uses
   DN.Command.Switch in '..\DN.Command.Switch.pas',
   DN.Command.Dispatcher in '..\DN.Command.Dispatcher.pas',
   DN.Command.Dispatcher.Intf in '..\DN.Command.Dispatcher.Intf.pas',
-  DN.Command.Help in '..\DN.Command.Help.pas';
+  DN.Command.Help in '..\DN.Command.Help.pas',
+  DN.Command.Install in '..\DN.Command.Install.pas',
+  DN.Command.Environment.Intf in '..\DN.Command.Environment.Intf.pas',
+  DN.Command.Environment in '..\DN.Command.Environment.pas',
+  DN.Command.Default in '..\DN.Command.Default.pas',
+  DN.Command.Exit in '..\DN.Command.Exit.pas';
 
 var
   GDPM: TDPM;

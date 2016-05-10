@@ -45,7 +45,11 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>..\..\..;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <VerInfo_Locale>1031</VerInfo_Locale>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;VCL;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>DPM</SanitizedProjectName>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -81,7 +85,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
-        <Debugger_RunParams>help</Debugger_RunParams>
+        <Debugger_RunParams>help install</Debugger_RunParams>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -104,6 +108,11 @@
         <DCCReference Include="..\DN.Command.Dispatcher.pas"/>
         <DCCReference Include="..\DN.Command.Dispatcher.Intf.pas"/>
         <DCCReference Include="..\DN.Command.Help.pas"/>
+        <DCCReference Include="..\DN.Command.Install.pas"/>
+        <DCCReference Include="..\DN.Command.Environment.Intf.pas"/>
+        <DCCReference Include="..\DN.Command.Environment.pas"/>
+        <DCCReference Include="..\DN.Command.Default.pas"/>
+        <DCCReference Include="..\DN.Command.Exit.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
