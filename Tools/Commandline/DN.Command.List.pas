@@ -56,6 +56,7 @@ begin
   case AnsiIndexText(LSection, [COnline, CInstalled, CUpdates]) of
     0: LPackages := LEnvironment.OnlinePackages;
     1: LPackages := LEnvironment.InstalledPackages;
+    2: LPackages := LEnvironment.UpdatePackages;
   else
     raise ENotSupportedException.Create('Unknown section ' + LSection);
   end;

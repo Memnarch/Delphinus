@@ -26,6 +26,7 @@ type
     function GetKnownCommands: TArray<TDNCommandClass>;
     function GetOnlinePackages: TArray<IDNPackage>;
     function GetInstalledPackages: TArray<IDNPackage>;
+    function GetUpdatePackages: TArray<IDNPackage>;
     function GetInteractive: Boolean;
     procedure SetInteractive(const Value: Boolean);
     procedure RequiresCurrentDelphi;
@@ -39,6 +40,7 @@ type
 implementation
 
 uses
+  Generics.Collections,
   SysUtils,
   IOUtils;
 
@@ -90,6 +92,35 @@ begin
   if FOnlinePackageProvider.Packages.Count = 0 then
     FOnlinePackageProvider.Reload;
   Result := FOnlinePackageProvider.Packages.ToArray;
+end;
+
+function TDNCommandEnvironment.GetUpdatePackages: TArray<IDNPackage>;
+var
+  LUpdates: TList<IDNPackage>;
+  LInstalled, LOnline: IDNPackage;
+begin
+  LUpdates := TList<IDNPackage>.Create();
+  try
+    for LInstalled in GetInstalledPackages() do
+    begin
+      for LOnline in GetOnlinePackages() do
+      begin
+        if LInstalled.ID = LOnline.ID then
+        begin
+          if (LInstalled.Versions.Count > 0)
+            and (LOnline.Versions.Count > 0)
+            and (LOnline.Versions[0].Value > LInstalled.Versions[0].Value) then
+          begin
+            LUpdates.Add(LOnline);
+          end;
+          Break;
+        end;
+      end;
+    end;
+    Result := LUpdates.ToArray;
+  finally
+    LUpdates.Free;
+  end;
 end;
 
 procedure TDNCommandEnvironment.RequiresCurrentDelphi;
