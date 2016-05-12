@@ -34,6 +34,7 @@ type
     FExistingIDs: TDictionary<TGUID, Integer>;
     FDateMutex: TMutex;
     FState: IDNPackageProviderState;
+    FLoadPictures: Boolean;
     function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
     procedure AddPackageFromJSon(AJSon: TJSONObject);
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
@@ -55,7 +56,7 @@ type
     property Progress: IDNProgress read FProgress implements IDNProgress;
     property State: IDNPackageProviderState read FState implements IDNPackageProviderState;
   public
-    constructor Create(const AClient: IDNHttpClient);
+    constructor Create(const AClient: IDNHttpClient; ALoadPictures: Boolean = True);
     destructor Destroy(); override;
     function Reload(): Boolean; override;
     function Download(const APackage: IDNPackage; const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean; override;
@@ -130,6 +131,7 @@ begin
   LKey := StringReplace(GetPushDateFile(), '\', '/', [rfReplaceAll]);
   FDateMutex := TMutex.Create(nil, False, LKey);
   FState := TDNGithubPackageProviderState.Create(FClient);
+  FLoadPictures := ALoadPictures;
 end;
 
 function TDNGitHubPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
@@ -190,7 +192,8 @@ begin
       LPackage.LicenseFile := LHeadInfo.LicenseFile;
       LPackage.Platforms := LHeadInfo.Platforms;
       APackage := LPackage;
-      LoadPicture(APackage.Picture, LAuthor, LPackage.RepositoryName, LPackage.DefaultBranch, LHeadInfo.Picture);
+      if FLoadPictures then
+        LoadPicture(APackage.Picture, LAuthor, LPackage.RepositoryName, LPackage.DefaultBranch, LHeadInfo.Picture);
       LoadVersionInfo(APackage, LAuthor, LName, LHeadInfo.FirstVersion, LReleases);
       FPushDates.AddOrSetValue(LFullName, LPushDate);
       Result := True;
