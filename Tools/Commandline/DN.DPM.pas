@@ -6,12 +6,18 @@ uses
   Generics.Collections,
   DN.Command,
   DN.Command.Dispatcher.Intf,
-  DN.Command.Environment.Intf;
+  DN.Command.Environment.Intf,
+  DN.PackageProvider.Intf,
+  DN.Settings.Intf,
+  DN.DelphiInstallation.Provider.Intf;
 
 type
   TDPM = class
   private
     FEnvironment: IDNCommandEnvironment;
+    FSettings: IDNSettings;
+    FOnlinePackageProvider: IDNPackageProvider;
+    FDelphiProvider: IDNDelphiInstallationProvider;
     FDispatcher: IDNCommandDispatcher;
     function GetCommandLine: string;
     function GetKnownCommands: TArray<TDNCommandClass>;
@@ -33,14 +39,36 @@ uses
   DN.Command.Help,
   DN.Command.Install,
   DN.Command.Default,
-  DN.Command.Exit;
+  DN.Command.Exit,
+  DN.Command.List,
+  DN.PackageProvider.Github,
+  DN.PackageProvider.Installed,
+  DN.HttpClient.Intf,
+  DN.HttpClient.WinHttp,
+  DN.Settings,
+  DN.DelphiInstallation.Provider;
 
 { TDPM }
 
 constructor TDPM.Create;
+var
+  LHTTP: IDNHttpClient;
+  LFactory: TInstalledPackageProviderFactory;
 begin
   inherited;
-  FEnvironment := TDNCommandEnvironment.Create(GetKnownCommands(), nil, nil);
+  FSettings := TDNSettings.Create();
+  LHTTP := TDNWinHttpClient.Create();
+  if FSettings.OAuthToken <> '' then
+    LHTTP.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
+  FOnlinePackageProvider := TDNGitHubPackageProvider.Create(LHTTP, False);
+  FDelphiProvider := TDNDelphiInstallationProvider.Create();
+  LFactory :=
+    function (const AComponentDirectory: string): IDNPackageProvider
+    begin
+      Result := TDNInstalledPackageProvider.Create(AComponentDirectory);
+    end;
+  FEnvironment := TDNCommandEnvironment.Create(GetKnownCommands(), FOnlinePackageProvider, LFactory,
+    FDelphiProvider);
   FDispatcher := TDNCommandDispatcher.Create(FEnvironment);
 end;
 
@@ -61,6 +89,7 @@ begin
   LCommands.Add(TDNCommandDefault);
   LCommands.Add(TDNCommandHelp);
   LCommands.Add(TDNCommandInstall);
+  LCommands.Add(TDNCommandList);
   LCommands.Add(TDNCommandExit);
   Result := LCommands.ToArray;
 end;

@@ -20,7 +20,8 @@ uses
   DN.Command.Environment.Intf in '..\DN.Command.Environment.Intf.pas',
   DN.Command.Environment in '..\DN.Command.Environment.pas',
   DN.Command.Default in '..\DN.Command.Default.pas',
-  DN.Command.Exit in '..\DN.Command.Exit.pas';
+  DN.Command.Exit in '..\DN.Command.Exit.pas',
+  DN.Command.List in '..\DN.Command.List.pas';
 
 var
   GDPM: TDPM;
