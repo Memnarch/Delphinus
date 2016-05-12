@@ -14,12 +14,15 @@ type
     function GetInstalledPackages: TArray<IDNPackage>;
     function GetUpdatePackages: TArray<IDNPackage>;
     function GetInteractive: Boolean;
+    function GetDelphiName: string;
+    procedure SetDelphiName(const Value: string);
     procedure SetInteractive(const Value: Boolean);
     property KnownCommands: TArray<TDNCommandClass> read GetKnownCommands;
     property OnlinePackages: TArray<IDNPackage> read GetOnlinePackages;
     property InstalledPackages: TArray<IDNPackage> read GetInstalledPackages;
     property UpdatePackages: TArray<IDNPackage> read GetUpdatePackages;
     property Interactive: Boolean read GetInteractive write SetInteractive;
+    property DelphiName: string read GetDelphiName write SetDelphiName;
   end;
 
 implementation

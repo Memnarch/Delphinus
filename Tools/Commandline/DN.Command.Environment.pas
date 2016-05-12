@@ -30,6 +30,8 @@ type
     function GetInteractive: Boolean;
     procedure SetInteractive(const Value: Boolean);
     procedure RequiresCurrentDelphi;
+    function GetDelphiName: string;
+    procedure SetDelphiName(const Value: string);
   public
     constructor Create(const AKnownCommands: TArray<TDNCommandClass>;
       const AOnlinePackageProvider: IDNPackageProvider;
@@ -56,6 +58,12 @@ begin
   FOnlinePackageProvider := AOnlinePackageProvider;
   FInstalledPackageProviderFactory := AInstalledProviderFactory;
   FInstallationProvider := AInstallationProvider;
+end;
+
+function TDNCommandEnvironment.GetDelphiName: string;
+begin
+  RequiresCurrentDelphi();
+  Result := FCurrentDelphi.ShortName;
 end;
 
 function TDNCommandEnvironment.GetInstalledPackageProvider: IDNPackageProvider;
@@ -131,6 +139,28 @@ begin
       FCurrentDelphi := FInstallationProvider.Installations[0]
     else
       raise ENotSupportedException.Create('No Delphi-Installation detected');
+  end;
+end;
+
+procedure TDNCommandEnvironment.SetDelphiName(const Value: string);
+var
+  LInstallation: IDNDelphiInstallation;
+begin
+  RequiresCurrentDelphi();
+  if not SameText(Value, FCurrentDelphi.ShortName) then
+  begin
+    for LInstallation in FInstallationProvider.Installations do
+    begin
+      if SameText(LInstallation.ShortName, Value) then
+      begin
+        FCurrentDelphi := LInstallation;
+        //invalidate depending instances
+        FInstalledPackageProvider := nil;
+        Break;
+      end;
+    end;
+    if not SameText(FCurrentDelphi.ShortName, Value) then
+      raise EArgumentException.Create('Unknown Delphi ' + Value);
   end;
 end;
 
