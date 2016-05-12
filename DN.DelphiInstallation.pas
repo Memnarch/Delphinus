@@ -4,6 +4,7 @@ interface
 
 uses
   DN.DelphiInstallation.Intf,
+  DN.Compiler.Intf,
   Graphics;
 
 type
@@ -17,6 +18,7 @@ type
     FEdition: string;
     FBDSVersion: string;
     FBDSCommonDir: string;
+    FSupportedPlatforms: TDNCompilerPlatforms;
     FIcon: TIcon;
     procedure Load;
     function GetIcon: TIcon;
@@ -29,6 +31,7 @@ type
     function GetBDSVersion: string;
     function GetBDSCommonDir: string;
     function ReadShortName(const AName: string): string;
+    function GetSupportedPlatforms: TDNCompilerPlatforms;
   public
     constructor Create(const ARoot: string);
     destructor Destroy; override;
@@ -42,6 +45,7 @@ type
     property Directory: string read GetDirectory;
     property Application: string read GetApplication;
     property BDSCommonDir: string read GetBDSCommonDir;
+    property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
   end;
 
 implementation
@@ -139,6 +143,32 @@ end;
 function TDNDelphInstallation.GetShortName: string;
 begin
   Result := FShortName;
+end;
+
+function TDNDelphInstallation.GetSupportedPlatforms: TDNCompilerPlatforms;
+const
+  CWin32 = 'DCC32.exe';
+  CWin64 = 'DCC64.exe';
+  COsx32 = 'DCCOSX.exe';
+var
+  LBinDir: string;
+begin
+  if FSupportedPlatforms = [] then
+  begin
+    LBinDir := ExtractFilePath(Application);
+    if TFile.Exists(TPath.Combine(LBinDir, CWin32)) then
+      Include(FSupportedPlatforms, cpWin32);
+
+    if TFile.Exists(TPath.Combine(LBinDir, CWin64)) then
+      Include(FSupportedPlatforms, cpWin64);
+
+    if TFile.Exists(TPath.Combine(LBinDir, COsx32)) then
+      Include(FSupportedPlatforms, cpOSX32);
+
+    if FSupportedPlatforms = [] then
+      raise ENotSupportedException.Create('Failed to detect supported platforms');
+  end;
+  Result := FSupportedPlatforms;
 end;
 
 function TDNDelphInstallation.ReadShortName(const AName: string): string;

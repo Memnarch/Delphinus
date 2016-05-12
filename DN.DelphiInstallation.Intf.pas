@@ -3,7 +3,8 @@ unit DN.DelphiInstallation.Intf;
 interface
 
 uses
-  Graphics;
+  Graphics,
+  DN.Compiler.Intf;
 
 type
   IDNDelphiInstallation = interface
@@ -17,6 +18,7 @@ type
     function GetEdition: string;
     function GetBDSVersion: string;
     function GetBDSCommonDir: string;
+    function GetSupportedPlatforms: TDNCompilerPlatforms;
 
     function IsRunning: Boolean;
     property Name: string read GetName;
@@ -28,6 +30,7 @@ type
     property Directory: string read GetDirectory;
     property Application: string read GetApplication;
     property BDSCommonDir: string read GetBDSCommonDir;
+    property SupportedPlatforms: TDNCompilerPlatforms read GetSupportedPlatforms;
   end;
 
 implementation
