@@ -34,12 +34,17 @@ procedure TDNCommandDefault.Execute;
 var
   LEnvironment: IDNCommandEnvironment;
   LDelphi: TDNCommandSwitchDelphi;
+  LFirstRun: Boolean;
 begin
   LEnvironment := (Environment as IDNCommandEnvironment);
+  LFirstRun := not LEnvironment.Interactive;
   LEnvironment.Interactive := True;
   LDelphi := GetSwitch<TDNCommandSwitchDelphi>();
   if LDelphi.ShortName <> '' then
     LEnvironment.DelphiName := LDelphi.ShortName;
+
+  if LFirstRun or (LDelphi.ShortName <> '') then
+    Writeln('Selected Delphi ' + LEnvironment.DelphiName);
 end;
 
 class function TDNCommandDefault.Name: string;
