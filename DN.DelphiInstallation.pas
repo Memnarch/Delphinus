@@ -10,6 +10,7 @@ type
   TDNDelphInstallation = class(TInterfacedObject, IDNDelphiInstallation)
   private
     FName: string;
+    FShortName: string;
     FRoot: string;
     FDirectory: string;
     FApplication: string;
@@ -20,17 +21,20 @@ type
     procedure Load;
     function GetIcon: TIcon;
     function GetName: string;
+    function GetShortName: string;
     function GetRoot: string;
     function GetDirectory: string;
     function GetApplication: string;
     function GetEdition: string;
     function GetBDSVersion: string;
     function GetBDSCommonDir: string;
+    function ReadShortName(const AName: string): string;
   public
     constructor Create(const ARoot: string);
     destructor Destroy; override;
     function IsRunning: Boolean;
     property Name: string read GetName;
+    property ShortName: string read GetShortName;
     property Edition: string read GetEdition;
     property BDSVersion: string read GetBDSVersion;
     property Icon: TIcon read GetIcon;
@@ -132,6 +136,25 @@ begin
   Result := FName;
 end;
 
+function TDNDelphInstallation.GetShortName: string;
+begin
+  Result := FShortName;
+end;
+
+function TDNDelphInstallation.ReadShortName(const AName: string): string;
+var
+  i, LStart: Integer;
+begin
+  LStart := 1;
+  for i := Length(AName) downto 1 do
+  begin
+    if AName[i] = ' ' then
+      Break;
+    LStart := i;
+  end;
+  Result := Copy(AName, LStart, Length(AName));
+end;
+
 function TDNDelphInstallation.GetRoot: string;
 begin
   Result := FRoot;
@@ -218,6 +241,8 @@ begin
           FName := LRegistry.ReadString(CDelphiWin32)
         else
           FName := LRegistry.ReadString('');
+
+        FShortName := ReadShortName(FName);
       end;
     end;
   finally
