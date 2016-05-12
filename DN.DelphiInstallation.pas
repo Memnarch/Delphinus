@@ -15,6 +15,7 @@ type
     FApplication: string;
     FEdition: string;
     FBDSVersion: string;
+    FBDSCommonDir: string;
     FIcon: TIcon;
     procedure Load;
     function GetIcon: TIcon;
@@ -24,6 +25,7 @@ type
     function GetApplication: string;
     function GetEdition: string;
     function GetBDSVersion: string;
+    function GetBDSCommonDir: string;
   public
     constructor Create(const ARoot: string);
     destructor Destroy; override;
@@ -35,17 +37,20 @@ type
     property Root: string read GetRoot;
     property Directory: string read GetDirectory;
     property Application: string read GetApplication;
+    property BDSCommonDir: string read GetBDSCommonDir;
   end;
 
 implementation
 
 uses
+  Classes,
   Windows,
   Registry,
   SysUtils,
   IOUtils,
   ShellApi,
-  TLHelp32;
+  TLHelp32,
+  StrUtils;
 
 { TDNDelphInstallationInfo }
 
@@ -66,6 +71,35 @@ end;
 function TDNDelphInstallation.GetApplication: string;
 begin
   Result := FApplication;
+end;
+
+function TDNDelphInstallation.GetBDSCommonDir: string;
+var
+  LFile: TStringList;
+  LLine: string;
+const
+  CPrefix = '@SET BDSCOMMONDIR=';
+begin
+  if FBDSCommonDir = '' then
+  begin
+    LFile := TStringList.Create();
+    try
+      LFile.LoadFromFile(TPath.Combine(ExtractFilePath(Application), 'rsvars.bat'));
+      for LLine in LFile do
+      begin
+        if StartsText(CPrefix, LLine) then
+        begin
+          FBDSCommonDir := Copy(LLine, Length(CPrefix) + 1, Length(LLine));
+          Break;
+        end;
+      end;
+      if FBDSCommonDir = '' then
+        raise Exception.Create('Failed to read BDSCommonDir for BDS ' + BDSVersion);
+    finally
+      LFile.Free;
+    end;
+  end;
+  Result := FBDSCommonDir;
 end;
 
 function TDNDelphInstallation.GetBDSVersion: string;

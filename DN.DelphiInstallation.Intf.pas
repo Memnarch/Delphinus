@@ -15,6 +15,7 @@ type
     function GetApplication: string;
     function GetEdition: string;
     function GetBDSVersion: string;
+    function GetBDSCommonDir: string;
 
     function IsRunning: Boolean;
     property Name: string read GetName;
@@ -24,6 +25,7 @@ type
     property Root: string read GetRoot;
     property Directory: string read GetDirectory;
     property Application: string read GetApplication;
+    property BDSCommonDir: string read GetBDSCommonDir;
   end;
 
 implementation
