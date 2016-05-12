@@ -15,8 +15,10 @@ type
     procedure PrintCommandHelp(ACommand: TDNCommandClass);
     procedure PrintDetailedCommandHelp(ACommand: TDNCommandClass);
     procedure PrintCommandSwitchHelp(ACommand: TDNCommandClass; ASwitch: TDNCommandSwitchClass);
+    procedure PrintDetailedCommandSwitchHelp(ACommand: TDNCommandClass; ASwitch: TDNCommandSwitchClass);
     function GetCommand(const AName: string): TDNCommandClass;
     function GetParameterString(ASwitch: TDNCommandSwitchClass): string;
+    function GetSwitchString(ACommand: TDNCommandClass; AIncludeParameters: Boolean): string;
   public
     procedure Execute; override;
     class function Name: string; override;
@@ -86,6 +88,22 @@ begin
     Result := Result + ']';
 end;
 
+function TDNCommandHelp.GetSwitchString(ACommand: TDNCommandClass;
+  AIncludeParameters: Boolean): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to ACommand.SwitchClassCount - 1 do
+  begin
+    if i > 0 then
+      Result := Result + ' ';
+    Result := Result + '-' + ACommand.SwitchClass(i).Name;
+    if AIncludeParameters then
+      Result := Result + ' ' + GetParameterString(ACommand.SwitchClass(0));
+  end;
+end;
+
 procedure TDNCommandHelp.ListAllCommand;
 var
   LCommand: TDNCommandClass;
@@ -125,15 +143,18 @@ end;
 procedure TDNCommandHelp.PrintCommandHelp(ACommand: TDNCommandClass);
 begin
   if ACommand.Name <> '' then
-    Writeln(ACommand.Name + ' ' + GetParameterString(ACommand))
+    Writeln(ACommand.Name + ' ' + GetParameterString(ACommand) + ' ' + GetSwitchString(ACommand, False))
   else
-    Writeln('<no command> ' + GetParameterString(ACommand));
+    Writeln('<no command> ' + GetParameterString(ACommand) + ' ' + GetSwitchString(ACommand, False));
   Writeln(CIdent + ACommand.Description);
 end;
 
 procedure TDNCommandHelp.PrintCommandSwitchHelp(ACommand: TDNCommandClass; ASwitch: TDNCommandSwitchClass);
 begin
-  Writeln(ACommand.Name + ':' + ASwitch.Name);
+  if ACommand.Name <> '' then
+    Writeln(ACommand.Name + ':' + ASwitch.Name + ' ' + GetParameterString(ASwitch))
+  else
+    Writeln('<no command>:' + ASwitch.Name + ' ' + GetParameterString(ASwitch));
   Writeln(CIdent, ASwitch.Description);
 end;
 
@@ -152,6 +173,35 @@ begin
       Writeln(CIdent3 + ACommand.ParameterDescription(i));
     end;
   end;
+
+  if ACommand.SwitchClassCount > 0 then
+  begin
+    Writeln(' ');
+    Writeln('Switches:');
+    for i := 0 to ACommand.SwitchClassCount - 1 do
+    begin
+      Writeln(CIdent2 + '-' + ACommand.SwitchClass(i).Name);
+      Writeln(CIdent3 + ACommand.SwitchClass(i).Description);
+    end;
+  end;
+end;
+
+procedure TDNCommandHelp.PrintDetailedCommandSwitchHelp(
+  ACommand: TDNCommandClass; ASwitch: TDNCommandSwitchClass);
+var
+  i: Integer;
+begin
+  PrintCommandSwitchHelp(ACommand, ASwitch);
+  if ASwitch.ParameterCount > 0 then
+  begin
+    Writeln('');
+    Writeln('Parameters:');
+    for i := 0 to ASwitch.ParameterCount - 1 do
+    begin
+      Writeln(CIdent2 + ASwitch.Parameter(i));
+      Writeln(CIdent3 + ASwitch.ParameterDescription(i));
+    end;
+  end;
 end;
 
 procedure TDNCommandHelp.ShowCommandHelp(const ACommand: string);
@@ -166,7 +216,7 @@ var
 begin
   LCommand := GetCommand(ACommand);
   LSwitch := LCommand.SwitchClassByName(ASwitch);
-  PrintCommandSwitchHelp(LCommand, LSwitch);
+  PrintDetailedCommandSwitchHelp(LCommand, LSwitch);
 end;
 
 end.
