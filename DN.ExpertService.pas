@@ -1,9 +1,9 @@
-unit DN.ToolsApi.ExpertService;
+unit DN.ExpertService;
 
 interface
 
 uses
-  DN.ToolsApi.ExpertService.Intf;
+  DN.ExpertService.Intf;
 
 type
   TDNExpertService = class(TInterfacedObject, IDNExpertService)

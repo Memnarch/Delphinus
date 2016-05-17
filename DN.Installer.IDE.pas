@@ -14,10 +14,16 @@ uses
   Types,
   DN.Installer,
   DN.ProjectInfo.Intf,
-  DN.Compiler.Intf;
+  DN.Compiler.Intf,
+  DN.ExpertService.Intf,
+  DN.EnvironmentOptions.Intf,
+  DN.BPLService.Intf;
 
 type
   TDNIDEInstaller = class(TDNInstaller)
+  private
+    FEnvironmentOptionsService: IDNEnvironmentOptionsService;
+    FBPLService: IDNBPLService;
   protected
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); override;
     procedure AddBrowsingPath(const ABrowsingPath: string; const APlatforms: TDNCompilerPlatforms); override;
@@ -26,6 +32,10 @@ type
     function GetBPLDir(APlatform: TDNCompilerPlatform): string; override;
     function GetDCPDir(APlatform: TDNCompilerPlatform): string; override;
   public
+    constructor Create(const ACompiler: IDNCompiler;
+      const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
+      const ABPLService: IDNBPLService;
+      const AExpertService: IDNExpertService = nil);
     function Install(const ASourceDirectory: string;
       const ATargetDirectory: string): Boolean; override;
   end;
@@ -38,16 +48,13 @@ uses
   IOUtils,
   StrUtils,
   Registry,
-  DN.Types,
-  ToolsApi,
-  DN.ToolsApi.Extension.Intf;
+  DN.Types;
 
 { TDNIDEInstaller }
 
 procedure TDNIDEInstaller.AddBrowsingPath(const ABrowsingPath: string;
   const APlatforms: TDNCompilerPlatforms);
 var
-  LService: IDNEnvironmentOptionsService;
   LPlatform: TDNCompilerPlatform;
   LPathes: string;
   LLines: TStringList;
@@ -56,12 +63,11 @@ begin
   LLines := TStringList.Create();
   try
     LLines.LineBreak := ';';
-    LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
     for LPlatform in APlatforms do
     begin
-      if LPlatform in LService.SupportedPlatforms then
+      if LPlatform in FEnvironmentOptionsService.SupportedPlatforms then
       begin
-        LPathes := LService.Options[LPlatform].BrowingPath;
+        LPathes := FEnvironmentOptionsService.Options[LPlatform].BrowingPath;
         LLines.Text := LPathes;
         if LLines.IndexOf(ABrowsingPath) < 0 then
         begin
@@ -70,7 +76,7 @@ begin
           else
             LPathes := ABrowsingPath;
 
-          LService.Options[LPlatform].BrowingPath := LPathes;
+          FEnvironmentOptionsService.Options[LPlatform].BrowingPath := LPathes;
         end;
       end;
     end;
@@ -81,7 +87,6 @@ end;
 
 procedure TDNIDEInstaller.AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms);
 var
-  LService: IDNEnvironmentOptionsService;
   LPlatform: TDNCompilerPlatform;
   LPathes: string;
   LLines: TStringList;
@@ -90,12 +95,11 @@ begin
   LLines := TStringList.Create();
   try
     LLines.LineBreak := ';';
-    LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
     for LPlatform in APlatforms do
     begin
-      if LPlatform in LService.SupportedPlatforms then
+      if LPlatform in FEnvironmentOptionsService.SupportedPlatforms then
       begin
-        LPathes := LService.Options[LPlatform].SearchPath;
+        LPathes := FEnvironmentOptionsService.Options[LPlatform].SearchPath;
         LLines.Text := LPathes;
         if LLines.IndexOf(ASearchPath) < 0 then
         begin
@@ -104,7 +108,7 @@ begin
           else
             LPathes := ASearchPath;
 
-          LService.Options[LPlatform].SearchPath := LPathes;
+          FEnvironmentOptionsService.Options[LPlatform].SearchPath := LPathes;
         end;
       end;
     end;
@@ -113,61 +117,45 @@ begin
   end;
 end;
 
-function TDNIDEInstaller.GetBPLDir(APlatform: TDNCompilerPlatform): string;
-var
-  LOptions: IDNEnvironmentOptions;
+constructor TDNIDEInstaller.Create(const ACompiler: IDNCompiler;
+  const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
+  const ABPLService: IDNBPLService;
+  const AExpertService: IDNExpertService);
 begin
-  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[APlatform];
-  Result := LOptions.BPLOutput;
+  inherited Create(ACompiler, AExpertService);
+  FEnvironmentOptionsService := AEnvironmentOptionsService;
+  FBPLService := ABPLService;
+end;
+
+function TDNIDEInstaller.GetBPLDir(APlatform: TDNCompilerPlatform): string;
+begin
+  Result := FEnvironmentOptionsService.Options[APlatform].BPLOutput;
 end;
 
 function TDNIDEInstaller.GetDCPDir(APlatform: TDNCompilerPlatform): string;
-var
-  LOptions: IDNEnvironmentOptions;
 begin
-  LOptions := (GDelphinusIDEServices as IDNEnvironmentOptionsService).Options[APlatform];
-  Result := LOptions.DCPOutput;
+  Result := FEnvironmentOptionsService.Options[APlatform].DCPOutput;
 end;
 
 function TDNIDEInstaller.GetSupportedPlatforms: TDNCompilerPlatforms;
 begin
-  Result := (GDelphinusIDEServices as IDNEnvironmentOptionsService).SupportedPlatforms;
+  Result := FEnvironmentOptionsService.SupportedPlatforms;
 end;
 
 function TDNIDEInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
-var
-  LService: IDNEnvironmentOptionsService;
 begin
-  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
-  LService.BeginUpdate();
+  FEnvironmentOptionsService.BeginUpdate();
   try
     Result := inherited;
   finally
-    LService.EndUpdate();
+    FEnvironmentOptionsService.EndUpdate();
   end;
 end;
 
 function TDNIDEInstaller.InstallBPL(const ABPL: string): Boolean;
-var
-  LService: IOTAPackageServices;
-  LResult: Boolean;
 begin
-  TThread.Synchronize(nil,
-  procedure
-  begin
-    try
-      LService := BorlandIDEServices as IOTAPackageServices;
-      LResult := LService.InstallPackage(ABPL);
-    except
-      on E: Exception do
-      begin
-        LResult := False;
-        DoMessage(mtError, E.Message);
-      end;
-    end;
-  end);
-  Result := LResult;
+  Result := FBPLService.Install(ABPL);
 end;
 
 end.

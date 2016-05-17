@@ -23,7 +23,7 @@ uses
   DN.JSonFile.Uninstallation,
   DN.JSonFile.Info,
   DN.Progress.Intf,
-  DN.ToolsApi.ExpertService.Intf;
+  DN.ExpertService.Intf;
 
 type
   TDNInstaller = class(TInterfacedObject, IDNInstaller, IDNProgress)

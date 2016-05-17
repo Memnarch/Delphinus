@@ -1,4 +1,4 @@
-unit DN.ToolsApi.ExpertService.Intf;
+unit DN.ExpertService.Intf;
 
 interface
 
@@ -8,9 +8,6 @@ type
     function RegisterExpert(const AExpert: string; ALoad: Boolean = False): Boolean;
     function UnregisterExpert(const AExpert: string; AUnload: Boolean = False): Boolean;
   end;
-
-var
-  GExpertService: IDNExpertService;
 
 implementation
 

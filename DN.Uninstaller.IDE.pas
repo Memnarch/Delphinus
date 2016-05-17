@@ -12,15 +12,27 @@ interface
 uses
   Classes,
   Types,
-  DN.Uninstaller;
+  DN.Uninstaller,
+  DN.ExpertService.Intf,
+  DN.FileService.Intf,
+  DN.EnvironmentOptions.Intf,
+  DN.BPLService.Intf;
 
 type
   TDNIDEUninstaller = class(TDNUninstaller)
+  private
+    FEnvironmentOptionsService: IDNEnvironmentOptionsService;
+    FBPLService: IDNBPLService;
   protected
     function RemoveSearchPath(const ASearchPath: string): Boolean; override;
     function RemoveBrowsingPath(const ABrowsingPath: string): Boolean; override;
     function UninstallPackage(const ABPLFile: string): Boolean; override;
   public
+    constructor Create(
+      const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
+      const ABPLService: IDNBPLService;
+      const AExpertService: IDNExpertService = nil;
+      const AFileService: IDNFileService = nil);
     function Uninstall(const ADirectory: string): Boolean; override;
   end;
 
@@ -31,17 +43,25 @@ uses
   SysUtils,
   StrUtils,
   Windows,
-  ToolsApi,
   DN.Types,
-  DN.ToolsApi.Extension.Intf,
   DN.Compiler.Intf;
 
 { TDNIDEUninstaller }
 
+constructor TDNIDEUninstaller.Create(
+  const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
+  const ABPLService: IDNBPLService;
+  const AExpertService: IDNExpertService;
+  const AFileService: IDNFileService);
+begin
+  inherited Create(AExpertService, AFileService);
+  FEnvironmentOptionsService := AEnvironmentOptionsService;
+  FBPLService := ABPLService;
+end;
+
 function TDNIDEUninstaller.RemoveBrowsingPath(
   const ABrowsingPath: string): Boolean;
 var
-  LService: IDNEnvironmentOptionsService;
   LOption: IDNEnvironmentOptions;
   LPlatform: TDNCompilerPlatform;
   LPathes: TStringDynArray;
@@ -50,10 +70,9 @@ var
 begin
   inherited;
   Result := False;
-  LService := GDelphinusIDEservices as IDNEnvironmentOptionsService;
-  for LPlatform in LService.SupportedPlatforms do
+  for LPlatform in FEnvironmentOptionsService.SupportedPlatforms do
   begin
-    LOption := LService.Options[LPlatform];
+    LOption := FEnvironmentOptionsService.Options[LPlatform];
     LPathes := SplitString(LOption.BrowingPath, ';');
     LPathStr := '';
     for LPath in LPathes do
@@ -71,7 +90,6 @@ end;
 
 function TDNIDEUninstaller.RemoveSearchPath(const ASearchPath: string): Boolean;
 var
-  LService: IDNEnvironmentOptionsService;
   LOption: IDNEnvironmentOptions;
   LPlatform: TDNCompilerPlatform;
   LPathes: TStringDynArray;
@@ -80,10 +98,9 @@ var
 begin
   inherited;
   Result := False;
-  LService := GDelphinusIDEservices as IDNEnvironmentOptionsService;
-  for LPlatform in LService.SupportedPlatforms do
+  for LPlatform in FEnvironmentOptionsService.SupportedPlatforms do
   begin
-    LOption := LService.Options[LPlatform];
+    LOption := FEnvironmentOptionsService.Options[LPlatform];
     LPathes := SplitString(LOption.SearchPath, ';');
     LPathStr := '';
     for LPath in LPathes do
@@ -100,48 +117,18 @@ begin
 end;
 
 function TDNIDEUninstaller.Uninstall(const ADirectory: string): Boolean;
-var
-  LService: IDNEnvironmentOptionsService;
 begin
-  LService := GDelphinusIDEServices as IDNEnvironmentOptionsService;
-  LService.BeginUpdate();
+  FEnvironmentOptionsService.BeginUpdate();
   try
     Result := inherited;
   finally
-    LService.EndUpdate;
+    FEnvironmentOptionsService.EndUpdate;
   end;
 end;
 
 function TDNIDEUninstaller.UninstallPackage(const ABPLFile: string): Boolean;
-var
-  LService: IOTAPackageServices;
-  LPackage: string;
-  LResult: Boolean;
 begin
-  TThread.Synchronize(nil,
-  procedure
-  var
-    i: Integer;
-  begin
-    LService := BorlandIDEServices as IOTAPackageServices;
-    LResult := LService.UninstallPackage(ABPLFile);
-    if not LResult then
-    begin
-      LResult := True;
-      LPackage := ExtractFileName(ABPLFile);
-      for i := 0 to LService.PackageCount - 1 do
-      begin
-        if SameText(LService.Package[i].Name, LPackage) then
-        begin
-          LResult := False;
-          Exit;
-        end;
-      end;
-      if LResult then
-        DoMessage(mtWarning, 'Package was not installed previously');
-    end
-  end);
-  Result := LResult;
+  Result := FBPLService.Uninstall(ABPLFile);
 end;
 
 end.
