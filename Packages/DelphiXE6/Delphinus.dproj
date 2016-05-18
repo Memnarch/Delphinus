@@ -206,6 +206,7 @@
         <DCCReference Include="..\..\DN.PackageProvider.GitHub.State.pas"/>
         <DCCReference Include="..\..\DN.BPLService.Intf.pas"/>
         <DCCReference Include="..\..\DN.BPLService.ToolsApi.pas"/>
+        <DCCReference Include="..\..\DN.EnvironmentOptions.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

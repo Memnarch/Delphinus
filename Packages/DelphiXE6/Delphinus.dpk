@@ -127,7 +127,8 @@ contains
   DN.PackageProvider.State.Intf in '..\..\DN.PackageProvider.State.Intf.pas',
   DN.PackageProvider.GitHub.State in '..\..\DN.PackageProvider.GitHub.State.pas',
   DN.BPLService.Intf in '..\..\DN.BPLService.Intf.pas',
-  DN.BPLService.ToolsApi in '..\..\DN.BPLService.ToolsApi.pas';
+  DN.BPLService.ToolsApi in '..\..\DN.BPLService.ToolsApi.pas',
+  DN.EnvironmentOptions in '..\..\DN.EnvironmentOptions.pas';
 
 end.
 

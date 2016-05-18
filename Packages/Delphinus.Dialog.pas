@@ -264,7 +264,7 @@ begin
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
-  FEnvironmentOptionsService := TDNEnvironmentOptionsService.Create();
+  FEnvironmentOptionsService := TDNIDEEnvironmentOptionsService.Create();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
