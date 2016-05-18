@@ -49,7 +49,7 @@ type
     function GetSetupTempDir: string;
     procedure CleanupTemp();
     function ConvertNameToValidDirectoryName(const AName: string): string;
-    procedure RegisterProgressHandler(const AInterface: IInterface);
+    procedure RegisterProgressHandler(const AInterface: IInterface; AHandler: TDNProgressEvent = nil);
     procedure UnregisterProgressHandler(const AInterface: IInterface);
   public
     constructor Create(const APackageProvider: IDNPackageProvider);
@@ -103,20 +103,15 @@ begin
 end;
 
 constructor TDNSetupCore.Create(const APackageProvider: IDNPackageProvider);
-var
-  LProgress: IDNProgress;
 begin
   inherited Create();
   FProvider := APackageProvider;
-  if Assigned(FProvider) and Supports(FProvider, IDNProgress, LProgress) then
-    LProgress.OnProgress := HandleProviderProgress;
   FProgress := TDNProgress.Create();
   FProgress.OnProgress := DoProgress;
 end;
 
 destructor TDNSetupCore.Destroy;
 begin
-  UnregisterProgressHandler(FProvider);
   inherited;
 end;
 
@@ -138,19 +133,24 @@ var
   LTempDir: string;
   LVersion: string;
 begin
-  ReportInfo('Downloading ' + APackage.Name);
-  LTempDir := GetSetupTempDir();
-  ForceDirectories(LTempDir);
-  if Assigned(AVersion) then
-    LVersion := AVersion.Name
-  else
-    LVersion := '';
+  RegisterProgressHandler(FProvider, HandleProviderProgress);
+  try
+    ReportInfo('Downloading ' + APackage.Name);
+    LTempDir := GetSetupTempDir();
+    ForceDirectories(LTempDir);
+    if Assigned(AVersion) then
+      LVersion := AVersion.Name
+    else
+      LVersion := '';
 
-  ReportInfo('Version: ' + LVersion);
-  Result := FProvider.Download(APackage, LVersion, LTempDir, AContentDirectory);
-  if not Result then
-  begin
-    ReportError('failed to download');
+    ReportInfo('Version: ' + LVersion);
+    Result := FProvider.Download(APackage, LVersion, LTempDir, AContentDirectory);
+    if not Result then
+    begin
+      ReportError('failed to download');
+    end;
+  finally
+    UnregisterProgressHandler(FProvider);
   end;
 end;
 
@@ -231,12 +231,17 @@ begin
   FProgress.SetTaskProgress(IfThen(AItem <> '', ATask + ': ' + AItem, ATask), AProgress, AMax);
 end;
 
-procedure TDNSetupCore.RegisterProgressHandler(const AInterface: IInterface);
+procedure TDNSetupCore.RegisterProgressHandler(const AInterface: IInterface; AHandler: TDNProgressEvent);
 var
   LProgress: IDNProgress;
 begin
   if Assigned(AInterface) and Supports(AInterface, IDNProgress, LProgress) then
-    LProgress.OnProgress := HandleProgress;
+  begin
+    if Assigned(AHandler) then
+      LProgress.OnProgress := AHandler
+    else
+      LProgress.OnProgress := HandleProgress;
+  end;
 end;
 
 procedure TDNSetupCore.ReportError(const AError: string);
