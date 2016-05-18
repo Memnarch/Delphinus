@@ -3,12 +3,14 @@ unit DN.Command.Environment;
 interface
 
 uses
+  DN.Types,
   DN.Command,
   DN.Command.Environment.Intf,
   DN.Package.Intf,
   DN.PackageProvider.Intf,
   DN.DelphiInstallation.Provider.Intf,
-  DN.DelphiInstallation.Intf;
+  DN.DelphiInstallation.Intf,
+  DN.Setup.Intf;
 
 type
   TInstalledPackageProviderFactory = reference to function(const AComponentDirectory: string): IDNPackageProvider;
@@ -32,11 +34,13 @@ type
     procedure RequiresCurrentDelphi;
     function GetDelphiName: string;
     procedure SetDelphiName(const Value: string);
+    procedure DefaultMessageHandler(AMessageType: TMessageType; const AMessage: string);
   public
     constructor Create(const AKnownCommands: TArray<TDNCommandClass>;
       const AOnlinePackageProvider: IDNPackageProvider;
       const AInstalledProviderFactory: TInstalledPackageProviderFactory;
       const AInstallationProvider: IDNDelphiInstallationProvider);
+    function CreateSetup: IDNSetup;
   end;
 
 implementation
@@ -44,7 +48,20 @@ implementation
 uses
   Generics.Collections,
   SysUtils,
-  IOUtils;
+  IOUtils,
+  DN.Installer.Intf,
+  DN.Uninstaller.Intf,
+  DN.Compiler.Intf,
+  DN.BPLService.Intf,
+  DN.EnvironmentOptions.Intf,
+  DN.ExpertService.Intf,
+  DN.Installer.IDE,
+  DN.Uninstaller.IDE,
+  DN.Compiler.MSBuild,
+  DN.BPLService.Registry,
+  DN.EnvironmentOptions.Registry,
+  DN.ExpertService,
+  DN.Setup;
 
 { TDNCommandEnvironment }
 
@@ -58,6 +75,40 @@ begin
   FOnlinePackageProvider := AOnlinePackageProvider;
   FInstalledPackageProviderFactory := AInstalledProviderFactory;
   FInstallationProvider := AInstallationProvider;
+end;
+
+function TDNCommandEnvironment.CreateSetup: IDNSetup;
+var
+  LCompiler: IDNCompiler;
+  LBPLService: IDNBPLService;
+  LEnvironmentOptionsService: IDNEnvironmentOptionsService;
+  LExpertService: IDNExpertService;
+  LInstaller: IDNInstaller;
+  LUninstaller: IDNUninstaller;
+begin
+  RequiresCurrentDelphi();
+  LCompiler := TDNMSBuildCompiler.Create(ExtractFilePath(FCurrentDelphi.Application));
+  LBPLService := TDNRegistryBPLService.Create(FCurrentDelphi.Root);
+  LEnvironmentOptionsService := TDNRegistryEnvironmentOptionsService.Create(FCurrentDelphi.Root, FCurrentDelphi.SupportedPlatforms);
+  LExpertService := TDNExpertService.Create(FCurrentDelphi.Root);
+  LInstaller := TDNIDEInstaller.Create(LCompiler, LEnvironmentOptionsService, LBPLService, LExpertService);
+  LUninstaller := TDNIDEUninstaller.Create(LEnvironmentOptionsService, LBPLService, LExpertService);
+  Result := TDNSetup.Create(LInstaller, LUninstaller, FOnlinePackageProvider);
+  Result.ComponentDirectory := TPath.Combine(FCurrentDelphi.BDSCommonDir, 'comps');
+  Result.OnMessage := DefaultMessageHandler;
+end;
+
+procedure TDNCommandEnvironment.DefaultMessageHandler(
+  AMessageType: TMessageType; const AMessage: string);
+var
+  LPostFix: string;
+begin
+  case AMessageType of
+    mtNotification: LPostFix := '<info> ';
+    mtWarning: LPostFix := '<warning> ';
+    mtError: LPostFix := '<error> ';
+  end;
+  Writeln(LPostFix + AMessage);
 end;
 
 function TDNCommandEnvironment.GetDelphiName: string;

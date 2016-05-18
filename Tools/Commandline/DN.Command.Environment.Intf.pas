@@ -4,7 +4,8 @@ interface
 
 uses
   DN.Command,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  DN.Setup.Intf;
 
 type
   IDNCommandEnvironment = interface
@@ -17,6 +18,7 @@ type
     function GetDelphiName: string;
     procedure SetDelphiName(const Value: string);
     procedure SetInteractive(const Value: Boolean);
+    function CreateSetup: IDNSetup;
     property KnownCommands: TArray<TDNCommandClass> read GetKnownCommands;
     property OnlinePackages: TArray<IDNPackage> read GetOnlinePackages;
     property InstalledPackages: TArray<IDNPackage> read GetInstalledPackages;
