@@ -122,7 +122,7 @@ begin
       //go into startblock when current char is no delimiter
       //we are not in quote
       //haven't reached end of text
-      if not CharInSet(AText[i], CDelimiters) and (not LInQuote) and (i < Length(AText)) then
+      if not CharInSet(AText[i], CDelimiters) and not LInQuote then
       begin
         if LStart = - 1 then
         begin
@@ -154,6 +154,8 @@ begin
         end;
       end;
     end;
+    if LStart > -1 then
+      LElements.Add(Copy(AText, LStart, Length(AText)));
     Result := LElements.ToArray;
   finally
     LElements.Free;
