@@ -32,8 +32,6 @@ requires
   rtl,
   DesignIDE,
   vclimg,
-  dbrtl,
-  DbxCommonDriver,
   vcl;
 
 contains
@@ -118,7 +116,8 @@ contains
   DN.Version in '..\..\DN.Version.pas',
   Delphinus.Resources in '..\Delphinus.Resources.pas',
   Delphinus.About in '..\Delphinus.About.pas' {AboutDialog},
-  DN.Graphics.Loader in '..\..\DN.Graphics.Loader.pas';
+  DN.Graphics.Loader in '..\..\DN.Graphics.Loader.pas',
+  DN.Compiler.IDE in '..\..\DN.Compiler.IDE.pas';
 
 end.
 

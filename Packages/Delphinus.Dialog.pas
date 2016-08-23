@@ -91,6 +91,7 @@ type
     procedure ShowDetail(const APackage: IDNPackage);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
+    function IsStarter: Boolean;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     procedure HandleSelectedPackageChanged(Sender: TObject);
     procedure HandleAsyncProgress(const ATask, AItem: string; AProgress, AMax: Int64);
@@ -122,6 +123,7 @@ uses
   Delphinus.SetupDialog,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
+  DN.Compiler.IDE,
   DN.Installer.Intf,
   DN.Installer.IDE,
   DN.Uninstaller.Intf,
@@ -273,6 +275,8 @@ begin
   LoadIcons();
 
   FFileService.Cleanup();
+  if IsStarter then
+    Caption := Caption + ' (Starter Edition)';
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -282,7 +286,10 @@ var
   LUninstaller: IDNUninstaller;
   LExpertService: IDNExpertService;
 begin
-  LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+  if IsStarter then
+    LCompiler := TDNIDECompiler.Create()
+  else
+    LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
   LCompiler.BPLOutput := GetBPLDirectory();
   LCompiler.DCPOutput := GetDCPDirectory();
   LExpertService := TDNExpertService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey());
@@ -497,6 +504,27 @@ function TDelphinusDialog.IsPackageInstalled(
   const APackage: IDNPackage): Boolean;
 begin
   Result := Assigned(GetInstalledPackage(APackage));
+end;
+
+function TDelphinusDialog.IsStarter: Boolean;
+var
+  LService: IOTAServices;
+  LReg: TRegistry;
+  LBase: string;
+begin
+  Result := False;
+  LService := BorlandIDEServices as IOTAServices;
+  LBase := LService.GetBaseRegistryKey();
+  LReg := TRegistry.Create();
+  try
+    if LReg.OpenKeyReadOnly(LBase) then
+    begin
+      if LReg.ValueExists('Edition') then
+        Result := SameText(LReg.ReadString('Edition'), 'Starter');
+    end;
+  finally
+    LReg.Free;
+  end;
 end;
 
 procedure TDelphinusDialog.LoadIcons;

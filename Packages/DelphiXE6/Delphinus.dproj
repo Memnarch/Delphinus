@@ -94,8 +94,6 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
-        <DCCReference Include="dbrtl.dcp"/>
-        <DCCReference Include="DbxCommonDriver.dcp"/>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="..\Delphinus.Main.pas"/>
         <DCCReference Include="..\Delphinus.Controller.pas"/>
@@ -198,6 +196,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.Graphics.Loader.pas"/>
+        <DCCReference Include="..\..\DN.Compiler.IDE.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
