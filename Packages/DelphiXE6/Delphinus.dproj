@@ -197,6 +197,7 @@
             <Form>AboutDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\DN.Graphics.Loader.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

@@ -75,7 +75,7 @@ uses
   DN.Package.Version.Intf,
   DN.Progress,
   DN.Environment,
-  Delphinus.Resources.Names;
+  DN.Graphics.Loader;
 
 const
   CGithubFileContent = 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s';//user/repo filepath/branch
@@ -349,56 +349,20 @@ end;
 
 procedure TDNGitHubPackageProvider.LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);
 var
-  LGraphic: TGraphic;
-  LResStream: TResourceStream;
-  LIsValid: Boolean;
   LPicStream: TMemoryStream;
   LPictureFile: string;
 begin
-  LIsValid := False;
-  LGraphic := nil;
-
   LPicStream := TMemoryStream.Create();
   try
     LPictureFile := StringReplace(APictureFile, '\', '/', [rfReplaceAll]);
     if GetFileStream(AAuthor, ARepository, AVersion, LPictureFile, LPicStream) then
     begin
-      case AnsiIndexText(ExtractFileExt(APictureFile), ['.png', '.jpg', '.jpeg']) of
-        0: LGraphic := TPngImage.Create();
-        1, 2: LGraphic := TJPEGImage.Create();
-      end;
-
-      if Assigned(LGraphic) then
-      begin
-        try
-          LPicStream.Position := 0;
-          LGraphic.LoadFromStream(LPicStream);
-          LIsValid := True;
-        except
-          on E: EInvalidGraphic do
-            FreeAndNil(LGraphic);
-        end;
-      end;
-    end;  
+      LPicStream.Position := 0;
+      TGraphicLoader.TryLoadPictureFromStream(LPicStream, ExtractFileExt(LPictureFile), APicture);
+    end;
   finally
     LPicStream.Free;
   end;
-
-  if not LIsValid then
-  begin
-    LResStream := TResourceStream.Create(HInstance, Png_Package, RT_RCDATA);
-    try
-      LGraphic := TPngImage.Create();
-      LGraphic.LoadFromStream(LResStream);
-    finally
-      LResStream.Free;
-    end;
-  end;
-
-  APicture.Assign(LGraphic);
-
-  if Assigned(LGraphic) then
-    LGraphic.Free;
 end;
 
 procedure TDNGitHubPackageProvider.LoadPushDates;

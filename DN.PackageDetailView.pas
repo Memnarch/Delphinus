@@ -54,6 +54,7 @@ type
     FPackage: IDNPackage;
     FOnGetInstalledVersion: TGetPackageVersion;
     FOnGetOnlineVersion: TGetPackageVersion;
+    FDummyPic: TGraphic;
     procedure LoadIcons;
     procedure SetPackage(const Value: IDNPackage);
     function GetInstalledVersion(const APackage: IDNPackage): TDNVersion;
@@ -65,6 +66,7 @@ type
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
+    property DummyPic: TGraphic read FDummyPic write FDummyPic;
     property Package: IDNPackage read FPackage write SetPackage;
     property OnGetInstalledVersion: TGetPackageVersion read FOnGetInstalledVersion write FOnGetInstalledVersion;
     property OnGetOnlineVersion: TGetPackageVersion read FOnGetOnlineVersion write FOnGetOnlineVersion;
@@ -231,7 +233,10 @@ begin
     lbAuthor.Caption := FPackage.Author;
     lbDescription.Caption := FPackage.Description;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
-    imgRepo.Picture := FPackage.Picture;
+    if Assigned(FPackage.Picture.Graphic) then
+      imgRepo.Picture := FPackage.Picture
+    else
+      imgRepo.Picture.Graphic := FDummyPic;
     lbLicense.Caption := FPackage.LicenseType;
     lbVersion.Caption := GetOnlineVersion(FPackage).ToString;
     lbInstalled.Caption := GetInstalledVersion(FPackage).ToString;
@@ -255,6 +260,7 @@ begin
     btnProject.Enabled := False;
     btnReport.Enabled := False;
   end;
+
   btnLicense.Enabled := lbLicense.Caption <> '';
 end;
 

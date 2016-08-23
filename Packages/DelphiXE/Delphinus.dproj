@@ -163,6 +163,7 @@
 			<DCCReference Include="..\Delphinus.About.pas">
 				<Form>AboutDialog</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\DN.Graphics.Loader.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

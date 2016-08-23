@@ -74,6 +74,7 @@ type
     FProgressDialog: TProgressDialog;
     FFilter: string;
     FFileService: IDNFileService;
+    FDummyPic: TGraphic;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -114,6 +115,7 @@ uses
   IOUtils,
   RTTI,
   Types,
+  PNGImage,
   DN.Types,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
@@ -299,6 +301,7 @@ begin
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
   FSettings := nil;
+  FDummyPic.Free;
   inherited;
 end;
 
@@ -497,6 +500,8 @@ begin
 end;
 
 procedure TDelphinusDialog.LoadIcons;
+var
+  LResStream: TResourceStream;
 begin
   actRefresh.ImageIndex := AddIconToImageList(ilMenu, Ico_Refresh);
   actOptions.ImageIndex := AddIconToImageList(ilMenu, Ico_Options);
@@ -504,6 +509,15 @@ begin
   actAbout.ImageIndex := AddIconToImageList(ilMenu, Ico_About);
   edSearch.LeftButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Search);
   edSearch.RightButton.ImageIndex := AddIconToImageList(ilSmall, Ico_Close);
+  LResStream := TResourceStream.Create(HInstance, Png_Package, RT_RCDATA);
+  try
+    FDummyPic := TPngImage.Create();
+    FDummyPic.LoadFromStream(LResStream);
+  finally
+    LResStream.Free;
+  end;
+  FOverView.DummyPic := FDummyPic;
+  FDetailView.DummyPic := FDummyPic;
 end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;

@@ -31,14 +31,14 @@ implementation
 
 uses
   IOUtils,
-  jpeg,
-  pngimage,
+  Graphics,
   DN.Types,
   DN.Package,
   DN.Uninstaller.Intf,
   DN.JSonFile.InstalledInfo,
   DN.Package.Version,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.Graphics.Loader;
 
 { TDNInstalledPackageProvider }
 
@@ -52,8 +52,6 @@ end;
 procedure TDNInstalledPackageProvider.LoadDetails(const APackage: IDNPackage;
   const AInfoFile: string);
 var
-  LJPG: TJPEGImage;
-  LPNG: TPNGImage;
   LImageFile: string;
   LInfo: TInstalledInfoFile;
   LVersion: IDNPackageVersion;
@@ -88,29 +86,7 @@ begin
         if LInfo.Picture <> '' then
         begin
           LImageFile := TPath.Combine(ExtractFilePath(AInfoFile), LInfo.Picture);
-          if TFile.Exists(LImageFile) then
-          begin
-            if LowerCase(ExtractFileExt(LImageFile)) = '.png' then
-            begin
-              LPNG := TPNGImage.Create();
-              try
-                LPNG.LoadFromFile(LImageFile);
-                APackage.Picture.Graphic := LPNG;
-              finally
-                LPNG.Free;
-              end;
-            end
-            else
-            begin
-              LJPG := TJPEGImage.Create();
-              try
-                LJPG.LoadFromFile(LImageFile);
-                APackage.Picture.Graphic := LJPG;
-              finally
-                LJPG.Free;
-              end;
-            end;
-          end;
+          TGraphicLoader.TryLoadPictureFromFile(LImageFile, APackage.Picture);
         end;
       end;
     finally

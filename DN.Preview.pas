@@ -39,6 +39,7 @@ type
     FOnInstall: TNotifyEvent;
     FOnUninstall: TNotifyEvent;
     FOSImages: TImageList;
+    FDummyPic: TGraphic;
     procedure SetSelected(const Value: Boolean);
     procedure SetPackage(const Value: IDNPackage);
     procedure SetInstalledVersion(const Value: TDNVersion);
@@ -58,6 +59,7 @@ type
     constructor Create(AOwner: TComponent; AOsImages: TImageList; AButtonImages: TImageList); reintroduce;
     destructor Destroy(); override;
     property Package: IDNPackage read FPackage write SetPackage;
+    property DummyPic: TGraphic read FDummyPic write FDummyPic;
     property Selected: Boolean read FSelected write SetSelected;
     property InstalledVersion: TDNVersion read FInstalledVersion write SetInstalledVersion;
     property UpdateVersion: TDNVersion read FUpdateVersion write SetUpdateVersion;
@@ -129,12 +131,19 @@ begin
   LTemp := TBitmap.Create();
   try
     LTemp.PixelFormat := pf32bit;
-    if Assigned(FPackage.Picture) then
+    if Assigned(FPackage.Picture.Graphic) then
     begin
       LTemp.SetSize(FPackage.Picture.Width, FPackage.Picture.Height);
       LTemp.Canvas.Brush.Color := clWhite;
       LTemp.Canvas.FillRect(LTemp.Canvas.ClipRect);
       LTemp.Canvas.Draw(0, 0, FPackage.Picture.Graphic);
+    end
+    else if Assigned(FDummyPic) then
+    begin
+      LTemp.SetSize(FDummyPic.Width, FDummyPic.Height);
+      LTemp.Canvas.Brush.Color := clWhite;
+      LTemp.Canvas.FillRect(LTemp.Canvas.ClipRect);
+      LTemp.Canvas.Draw(0, 0, FDummyPic);
     end;
     FTarget.SetSize(CPreviewImageSize, CPreviewImageSize);
     FTarget.Canvas.FillRect(FTarget.Canvas.ClipRect);

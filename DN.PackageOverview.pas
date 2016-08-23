@@ -45,6 +45,7 @@ type
     FOSIcons: TImageList;
     FButtonIcons: TImageList;
     FRemovedSelectedPackage: TGUID;
+    FDummyPic: TGraphic;
     procedure HandlePackagesChanged(Sender: TObject; const Item: IDNPackage; Action: TCollectionNotification);
     procedure AddPreview(const APackage: IDNPackage);
     procedure RemovePreview(const APackage: IDNPackage);
@@ -70,6 +71,7 @@ type
     procedure Refresh();
     procedure ApplyFilter;
     property Packages: TList<IDNPackage> read FPackages;
+    property DummyPic: TGraphic read FDummyPic write FDummyPic;
     property SelectedPackage: IDNPackage read FSelectedPackage;
     property OnSelectedPackageChanged: TNotifyEvent read FOnSelectedPackageChanged write FOnSelectedPackageChanged;
     property OnCheckIsPackageInstalled: TCheckIsPackageInstalled read FOnCheckIsPackageInstalled write FOnCheckIsPackageInstalled;
@@ -102,6 +104,7 @@ begin
       LPreview := FUnusedPreviews.Extract(FUnusedPreviews[0])
     else
       LPreview := TPreview.Create(nil, FOSIcons, FButtonIcons);
+    LPreview.DummyPic := FDummyPic;
     LPreview.Package := APackage;
     LPreview.Parent := Self;
     SetPreviewPosition(LPreview, FPreviews.Count, FColumns);
