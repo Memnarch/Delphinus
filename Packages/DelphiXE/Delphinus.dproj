@@ -165,6 +165,11 @@
 			</DCCReference>
 			<DCCReference Include="..\..\DN.Graphics.Loader.pas"/>
 			<DCCReference Include="..\..\DN.Compiler.IDE.pas"/>
+			<DCCReference Include="..\..\DN.Compiler.ValueOverrides.Factory.pas"/>
+			<DCCReference Include="..\..\DN.Compiler.ValueOverrides.Intf.pas"/>
+			<DCCReference Include="..\..\DN.Compiler.ValueOverrides.pas"/>
+			<DCCReference Include="..\..\DN.DPRProperties.Intf.pas"/>
+			<DCCReference Include="..\..\DN.DPRProperties.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

@@ -15,7 +15,8 @@ uses
   SysUtils,
   DN.Types,
   DN.Compiler.Intf,
-  DN.Compiler;
+  DN.Compiler,
+  DN.Compiler.ValueOverrides.Intf;
 
 type
   TDNMSBuildCompiler = class(TDNCompiler)
@@ -26,6 +27,8 @@ type
     function BuildCommandLine(const AProjectfile: string): string;
     function GetMSBuildProperties: string;
     function Execute(const ACommandLine: string): Cardinal;
+    function BuildParameterOverrideString(const ADefaultOverrides: ICompilerValueOverrides): string;
+    function GetParameterOverrides(AConfig: TDNCompilerConfig): string;
   protected
     function GetVersion: TCompilerVersion; override;
   public
@@ -38,7 +41,8 @@ implementation
 uses
   IOUtils,
   ShellApi,
-  DN.VariableResolver.Intf;
+  DN.VariableResolver.Intf,
+  DN.Compiler.ValueOverrides.Factory;
 
 { TDNMSBuildCompiler }
 
@@ -48,6 +52,28 @@ begin
   Result := 'call "' + FEmbarcaderoBinFolder + '\RSVars.bat"';
   Result := Result + '& msbuild "' + AProjectfile + '" ' + GetMSBuildProperties() + ' > "' + FLogFile + '"';
   Result := 'cmd.exe /c ' + Result;
+end;
+
+function TDNMSBuildCompiler.BuildParameterOverrideString(
+  const ADefaultOverrides: ICompilerValueOverrides): string;
+const
+  CParameterOverrides = '/p:%s=%s';
+  CDebugInformation = 'DCC_DebugInformation';
+var
+  LParameter, LValue: string;
+begin
+  if not FParameterOverrides.ContainsKey(CDebugInformation) then
+    Result := Format(CParameterOverrides, [CDebugInformation, ADefaultOverrides.DebugInformation])
+  else
+    Result := '';
+
+  for LParameter in FParameterOverrides.Keys do
+  begin
+    LValue := FParameterOverrides[LParameter];
+    if LValue = '' then
+      LValue := '""';
+    Result := Result + ' ' + Format(CParameterOverrides, [LParameter, LValue]);
+  end;
 end;
 
 function TDNMSBuildCompiler.Compile(const AProjectFile: string): Boolean;
@@ -110,6 +136,14 @@ begin
 
   if BPLOutput <> '' then
     Result := Result + ' /p:DCC_BplOutput="' + LResolver.Resolve(ExcludeTrailingPathDelimiter(BPLOutput)) + '"';
+
+  Result := Result + ' ' + GetParameterOverrides(Config);
+end;
+
+function TDNMSBuildCompiler.GetParameterOverrides(
+  AConfig: TDNCompilerConfig): string;
+begin
+  Result := BuildParameterOverrideString(TValueOverridesFactory.CreateOverride(AConfig, Version));
 end;
 
 function TDNMSBuildCompiler.GetVersion: TCompilerVersion;

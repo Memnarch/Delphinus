@@ -11,6 +11,7 @@ interface
 
 uses
   Classes,
+  Generics.Collections,
   DN.Types,
   DN.Compiler.Intf,
   DN.VariableResolver.Intf;
@@ -41,7 +42,10 @@ type
     function GetLog: TStrings;
     function GetPlatform: TDNCompilerPlatform;
     procedure SetPlatform(const Value: TDNCompilerPlatform);
+    function GetParameterOverride(const AProperty: string): string;
+    procedure SetParameterOverride(const AProperty: string; const Value: string);
   protected
+    FParameterOverrides: TDictionary<string, string>;
     function GetVersion: TCompilerVersion; virtual;
     function CreateResolver: IVariableResolver;
   public
@@ -57,6 +61,7 @@ type
     property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
     property Version: TCompilerVersion read GetVersion;
+    property ParameterOverride[const AProperty: string]: string read GetParameterOverride write SetParameterOverride;
   end;
 
 implementation
@@ -77,6 +82,7 @@ constructor TDNCompiler.Create;
 begin
   inherited;
   FLog := TStringList.Create();
+  FParameterOverrides := TDictionary<string, string>.Create();
   FTarget := ctBuild;
   FConfig := ccRelease;
   FPlatform := cpWin32;
@@ -90,12 +96,19 @@ end;
 destructor TDNCompiler.Destroy;
 begin
   FLog.Free();
+  FParameterOverrides.Free;
   inherited;
 end;
 
 function TDNCompiler.GetLog: TStrings;
 begin
   Result := FLog;
+end;
+
+function TDNCompiler.GetParameterOverride(const AProperty: string): string;
+begin
+  if not FParameterOverrides.TryGetValue(AProperty, Result) then
+    Result := '';
 end;
 
 function TDNCompiler.GetPlatform: TDNCompilerPlatform;
@@ -136,6 +149,12 @@ end;
 procedure TDNCompiler.SetEXEOutput(const Value: string);
 begin
   FEXEOutput := Value;
+end;
+
+procedure TDNCompiler.SetParameterOverride(const AProperty: string;
+  const Value: string);
+begin
+  FParameterOverrides.AddOrSetValue(AProperty, Value);
 end;
 
 procedure TDNCompiler.SetPlatform(const Value: TDNCompilerPlatform);

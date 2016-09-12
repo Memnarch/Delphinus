@@ -114,7 +114,12 @@ contains
   Delphinus.Resources in '..\Delphinus.Resources.pas',
   Delphinus.About in '..\Delphinus.About.pas' {AboutDialog},
   DN.Graphics.Loader in '..\..\DN.Graphics.Loader.pas',
-  DN.Compiler.IDE in '..\..\DN.Compiler.IDE.pas';
+  DN.Compiler.IDE in '..\..\DN.Compiler.IDE.pas',
+  DN.Compiler.ValueOverrides.Factory in '..\..\DN.Compiler.ValueOverrides.Factory.pas',
+  DN.Compiler.ValueOverrides.Intf in '..\..\DN.Compiler.ValueOverrides.Intf.pas',
+  DN.Compiler.ValueOverrides in '..\..\DN.Compiler.ValueOverrides.pas',
+  DN.DPRProperties.Intf in '..\..\DN.DPRProperties.Intf.pas',
+  DN.DPRProperties in '..\..\DN.DPRProperties.pas';
 
 end.
 

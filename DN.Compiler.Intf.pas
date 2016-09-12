@@ -31,12 +31,14 @@ type
     function GetTarget: TDNCompilerTarget;
     procedure SetConfig(const Value: TDNCompilerConfig);
     procedure SetTarget(const Value: TDNCompilerTarget);
+    procedure SetParameterOverride(const AProperty: string; const AValue: string);
     function GetPlatform: TDNCompilerPlatform;
     procedure SetPlatform(const Value: TDNCompilerPlatform);
     function GetBPLOutput: string;
     procedure SetBPLOutput(const Value: string);
     function GetLog: TStrings;
     function GetVersion: TCompilerVersion;
+    function GetParameterOverride(const AProperty: string): string;
 
     function Compile(const AProjectFile: string): Boolean;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
@@ -48,6 +50,7 @@ type
     property Platform: TDNCompilerPlatform read GetPlatform write SetPlatform;
     property Log: TStrings read GetLog;
     property Version: TCompilerVersion read GetVersion;
+    property ParameterOverride[const AProperty: string]: string read GetParameterOverride write SetParameterOverride;
   end;
 
 const

@@ -10,7 +10,8 @@ unit DN.ProjectInfo.Intf;
 interface
 
 uses
-  DN.Compiler.Intf;
+  DN.Compiler.Intf,
+  DN.DPRProperties.Intf;
 
 type
   IDNProjectInfo = interface
@@ -23,6 +24,7 @@ type
     function GetSupportedPlatforms: TDNCompilerPlatforms;
     function LoadFromFile(const AProjectFile: string): Boolean;
     function GetLoadingError: string;
+    function CreateDPRProperties: IDPRProperties;
     property IsPackage: Boolean read GetIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;

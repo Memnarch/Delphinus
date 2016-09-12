@@ -520,6 +520,7 @@ begin
       FCompiler.Platform := LPlatform;
       ConfigureCompiler(FCompiler);
       LResolver := TCompilerVariableResolver.Create(FCompiler.Platform, FCompiler.Config);
+
       Result := FCompiler.Compile(AProject.FileName);
       if Result and AProject.IsPackage then
       begin

@@ -15,7 +15,8 @@ uses
   SysUtils,
   XMLIntf,
   DN.ProjectInfo.Intf,
-  DN.Compiler.Intf;
+  DN.Compiler.Intf,
+  DN.DPRProperties.Intf;
 
 type
   TDNProjectInfo = class(TInterfacedObject, IDNProjectInfo)
@@ -36,9 +37,11 @@ type
     function GetFileName: string;
     function GetSupportedPlatforms: TDNCompilerPlatforms;
     function GetLoadingError: string;
+    procedure FindDLLVersionDefines(const AProject: IXMLNode; out ADLLPrefix, ADLLSuffix, ADLLVersion: string);
     procedure SetError(const AError: string);
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
+    function CreateDPRProperties: IDPRProperties;
     property IsPackage: Boolean read GetIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName;
@@ -54,7 +57,8 @@ uses
   IOUtils,
   XMLDoc,
   StrUtils,
-  Variants;
+  Variants,
+  DN.DPRProperties;
 
 const
   CPropertyGroup = 'PropertyGroup';
@@ -66,6 +70,39 @@ const
 
 
 { TDNProjectInfo }
+
+function TDNProjectInfo.CreateDPRProperties: IDPRProperties;
+begin
+  if IsPackage then
+    Result := TDPRProperties.Create(ChangeFileExt(FileName, '.dpk'))
+  else
+    Result := TDPRProperties.Create(ChangeFileExt(FileName, '.dpr'));
+end;
+
+procedure TDNProjectInfo.FindDLLVersionDefines(const AProject: IXMLNode;
+  out ADLLPrefix, ADLLSuffix, ADLLVersion: string);
+var
+  LGroup: IXMLNode;
+  LValue: string;
+begin
+  ADLLPrefix := '';
+  ADLLSuffix := '';
+  ADLLVersion := '';
+  LGroup := AProject.ChildNodes.First;
+  while Assigned(LGroup) do
+  begin
+    LValue := VarToStr(LGroup.ChildValues['DllPrefix']);
+    if LValue <> '' then
+      ADLLPrefix := LValue;
+    LValue := VarToStr(LGroup.ChildValues['DllSuffix']);
+    if LValue <> '' then
+      ADLLSuffix := LValue;
+    LValue := VarToStr(LGroup.ChildValues['DllVersion']);
+    if LValue <> '' then
+      ADLLVersion := LValue;
+    LGroup := LGroup.NextSibling;
+  end;
+end;
 
 function TDNProjectInfo.GetBinaryName: string;
 begin
@@ -173,9 +210,7 @@ begin
           if (LExtension <> '') and (not StartsText('.', LExtension)) then
             LExtension := '.' + LExtension;
 
-          LPrefix := VarToStr(LBase.ChildValues['DllPrefix']);
-          LSuffix := VarToStr(LBase.ChildValues['DllSuffix']);
-          LVersion := VarToStr(LBase.ChildValues['DllVersion']);
+          FindDLLVersionDefines(LProject, LPrefix, LSuffix, LVersion);
           if LVersion <> '' then
             LVersion := '.' + LVersion;
         end;
