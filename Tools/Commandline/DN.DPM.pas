@@ -38,6 +38,7 @@ uses
   DN.Command.Environment,
   DN.Command.Help,
   DN.Command.Install,
+  DN.Command.Uninstall,
   DN.Command.Default,
   DN.Command.Exit,
   DN.Command.List,
@@ -89,6 +90,7 @@ begin
   LCommands.Add(TDNCommandDefault);
   LCommands.Add(TDNCommandHelp);
   LCommands.Add(TDNCommandInstall);
+  LCommands.Add(TDNCommandUninstall);
   LCommands.Add(TDNCommandList);
   LCommands.Add(TDNCommandExit);
   Result := LCommands.ToArray;

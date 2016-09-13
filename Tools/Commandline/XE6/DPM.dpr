@@ -25,7 +25,8 @@ uses
   DN.Command.Switch.Delphi in '..\DN.Command.Switch.Delphi.pas',
   DN.EnvironmentOptions.Registry in '..\..\..\DN.EnvironmentOptions.Registry.pas',
   DN.EnvironmentOptions in '..\..\..\DN.EnvironmentOptions.pas',
-  DN.BPLService.Registry in '..\..\..\DN.BPLService.Registry.pas';
+  DN.BPLService.Registry in '..\..\..\DN.BPLService.Registry.pas',
+  DN.Command.Uninstall in '..\DN.Command.Uninstall.pas';
 
 var
   GDPM: TDPM;
