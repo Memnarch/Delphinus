@@ -49,12 +49,14 @@ end;
 
 function TDNRegistryBPLService.Uninstall(const ABPLFile: string): Boolean;
 begin
-  Result := FRegistry.OpenKey(ABPLFile, False);
+  Result := FRegistry.OpenKey(FKey, False);
   if Result then
-  try
-    Result := FRegistry.DeleteValue(ABPLFile);
-  finally
-    FRegistry.CloseKey();
+  begin
+    try
+      Result := FRegistry.DeleteValue(ABPLFile);
+    finally
+      FRegistry.CloseKey();
+    end;
   end;
 end;
 
