@@ -14,7 +14,8 @@ uses
   Generics.Collections,
   DN.Types,
   DN.Compiler.Intf,
-  DN.VariableResolver.Intf;
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler.Factory;
 
 type
   TDNCompiler = class(TInterfacedObject, IDNCompiler)
@@ -27,6 +28,7 @@ type
     FConfig: TDNCompilerConfig;
     FPlatform: TDNCompilerPlatform;
     FLog: TStringList;
+    FVariableResolverFactory: TDNCompilerVariableResolverFacory;
     function GetEXEOutput: string;
     function GetDCPOutput: string;
     function GetDCUOutput: string;
@@ -49,7 +51,7 @@ type
     function GetVersion: TCompilerVersion; virtual;
     function CreateResolver: IVariableResolver;
   public
-    constructor Create();
+    constructor Create(const AVariableResolverFactory: TDNCompilerVariableResolverFacory);
     destructor Destroy(); override;
     function Compile(const AProjectFile: string): Boolean; virtual; abstract;
     property DCUOutput: string read GetDCUOutput write SetDCUOutput;
@@ -68,8 +70,7 @@ implementation
 
 uses
   SysUtils,
-  StrUtils,
-  DN.VariableResolver.Compiler;
+  StrUtils;
 
 { TDNCompiler }
 
@@ -78,19 +79,20 @@ begin
   Result := FEXEOutput;
 end;
 
-constructor TDNCompiler.Create;
+constructor TDNCompiler.Create(const AVariableResolverFactory: TDNCompilerVariableResolverFacory);
 begin
-  inherited;
+  inherited Create();
   FLog := TStringList.Create();
   FParameterOverrides := TDictionary<string, string>.Create();
   FTarget := ctBuild;
   FConfig := ccRelease;
   FPlatform := cpWin32;
+  FVariableResolverFactory := AVariableResolverFactory;
 end;
 
 function TDNCompiler.CreateResolver: IVariableResolver;
 begin
-  Result := TCompilerVariableResolver.Create(Platform, Config);
+  Result := FVariableResolverFactory(Platform, Config);
 end;
 
 destructor TDNCompiler.Destroy;

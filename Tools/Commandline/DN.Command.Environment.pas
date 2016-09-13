@@ -61,7 +61,10 @@ uses
   DN.BPLService.Registry,
   DN.EnvironmentOptions.Registry,
   DN.ExpertService,
-  DN.Setup;
+  DN.Setup,
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler,
+  DN.VariableResolver.Compiler.Factory;
 
 { TDNCommandEnvironment }
 
@@ -85,13 +88,19 @@ var
   LExpertService: IDNExpertService;
   LInstaller: IDNInstaller;
   LUninstaller: IDNUninstaller;
+  LVariableResolverFactory: TDNCompilerVariableResolverFacory;
 begin
   RequiresCurrentDelphi();
-  LCompiler := TDNMSBuildCompiler.Create(ExtractFilePath(FCurrentDelphi.Application));
+  LVariableResolverFactory :=
+    function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver
+    begin
+      Result := TCompilerVariableResolver.Create(APlatform, AConfig, FCurrentDelphi.BDSCommonDir);
+    end;
+  LCompiler := TDNMSBuildCompiler.Create(LVariableResolverFactory, ExtractFilePath(FCurrentDelphi.Application));
   LBPLService := TDNRegistryBPLService.Create(FCurrentDelphi.Root);
   LEnvironmentOptionsService := TDNRegistryEnvironmentOptionsService.Create(FCurrentDelphi.Root, FCurrentDelphi.SupportedPlatforms);
   LExpertService := TDNExpertService.Create(FCurrentDelphi.Root);
-  LInstaller := TDNIDEInstaller.Create(LCompiler, LEnvironmentOptionsService, LBPLService, LExpertService);
+  LInstaller := TDNIDEInstaller.Create(LCompiler, LEnvironmentOptionsService, LBPLService, LVariableResolverFactory, LExpertService);
   LUninstaller := TDNIDEUninstaller.Create(LEnvironmentOptionsService, LBPLService, LExpertService);
   Result := TDNSetup.Create(LInstaller, LUninstaller, FOnlinePackageProvider);
   Result.ComponentDirectory := TPath.Combine(FCurrentDelphi.BDSCommonDir, 'comps');

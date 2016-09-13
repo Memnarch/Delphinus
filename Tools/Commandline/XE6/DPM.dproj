@@ -119,6 +119,7 @@
         <DCCReference Include="..\..\..\DN.EnvironmentOptions.pas"/>
         <DCCReference Include="..\..\..\DN.BPLService.Registry.pas"/>
         <DCCReference Include="..\DN.Command.Uninstall.pas"/>
+        <DCCReference Include="..\..\..\DN.VariableResolver.Compiler.Factory.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

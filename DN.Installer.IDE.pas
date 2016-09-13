@@ -17,7 +17,8 @@ uses
   DN.Compiler.Intf,
   DN.ExpertService.Intf,
   DN.EnvironmentOptions.Intf,
-  DN.BPLService.Intf;
+  DN.BPLService.Intf,
+  DN.VariableResolver.Compiler.Factory;
 
 type
   TDNIDEInstaller = class(TDNInstaller)
@@ -35,6 +36,7 @@ type
     constructor Create(const ACompiler: IDNCompiler;
       const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
       const ABPLService: IDNBPLService;
+      const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
       const AExpertService: IDNExpertService = nil);
     function Install(const ASourceDirectory: string;
       const ATargetDirectory: string): Boolean; override;
@@ -120,9 +122,10 @@ end;
 constructor TDNIDEInstaller.Create(const ACompiler: IDNCompiler;
   const AEnvironmentOptionsService: IDNEnvironmentOptionsService;
   const ABPLService: IDNBPLService;
+  const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
   const AExpertService: IDNExpertService);
 begin
-  inherited Create(ACompiler, AExpertService);
+  inherited Create(ACompiler, AVariableResolverFactory, AExpertService);
   FEnvironmentOptionsService := AEnvironmentOptionsService;
   FBPLService := ABPLService;
 end;

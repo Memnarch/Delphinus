@@ -16,7 +16,8 @@ uses
   DN.Types,
   DN.Compiler.Intf,
   DN.Compiler,
-  DN.Compiler.ValueOverrides.Intf;
+  DN.Compiler.ValueOverrides.Intf,
+  DN.VariableResolver.Compiler.Factory;
 
 type
   TDNMSBuildCompiler = class(TDNCompiler)
@@ -32,7 +33,8 @@ type
   protected
     function GetVersion: TCompilerVersion; override;
   public
-    constructor Create(const AEmbarcaderoBinFolder: string);
+    constructor Create(const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+      const AEmbarcaderoBinFolder: string);
     function Compile(const AProjectFile: string): Boolean; override;
   end;
 
@@ -81,9 +83,10 @@ begin
   Result := Execute(BuildCommandLine(AProjectFile)) = 0;
 end;
 
-constructor TDNMSBuildCompiler.Create(const AEmbarcaderoBinFolder: string);
+constructor TDNMSBuildCompiler.Create(const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+  const AEmbarcaderoBinFolder: string);
 begin
-  inherited Create();
+  inherited Create(AVariableResolverFactory);
   FEmbarcaderoBinFolder := AEmbarcaderoBinFolder;
   FLogFile := TPath.GetTempFileName();
 end;

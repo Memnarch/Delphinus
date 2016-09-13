@@ -26,7 +26,8 @@ uses
   DN.EnvironmentOptions.Registry in '..\..\..\DN.EnvironmentOptions.Registry.pas',
   DN.EnvironmentOptions in '..\..\..\DN.EnvironmentOptions.pas',
   DN.BPLService.Registry in '..\..\..\DN.BPLService.Registry.pas',
-  DN.Command.Uninstall in '..\DN.Command.Uninstall.pas';
+  DN.Command.Uninstall in '..\DN.Command.Uninstall.pas',
+  DN.VariableResolver.Compiler.Factory in '..\..\..\DN.VariableResolver.Compiler.Factory.pas';
 
 var
   GDPM: TDPM;

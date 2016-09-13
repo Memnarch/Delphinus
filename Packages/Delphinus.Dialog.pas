@@ -149,6 +149,9 @@ uses
   DN.EnvironmentOptions.IDE,
   DN.BPLService.Intf,
   DN.BPLService.ToolsApi,
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler,
+  DN.VariableResolver.Compiler.Factory,
   Delphinus.Resources.Names,
   Delphinus.Resources,
   Delphinus.About,
@@ -314,16 +317,23 @@ var
   LUninstaller: IDNUninstaller;
   LExpertService: IDNExpertService;
   LBPLService: IDNBPLService;
+  LVariableResolverFactory: TDNCompilerVariableResolverFacory;
 begin
+  LVariableResolverFactory :=
+    function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver
+    begin
+      Result := TCompilerVariableResolver.Create(APlatform, AConfig, GetEnvironmentVariable('BDSCommonDir'));
+    end;
+
   if IsStarter then
-    LCompiler := TDNIDECompiler.Create()
+    LCompiler := TDNIDECompiler.Create(LVariableResolverFactory)
   else
-    LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+    LCompiler := TDNMSBuildCompiler.Create(LVariableResolverFactory, GetEnvironmentVariable('BDSBIN'));
   LCompiler.BPLOutput := GetBPLDirectory();
   LCompiler.DCPOutput := GetDCPDirectory();
   LExpertService := TDNExpertService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey());
   LBPLService := TDNToolsApiBPLService.Create();
-  LInstaller := TDNIDEInstaller.Create(LCompiler, FEnvironmentOptionsService, LBPLService, LExpertService);
+  LInstaller := TDNIDEInstaller.Create(LCompiler, FEnvironmentOptionsService, LBPLService, LVariableResolverFactory, LExpertService);
   LUninstaller := TDNIDEUninstaller.Create(FEnvironmentOptionsService, LBPLService, LExpertService, FFileService);
   Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
   Result.ComponentDirectory := GetComponentDirectory();
