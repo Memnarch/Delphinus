@@ -189,9 +189,9 @@ begin
       begin
         if LInstalled.ID = LOnline.ID then
         begin
-          if (LInstalled.Versions.Count > 0)
-            and (LOnline.Versions.Count > 0)
-            and (LOnline.Versions[0].Value > LInstalled.Versions[0].Value) then
+          if (LOnline.Versions.Count > 0)
+            and ((LInstalled.Versions.Count = 0)
+              or (LOnline.Versions[0].Value > LInstalled.Versions[0].Value)) then
           begin
             LUpdates.Add(LOnline);
           end;
