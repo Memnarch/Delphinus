@@ -9,9 +9,6 @@ uses
 
 type
   TDNCommandInstall = class(TDNCommand)
-  private
-    function FindPackage(const AID: string; const APackages: TArray<IDNPackage>): IDNPackage;
-    function FindVersion(const APackage: IDNPackage; const AVersion: string): IDNPackageVersion;
   public
     class function Description: string; override;
     class function Name: string; override;
@@ -29,7 +26,8 @@ uses
   SysUtils,
   DN.Command.Environment.Intf,
   DN.Setup.Intf,
-  DN.Version;
+  DN.Version,
+  DN.Package.Finder.Intf;
 
 const
   CID = 'ID';
@@ -48,57 +46,18 @@ var
   LSetup: IDNSetup;
   LPackage: IDNPackage;
   LVersion: IDNPackageVersion;
+  LFinder: IDNPackageFinder;
 begin
   inherited;
   LEnvironment := Environment as IDNCommandEnvironment;
+  LFinder := LEnvironment.CreatePackageFinder(LEnvironment.OnlinePackages);
+  LPackage := LFinder.Find(ReadParameter(CID));
+  if ParameterValueCount > 1 then
+    LVersion := LEnvironment.VersionFinder.Find(LPackage, ReadParameter(CVersion))
+  else if LPackage.Versions.Count > 0 then
+    LVersion := LPackage.Versions[0];
   LSetup := LEnvironment.CreateSetup();
-  LPackage := FindPackage(Trim(ReadParameter(CID)), LEnvironment.OnlinePackages);
-  if Assigned(LPackage) then
-  begin
-    if ParameterValueCount > 1 then
-    begin
-      LVersion := FindVersion(LPackage, Trim(ReadParameter(CVersion)));
-    end
-    else
-    begin
-      if LPackage.Versions.Count > 0 then
-        LVersion := LPackage.Versions[0];
-    end;
-    LSetup.Install(LPackage, LVersion);
-  end
-  else
-  begin
-    raise Exception.Create('Could not resolve package: ' + Trim(ReadParameter(CID)));
-  end;
-end;
-
-function TDNCommandInstall.FindPackage(const AID: string;
-  const APackages: TArray<IDNPackage>): IDNPackage;
-var
-  LPackage: IDNPackage;
-begin
-  for LPackage in APackages do
-    if SameText(LPackage.Name, AID) or SameText(LPackage.ID.ToString, AID) then
-      Exit(LPackage);
-  Result := nil;
-end;
-
-function TDNCommandInstall.FindVersion(const APackage: IDNPackage;
-  const AVersion: string): IDNPackageVersion;
-var
-  LVersion: TDNVersion;
-  LPackageVersion: IDNPackageVersion;
-begin
-  Result := nil;
-  if AVersion = '' then
-    Exit;
-  LVersion := TDNVersion.Parse(AVersion);
-  for LPackageVersion in APackage.Versions do
-    if LPackageVersion.Value = LVersion then
-      Exit(LPackageVersion);
-
-  if not Assigned(Result) then
-    raise Exception.Create('Version not found: ' + LVersion.ToString);
+  LSetup.Install(LPackage, LVersion);
 end;
 
 class function TDNCommandInstall.Name: string;

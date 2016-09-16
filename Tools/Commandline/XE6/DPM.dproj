@@ -120,6 +120,10 @@
         <DCCReference Include="..\..\..\DN.BPLService.Registry.pas"/>
         <DCCReference Include="..\DN.Command.Uninstall.pas"/>
         <DCCReference Include="..\..\..\DN.VariableResolver.Compiler.Factory.pas"/>
+        <DCCReference Include="..\..\..\DN.Package.Finder.Intf.pas"/>
+        <DCCReference Include="..\..\..\DN.Package.Finder.pas"/>
+        <DCCReference Include="..\..\..\DN.Package.Version.Finder.Intf.pas"/>
+        <DCCReference Include="..\..\..\DN.Package.Version.Finder.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

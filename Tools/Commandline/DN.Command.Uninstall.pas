@@ -23,7 +23,8 @@ uses
   SysUtils,
   DN.Command.Environment.Intf,
   DN.Setup.Intf,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  DN.Package.Finder.Intf;
 
 const
   CID = 'ID';
@@ -40,23 +41,17 @@ var
   LEnvironment: IDNCommandEnvironment;
   LSetup: IDNSetup;
   LPackage: IDNPackage;
-  LID: string;
+  LFinder: IDNPackageFinder;
 begin
   inherited;
   LEnvironment := Environment as IDNCommandEnvironment;
-  LID := ReadParameter(CID);
-  for LPackage in LEnvironment.InstalledPackages do
-  begin
-    if SameText(LID, LPackage.Name) or SameText(LID, LPackage.ID.ToString) then
-    begin
-      LSetup := LEnvironment.CreateSetup();
-      if LSetup.Uninstall(LPackage) then
-        Exit
-      else
-        raise Exception.Create('Could not uninstall ' + LPackage.Name);
-    end;
-  end;
-  raise Exception.Create('Could not resolve package ' + LID);
+  LFinder := LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages);
+  LPackage := LFinder.Find(ReadParameter(CID));
+  LSetup := LEnvironment.CreateSetup();
+  if LSetup.Uninstall(LPackage) then
+    Exit
+  else
+    raise Exception.Create('Could not uninstall ' + LPackage.Name);
 end;
 
 class function TDNCommandUninstall.Name: string;

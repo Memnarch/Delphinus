@@ -10,7 +10,9 @@ uses
   DN.PackageProvider.Intf,
   DN.DelphiInstallation.Provider.Intf,
   DN.DelphiInstallation.Intf,
-  DN.Setup.Intf;
+  DN.Setup.Intf,
+  DN.Package.Finder.Intf,
+  DN.Package.Version.Finder.Intf;
 
 type
   TInstalledPackageProviderFactory = reference to function(const AComponentDirectory: string): IDNPackageProvider;
@@ -24,6 +26,7 @@ type
     FInstallationProvider: IDNDelphiInstallationProvider;
     FCurrentDelphi: IDNDelphiInstallation;
     FInteractive: Boolean;
+    FVersionFinder: IDNVersionFinder;
     function GetInstalledPackageProvider: IDNPackageProvider;
     function GetKnownCommands: TArray<TDNCommandClass>;
     function GetOnlinePackages: TArray<IDNPackage>;
@@ -41,6 +44,8 @@ type
       const AInstalledProviderFactory: TInstalledPackageProviderFactory;
       const AInstallationProvider: IDNDelphiInstallationProvider);
     function CreateSetup: IDNSetup;
+    function CreatePackageFinder(const APackages: System.TArray<DN.Package.Intf.IDNPackage>): IDNPackageFinder;
+    function VersionFinder: IDNVersionFinder;
   end;
 
 implementation
@@ -64,7 +69,9 @@ uses
   DN.Setup,
   DN.VariableResolver.Intf,
   DN.VariableResolver.Compiler,
-  DN.VariableResolver.Compiler.Factory;
+  DN.VariableResolver.Compiler.Factory,
+  DN.Package.Finder,
+  DN.Package.Version.Finder;
 
 { TDNCommandEnvironment }
 
@@ -78,6 +85,13 @@ begin
   FOnlinePackageProvider := AOnlinePackageProvider;
   FInstalledPackageProviderFactory := AInstalledProviderFactory;
   FInstallationProvider := AInstallationProvider;
+  FVersionFinder := TDNVersionFinder.Create();
+end;
+
+function TDNCommandEnvironment.CreatePackageFinder(
+  const APackages: System.TArray<DN.Package.Intf.IDNPackage>): IDNPackageFinder;
+begin
+  Result := TDNPackageFinder.Create(APackages);
 end;
 
 function TDNCommandEnvironment.CreateSetup: IDNSetup;
@@ -227,6 +241,11 @@ end;
 procedure TDNCommandEnvironment.SetInteractive(const Value: Boolean);
 begin
   FInteractive := Value;
+end;
+
+function TDNCommandEnvironment.VersionFinder: IDNVersionFinder;
+begin
+  Result := FVersionFinder;
 end;
 
 end.

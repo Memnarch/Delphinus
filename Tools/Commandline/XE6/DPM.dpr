@@ -27,7 +27,11 @@ uses
   DN.EnvironmentOptions in '..\..\..\DN.EnvironmentOptions.pas',
   DN.BPLService.Registry in '..\..\..\DN.BPLService.Registry.pas',
   DN.Command.Uninstall in '..\DN.Command.Uninstall.pas',
-  DN.VariableResolver.Compiler.Factory in '..\..\..\DN.VariableResolver.Compiler.Factory.pas';
+  DN.VariableResolver.Compiler.Factory in '..\..\..\DN.VariableResolver.Compiler.Factory.pas',
+  DN.Package.Finder.Intf in '..\..\..\DN.Package.Finder.Intf.pas',
+  DN.Package.Finder in '..\..\..\DN.Package.Finder.pas',
+  DN.Package.Version.Finder.Intf in '..\..\..\DN.Package.Version.Finder.Intf.pas',
+  DN.Package.Version.Finder in '..\..\..\DN.Package.Version.Finder.pas';
 
 var
   GDPM: TDPM;
