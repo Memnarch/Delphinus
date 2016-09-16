@@ -39,6 +39,7 @@ uses
   DN.Command.Help,
   DN.Command.Install,
   DN.Command.Uninstall,
+  DN.Command.Update,
   DN.Command.Default,
   DN.Command.Exit,
   DN.Command.List,
@@ -92,6 +93,7 @@ begin
   LCommands.Add(TDNCommandHelp);
   LCommands.Add(TDNCommandInstall);
   LCommands.Add(TDNCommandUninstall);
+  LCommands.Add(TDNCommandUpdate);
   LCommands.Add(TDNCommandList);
   LCommands.Add(TDNCommandInfo);
   LCommands.Add(TDNCommandExit);

@@ -34,7 +34,8 @@ uses
   DN.Package.Version.Finder in '..\..\..\DN.Package.Version.Finder.pas',
   DN.Command.Info in '..\DN.Command.Info.pas',
   DN.Command.Switch.Versions in '..\DN.Command.Switch.Versions.pas',
-  DN.Command.Switch.License in '..\DN.Command.Switch.License.pas';
+  DN.Command.Switch.License in '..\DN.Command.Switch.License.pas',
+  DN.Command.Update in '..\DN.Command.Update.pas';
 
 var
   GDPM: TDPM;
