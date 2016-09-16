@@ -43,6 +43,7 @@ implementation
 uses
   IOUtils,
   ShellApi,
+  DN.Utils,
   DN.VariableResolver.Intf,
   DN.Compiler.ValueOverrides.Factory;
 

@@ -5,7 +5,7 @@ interface
 uses
   Classes,
   Generics.Collections,
-  DN.Compiler.Intf,
+  DN.Types,
   DN.EnvironmentOptions.Intf;
 
 type

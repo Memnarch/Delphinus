@@ -16,7 +16,7 @@ uses
   IniFiles,
   Generics.Collections,
   ToolsApi,
-  DN.Compiler.Intf,
+  DN.Types,
   DN.EnvironmentOptions;
 
 type

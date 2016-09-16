@@ -83,7 +83,7 @@ implementation
 
 uses
   DN.Graphics,
-  DN.Compiler.Intf;
+  DN.Types;
 
 { TPreview }
 

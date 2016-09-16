@@ -10,7 +10,7 @@ unit DN.ProjectInfo.Intf;
 interface
 
 uses
-  DN.Compiler.Intf,
+  DN.Types,
   DN.DPRProperties.Intf;
 
 type

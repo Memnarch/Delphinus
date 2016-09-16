@@ -4,7 +4,7 @@ interface
 
 uses
   DN.DelphiInstallation.Intf,
-  DN.Compiler.Intf,
+  DN.Types,
   Graphics;
 
 type

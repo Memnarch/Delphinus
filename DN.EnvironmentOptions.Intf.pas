@@ -10,6 +10,7 @@ unit DN.EnvironmentOptions.Intf;
 interface
 
 uses
+  DN.Types,
   DN.Compiler.Intf;
 
 type

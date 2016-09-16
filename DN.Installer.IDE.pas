@@ -12,6 +12,7 @@ interface
 uses
   Classes,
   Types,
+  DN.Types,
   DN.Installer,
   DN.ProjectInfo.Intf,
   DN.Compiler.Intf,
@@ -49,8 +50,7 @@ uses
   SysUtils,
   IOUtils,
   StrUtils,
-  Registry,
-  DN.Types;
+  Registry;
 
 { TDNIDEInstaller }
 

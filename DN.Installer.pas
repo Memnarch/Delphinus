@@ -104,6 +104,7 @@ uses
   IOUtils,
   StrUtils,
   Masks,
+  DN.Utils,
   DN.ProjectInfo,
   DN.ProjectGroupInfo,
   DN.Uninstaller.Intf,

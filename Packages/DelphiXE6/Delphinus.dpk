@@ -129,7 +129,8 @@ contains
   DN.BPLService.Intf in '..\..\DN.BPLService.Intf.pas',
   DN.BPLService.ToolsApi in '..\..\DN.BPLService.ToolsApi.pas',
   DN.EnvironmentOptions in '..\..\DN.EnvironmentOptions.pas',
-  DN.VariableResolver.Compiler.Factory in '..\..\DN.VariableResolver.Compiler.Factory.pas';
+  DN.VariableResolver.Compiler.Factory in '..\..\DN.VariableResolver.Compiler.Factory.pas',
+  DN.Utils in '..\..\DN.Utils.pas';
 
 end.
 

@@ -5,7 +5,7 @@ interface
 uses
   Registry,
   Generics.Collections,
-  DN.Compiler.Intf,
+  DN.Types,
   DN.EnvironmentOptions;
 
 type
@@ -32,6 +32,7 @@ implementation
 uses
   Windows,
   IOUtils,
+  DN.Utils,
   DN.EnvironmentOptions.Intf;
 
 { TDNRegistryEnvironmentOptionsService }

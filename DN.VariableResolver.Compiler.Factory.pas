@@ -4,7 +4,7 @@ interface
 
 uses
   DN.VariableResolver.Intf,
-  DN.Compiler.Intf;
+  DN.Types;
 
 type
   TDNCompilerVariableResolverFacory = reference to function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver;

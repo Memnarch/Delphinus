@@ -4,7 +4,7 @@ interface
 
 uses
   Graphics,
-  DN.Compiler.Intf;
+  DN.Types;
 
 type
   IDNDelphiInstallation = interface

@@ -208,6 +208,7 @@
         <DCCReference Include="..\..\DN.BPLService.ToolsApi.pas"/>
         <DCCReference Include="..\..\DN.EnvironmentOptions.pas"/>
         <DCCReference Include="..\..\DN.VariableResolver.Compiler.Factory.pas"/>
+        <DCCReference Include="..\..\DN.Utils.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

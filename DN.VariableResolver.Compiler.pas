@@ -4,7 +4,7 @@ interface
 
 uses
   DN.VariableResolver,
-  DN.Compiler.Intf;
+  DN.Types;
 
 type
   TCompilerVariableResolver = class(TVariableResolver)
@@ -13,6 +13,9 @@ type
   end;
 
 implementation
+
+uses
+  DN.Utils;
 
 { TCompilerVariableResolver }
 
