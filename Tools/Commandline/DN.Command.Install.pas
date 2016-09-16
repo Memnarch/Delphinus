@@ -44,7 +44,7 @@ procedure TDNCommandInstall.Execute;
 var
   LEnvironment: IDNCommandEnvironment;
   LSetup: IDNSetup;
-  LPackage: IDNPackage;
+  LPackage, LInstalledPackage: IDNPackage;
   LVersion: IDNPackageVersion;
   LFinder: IDNPackageFinder;
 begin
@@ -57,7 +57,14 @@ begin
   else if LPackage.Versions.Count > 0 then
     LVersion := LPackage.Versions[0];
   LSetup := LEnvironment.CreateSetup();
-  LSetup.Install(LPackage, LVersion);
+  if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
+  begin
+    LSetup.Update(LPackage, LVersion);
+  end
+  else
+  begin
+    LSetup.Install(LPackage, LVersion);
+  end;
 end;
 
 class function TDNCommandInstall.Name: string;
