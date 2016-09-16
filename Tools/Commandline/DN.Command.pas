@@ -12,9 +12,12 @@ type
   TDNCommand = class(TDNCommandSwitch)
   private
     FSwitches: TList<TDNCommandSwitch>;
+    FUsedSwitches: Integer;
     FEnvironment: IInterface;
   protected
     function GetSwitch<T: TDNCommandSwitch>: T;
+    function HasSwitch<T: TDNCommandSwitch>: Boolean;
+    function SwitchCount: Integer;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -58,6 +61,17 @@ begin
   Result := nil;
 end;
 
+function TDNCommand.HasSwitch<T>: Boolean;
+var
+  LSwitch: TDNCommandSwitch;
+begin
+  for LSwitch in FSwitches do
+    if LSwitch is T then
+      Exit(LSwitch.IsUsed);
+
+  Result := False;
+end;
+
 function GetSwitchArgument(const AName: string; const AArguments: TArray<IDNCommandSwitchArgument>): IDNCommandSwitchArgument;
 var
   LArgument: IDNCommandSwitchArgument;
@@ -82,7 +96,10 @@ begin
     try
       LSwitchArgument := GetSwitchArgument(SwitchClass(i).Name, AArgument.Switches);
       if Assigned(LSwitchArgument) then
+      begin
         LSwitch.Initialize(LSwitchArgument);
+        Inc(FUsedSwitches);
+      end;
     finally
       FSwitches.Add(LSwitch);
     end;
@@ -109,6 +126,11 @@ end;
 class function TDNCommand.SwitchClassCount: Integer;
 begin
   Result := 0;
+end;
+
+function TDNCommand.SwitchCount: Integer;
+begin
+  Result := FUsedSwitches;
 end;
 
 class procedure TDNCommand.Validate(const AArgument: IDNCommandArgument);

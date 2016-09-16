@@ -11,6 +11,7 @@ type
   TDNCommandSwitch = class
   private
     FParameters: TDictionary<string, string>;
+    FIsUsed: Boolean;
   protected
     function ReadParameter(const AName: string): string;
     function ParameterValueCount: Integer;
@@ -18,6 +19,7 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
     procedure Initialize(const AArgument: IDNCommandSwitchArgument); virtual;
+    property IsUsed: Boolean read FIsUsed;
     class procedure Validate(const AArgument: IDNCommandSwitchArgument); virtual;
     class function Name: string; virtual; abstract;
     class function Description: string; virtual;
@@ -88,6 +90,7 @@ procedure TDNCommandSwitch.Initialize(
 var
   i: Integer;
 begin
+  FIsUsed := True;
   for i := 0 to Length(AArgument.Parameters) - 1 do
     FParameters.Add(Parameter(i), AArgument.Parameters[i]);
 end;

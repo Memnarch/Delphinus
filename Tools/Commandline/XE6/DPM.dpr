@@ -31,7 +31,10 @@ uses
   DN.Package.Finder.Intf in '..\..\..\DN.Package.Finder.Intf.pas',
   DN.Package.Finder in '..\..\..\DN.Package.Finder.pas',
   DN.Package.Version.Finder.Intf in '..\..\..\DN.Package.Version.Finder.Intf.pas',
-  DN.Package.Version.Finder in '..\..\..\DN.Package.Version.Finder.pas';
+  DN.Package.Version.Finder in '..\..\..\DN.Package.Version.Finder.pas',
+  DN.Command.Info in '..\DN.Command.Info.pas',
+  DN.Command.Switch.Versions in '..\DN.Command.Switch.Versions.pas',
+  DN.Command.Switch.License in '..\DN.Command.Switch.License.pas';
 
 var
   GDPM: TDPM;
