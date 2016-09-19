@@ -131,6 +131,10 @@
         <DCCReference Include="..\..\..\DN.TextTable.pas"/>
         <DCCReference Include="..\..\..\DN.TextTable.Intf.pas"/>
         <DCCReference Include="..\DN.Command.DelphiBlock.pas"/>
+        <RcItem Include="..\..\..\Icons\Console.ico">
+            <ResourceType>ICON</ResourceType>
+            <ResourceId>ApplicationIcon</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -4,6 +4,8 @@ program DPM;
 
 {$R *.res}
 
+{$R *.dres}
+
 uses
   SysUtils,
   DN.DPM in '..\DN.DPM.pas',
