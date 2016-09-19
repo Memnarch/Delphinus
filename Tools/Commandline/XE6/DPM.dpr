@@ -40,7 +40,8 @@ uses
   DN.Command.Update in '..\DN.Command.Update.pas',
   DN.TextTable in '..\..\..\DN.TextTable.pas',
   DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas',
-  DN.Command.DelphiBlock in '..\DN.Command.DelphiBlock.pas';
+  DN.Command.DelphiBlock in '..\DN.Command.DelphiBlock.pas',
+  DN.Command.About in '..\DN.Command.About.pas';
 
 var
   GDPM: TDPM;

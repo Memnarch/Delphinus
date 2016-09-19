@@ -44,6 +44,7 @@ uses
   DN.Command.Exit,
   DN.Command.List,
   DN.Command.Info,
+  DN.Command.About,
   DN.PackageProvider.Github,
   DN.PackageProvider.Installed,
   DN.HttpClient.Intf,
@@ -97,6 +98,7 @@ begin
   LCommands.Add(TDNCommandList);
   LCommands.Add(TDNCommandInfo);
   LCommands.Add(TDNCommandExit);
+  LCommands.Add(TDNCommandAbout);
   Result := LCommands.ToArray;
 end;
 
