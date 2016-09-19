@@ -9,7 +9,7 @@ uses
 type
   TDNCommandList = class(TDNCommand)
   private
-    procedure PrintPackageInfo(const APackage: IDNPackage);
+    procedure PrintPackageInfo(const APackages: TArray<IDNPackage>);
   public
     class function Name: string; override;
     class function Parameter(AIndex: Integer): string; override;
@@ -25,7 +25,9 @@ implementation
 uses
   SysUtils,
   StrUtils,
-  DN.Command.Environment.Intf;
+  DN.Command.Environment.Intf,
+  DN.TextTable,
+  DN.TextTable.Intf;
 
 const
   CSection = 'Section';
@@ -44,7 +46,6 @@ procedure TDNCommandList.Execute;
 var
   LEnvironment: IDNCommandEnvironment;
   LPackages: TArray<IDNPackage>;
-  LPackage: IDNPackage;
   LSection: string;
 begin
   LEnvironment := Environment as IDNCommandEnvironment;
@@ -61,11 +62,7 @@ begin
     raise ENotSupportedException.Create('Unknown section ' + LSection);
   end;
 
-  for LPackage in LPackages do
-  begin
-    Writeln('');
-    PrintPackageInfo(LPackage);
-  end;
+  PrintPackageInfo(LPackages);
 end;
 
 class function TDNCommandList.Name: string;
@@ -97,15 +94,26 @@ begin
   end;
 end;
 
-procedure TDNCommandList.PrintPackageInfo(const APackage: IDNPackage);
+procedure TDNCommandList.PrintPackageInfo(const APackages: TArray<IDNPackage>);
+var
+  LTable: IDNTextTable;
+  LVersion: string;
+  LPackage: IDNPackage;
 begin
-  Writeln('Name: ' + APackage.Name);
-  Writeln('Author: ' + APackage.Author);
-  Writeln('ID: ' + APackage.ID.ToString);
-  if APackage.Versions.Count > 0 then
-    Writeln('Version: ' + APackage.Versions[0].Value.ToString)
-  else
-    Writeln('Version: <none>');
+  LTable := TDNTextTable.Create();
+  LTable.AddColumn('Name', 50);
+  LTable.AddColumn('Author', 20);
+  LTable.AddColumn('Version', 10);
+  for LPackage in APackages do
+  begin
+    if LPackage.Versions.Count > 0 then
+      LVersion := LPackage.Versions.First.Value.ToString
+    else
+      LVersion := '';
+    LTable.AddRecord([LPackage.Name, LPackage.Author, LVersion]);
+  end;
+  Writeln('');
+  Writeln(LTable.Text);
 end;
 
 end.

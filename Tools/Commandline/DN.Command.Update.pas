@@ -20,7 +20,9 @@ implementation
 
 uses
   DN.Command.Environment.Intf,
-  DN.Setup.Intf;
+  DN.Setup.Intf,
+  DN.TextTable.Intf,
+  DN.TextTable;
 
 const
   CTableHeader = 'Name              UpdateTo';
@@ -64,14 +66,16 @@ procedure TDNCommandUpdate.PrintUpdateTable(
   const APackages: TArray<IDNPackage>);
 var
   LPackage: IDNPackage;
-  LLine: string;
+  LTable: IDNTextTable;
 begin
-  Writeln(CTableHeader);
+  LTable := TDNTextTable.Create();
+  LTable.AddColumn('Name', 20);
+  LTable.AddColumn('UpdateTo');
   for LPackage in APackages do
-  begin
-    LLine := LPackage.Name + StringOfChar(' ', CColumn1Length - Length(LPackage.Name)) + LPackage.Versions.First.Value.ToString;
-    Writeln(LLine);
-  end;
+    LTable.AddRecord([LPackage.Name, LPackage.Versions.First.Value.ToString]);
+
+  Writeln('');
+  Writeln(LTable.Text);
 end;
 
 end.

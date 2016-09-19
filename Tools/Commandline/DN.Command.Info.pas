@@ -32,7 +32,9 @@ uses
   DN.Command.Environment.Intf,
   DN.Command.Switch.Versions,
   DN.Command.Switch.License,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.TextTable.Intf,
+  DN.TextTable;
 
 const
   CID = 'ID';
@@ -133,19 +135,24 @@ end;
 procedure TDNCommandInfo.PrintVersions(const APackage: IDNPackage);
 var
   LVersion: IDNPackageVersion;
-  LVersionStr: string;
+  LTable: IDNTextTable;
 const
   CMaxVersionLength = 15;
 begin
   Writeln('');
-  Writeln('Version        Supports');
-  for LVersion in APackage.Versions do
-  begin
-    LVersionStr := LVersion.Value.ToString;
-    Writeln(LVersionStr + StringOfChar(' ', CMaxVersionLength - Length(LVersionStr)) + GenerateSupportsString(LVersion.CompilerMin, LVersion.CompilerMax));
-  end;
   if APackage.Versions.Count = 0 then
+  begin
     Writeln('No versions available');
+  end
+  else
+  begin
+    LTable := TDNTextTable.Create();
+    LTable.AddColumn('Version', 15);
+    LTable.AddColumn('Supports');
+    for LVersion in APackage.Versions do
+      LTable.AddRecord([LVersion.Value.ToString, GenerateSupportsString(LVersion.CompilerMin, LVersion.CompilerMax)]);
+    Write(LTable.Text);
+  end;
   Writeln('');
 end;
 

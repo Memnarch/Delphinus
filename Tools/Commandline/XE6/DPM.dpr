@@ -35,7 +35,9 @@ uses
   DN.Command.Info in '..\DN.Command.Info.pas',
   DN.Command.Switch.Versions in '..\DN.Command.Switch.Versions.pas',
   DN.Command.Switch.License in '..\DN.Command.Switch.License.pas',
-  DN.Command.Update in '..\DN.Command.Update.pas';
+  DN.Command.Update in '..\DN.Command.Update.pas',
+  DN.TextTable in '..\..\..\DN.TextTable.pas',
+  DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas';
 
 var
   GDPM: TDPM;
