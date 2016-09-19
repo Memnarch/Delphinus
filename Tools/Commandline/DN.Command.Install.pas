@@ -3,12 +3,12 @@ unit DN.Command.Install;
 interface
 
 uses
-  DN.Command,
+  DN.Command.DelphiBlock,
   DN.Package.Intf,
   DN.Package.Version.Intf;
 
 type
-  TDNCommandInstall = class(TDNCommand)
+  TDNCommandInstall = class(TDNCommandDelphiBlock)
   public
     class function Description: string; override;
     class function Name: string; override;
@@ -49,21 +49,26 @@ var
   LFinder: IDNPackageFinder;
 begin
   inherited;
-  LEnvironment := Environment as IDNCommandEnvironment;
-  LFinder := LEnvironment.CreatePackageFinder(LEnvironment.OnlinePackages);
-  LPackage := LFinder.Find(ReadParameter(CID));
-  if ParameterValueCount > 1 then
-    LVersion := LEnvironment.VersionFinder.Find(LPackage, ReadParameter(CVersion))
-  else if LPackage.Versions.Count > 0 then
-    LVersion := LPackage.Versions[0];
-  LSetup := LEnvironment.CreateSetup();
-  if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
-  begin
-    LSetup.Update(LPackage, LVersion);
-  end
-  else
-  begin
-    LSetup.Install(LPackage, LVersion);
+  BeginBlock();
+  try
+    LEnvironment := Environment as IDNCommandEnvironment;
+    LFinder := LEnvironment.CreatePackageFinder(LEnvironment.OnlinePackages);
+    LPackage := LFinder.Find(ReadParameter(CID));
+    if ParameterValueCount > 1 then
+      LVersion := LEnvironment.VersionFinder.Find(LPackage, ReadParameter(CVersion))
+    else if LPackage.Versions.Count > 0 then
+      LVersion := LPackage.Versions[0];
+    LSetup := LEnvironment.CreateSetup();
+    if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
+    begin
+      LSetup.Update(LPackage, LVersion);
+    end
+    else
+    begin
+      LSetup.Install(LPackage, LVersion);
+    end;
+  finally
+    EndBlock();
   end;
 end;
 

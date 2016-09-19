@@ -3,11 +3,11 @@ unit DN.Command.Update;
 interface
 
 uses
-  DN.Command,
+  DN.Command.DelphiBlock,
   DN.Package.Intf;
 
 type
-  TDNCommandUpdate = class(TDNCommand)
+  TDNCommandUpdate = class(TDNCommandDelphiBlock)
   private
     procedure PrintUpdateTable(const APackages: TArray<IDNPackage>);
   public
@@ -42,18 +42,23 @@ var
   LUpdates: TArray<IDNPackage>;
 begin
   inherited;
-  LEnvironment := Environment as IDNCommandEnvironment;
-  LUpdates := LEnvironment.UpdatePackages;
-  if Length(LUpdates) > 0 then
-  begin
-    PrintUpdateTable(LUpdates);
-    LSetup := LEnvironment.CreateSetup();
-    for LPackage in LUpdates do
-      LSetup.Update(LPackage, LPackage.Versions.First);
-  end
-  else
-  begin
-    Writeln('No updates available');
+  BeginBlock();
+  try
+    LEnvironment := Environment as IDNCommandEnvironment;
+    LUpdates := LEnvironment.UpdatePackages;
+    if Length(LUpdates) > 0 then
+    begin
+      PrintUpdateTable(LUpdates);
+      LSetup := LEnvironment.CreateSetup();
+      for LPackage in LUpdates do
+        LSetup.Update(LPackage, LPackage.Versions.First);
+    end
+    else
+    begin
+      Writeln('No updates available');
+    end;
+  finally
+    EndBlock();
   end;
 end;
 

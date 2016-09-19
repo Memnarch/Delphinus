@@ -3,11 +3,11 @@ unit DN.Command.List;
 interface
 
 uses
-  DN.Command,
+  DN.Command.DelphiBlock,
   DN.Package.Intf;
 
 type
-  TDNCommandList = class(TDNCommand)
+  TDNCommandList = class(TDNCommandDelphiBlock)
   private
     procedure PrintPackageInfo(const APackages: TArray<IDNPackage>);
   public
@@ -48,21 +48,26 @@ var
   LPackages: TArray<IDNPackage>;
   LSection: string;
 begin
-  LEnvironment := Environment as IDNCommandEnvironment;
-  if ParameterValueCount = 1 then
-    LSection := ReadParameter(CSection)
-  else
-    LSection := COnline;
+  BeginBlock();
+  try
+    LEnvironment := Environment as IDNCommandEnvironment;
+    if ParameterValueCount = 1 then
+      LSection := ReadParameter(CSection)
+    else
+      LSection := COnline;
 
-  case AnsiIndexText(LSection, [COnline, CInstalled, CUpdates]) of
-    0: LPackages := LEnvironment.OnlinePackages;
-    1: LPackages := LEnvironment.InstalledPackages;
-    2: LPackages := LEnvironment.UpdatePackages;
-  else
-    raise ENotSupportedException.Create('Unknown section ' + LSection);
+    case AnsiIndexText(LSection, [COnline, CInstalled, CUpdates]) of
+      0: LPackages := LEnvironment.OnlinePackages;
+      1: LPackages := LEnvironment.InstalledPackages;
+      2: LPackages := LEnvironment.UpdatePackages;
+    else
+      raise ENotSupportedException.Create('Unknown section ' + LSection);
+    end;
+
+    PrintPackageInfo(LPackages);
+  finally
+    EndBlock();
   end;
-
-  PrintPackageInfo(LPackages);
 end;
 
 class function TDNCommandList.Name: string;

@@ -37,7 +37,8 @@ uses
   DN.Command.Switch.License in '..\DN.Command.Switch.License.pas',
   DN.Command.Update in '..\DN.Command.Update.pas',
   DN.TextTable in '..\..\..\DN.TextTable.pas',
-  DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas';
+  DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas',
+  DN.Command.DelphiBlock in '..\DN.Command.DelphiBlock.pas';
 
 var
   GDPM: TDPM;

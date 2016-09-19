@@ -3,10 +3,10 @@ unit DN.Command.Uninstall;
 interface
 
 uses
-  DN.Command;
+  DN.Command.DelphiBlock;
 
 type
-  TDNCommandUninstall = class(TDNCommand)
+  TDNCommandUninstall = class(TDNCommandDelphiBlock)
   public
     class function Description: string; override;
     class function Name: string; override;
@@ -44,14 +44,19 @@ var
   LFinder: IDNPackageFinder;
 begin
   inherited;
-  LEnvironment := Environment as IDNCommandEnvironment;
-  LFinder := LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages);
-  LPackage := LFinder.Find(ReadParameter(CID));
-  LSetup := LEnvironment.CreateSetup();
-  if LSetup.Uninstall(LPackage) then
-    Exit
-  else
-    raise Exception.Create('Could not uninstall ' + LPackage.Name);
+  BeginBlock();
+  try
+    LEnvironment := Environment as IDNCommandEnvironment;
+    LFinder := LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages);
+    LPackage := LFinder.Find(ReadParameter(CID));
+    LSetup := LEnvironment.CreateSetup();
+    if LSetup.Uninstall(LPackage) then
+      Exit
+    else
+      raise Exception.Create('Could not uninstall ' + LPackage.Name);
+  finally
+    EndBlock();
+  end;
 end;
 
 class function TDNCommandUninstall.Name: string;
