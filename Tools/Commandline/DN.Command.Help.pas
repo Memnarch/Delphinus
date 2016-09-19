@@ -102,6 +102,8 @@ begin
     if AIncludeParameters then
       Result := Result + ' ' + GetParameterString(ACommand.SwitchClass(0));
   end;
+  if Result <> '' then
+    Result := '[' + Result + ']';
 end;
 
 procedure TDNCommandHelp.ListAllCommand;
