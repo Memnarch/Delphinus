@@ -74,6 +74,9 @@ uses
   DN.Package.Finder,
   DN.Package.Version.Finder;
 
+const
+  CStarterEdition = 'Starter';
+
 { TDNCommandEnvironment }
 
 constructor TDNCommandEnvironment.Create(
@@ -212,13 +215,19 @@ begin
 end;
 
 procedure TDNCommandEnvironment.RequiresCurrentDelphi;
+var
+  LInstallation: IDNDelphiInstallation;
 begin
   if not Assigned(FCurrentDelphi) then
   begin
-    if FInstallationProvider.Installations.Count > 0 then
-      FCurrentDelphi := FInstallationProvider.Installations[0]
-    else
-      raise ENotSupportedException.Create('No Delphi-Installation detected');
+    for LInstallation in FInstallationProvider.Installations do
+      if not SameText(LInstallation.Edition, CStarterEdition) then
+      begin
+        FCurrentDelphi := LInstallation;
+        Exit;
+      end;
+
+    raise ENotSupportedException.Create('No suitable Delphi-Installation detected');
   end;
 end;
 
@@ -233,6 +242,8 @@ begin
     begin
       if SameText(LInstallation.ShortName, Value) then
       begin
+        if SameText(LInstallation.Edition, CStarterEdition) then
+          raise ENotSupportedException.Create('Starter-Editions are not supported');
         FCurrentDelphi := LInstallation;
         //invalidate depending instances
         FInstalledPackageProvider := nil;
