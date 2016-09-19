@@ -41,7 +41,8 @@ uses
   DN.TextTable in '..\..\..\DN.TextTable.pas',
   DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas',
   DN.Command.DelphiBlock in '..\DN.Command.DelphiBlock.pas',
-  DN.Command.About in '..\DN.Command.About.pas';
+  DN.Command.About in '..\DN.Command.About.pas',
+  DN.Command.Delphis in '..\DN.Command.Delphis.pas';
 
 var
   GDPM: TDPM;

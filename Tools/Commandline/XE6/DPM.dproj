@@ -132,6 +132,7 @@
         <DCCReference Include="..\..\..\DN.TextTable.Intf.pas"/>
         <DCCReference Include="..\DN.Command.DelphiBlock.pas"/>
         <DCCReference Include="..\DN.Command.About.pas"/>
+        <DCCReference Include="..\DN.Command.Delphis.pas"/>
         <RcItem Include="..\..\..\Icons\Console.ico">
             <ResourceType>ICON</ResourceType>
             <ResourceId>ApplicationIcon</ResourceId>

@@ -7,7 +7,8 @@ uses
   DN.Package.Intf,
   DN.Setup.Intf,
   DN.Package.Finder.Intf,
-  DN.Package.Version.Finder.Intf;
+  DN.Package.Version.Finder.Intf,
+  DN.DelphiInstallation.Intf;
 
 type
   IDNCommandEnvironment = interface
@@ -18,6 +19,7 @@ type
     function GetUpdatePackages: TArray<IDNPackage>;
     function GetInteractive: Boolean;
     function GetDelphiName: string;
+    function GetDelphiInstallations: TArray<IDNDelphiInstallation>;
     procedure SetDelphiName(const Value: string);
     procedure SetInteractive(const Value: Boolean);
     function CreateSetup: IDNSetup;
@@ -29,6 +31,7 @@ type
     property UpdatePackages: TArray<IDNPackage> read GetUpdatePackages;
     property Interactive: Boolean read GetInteractive write SetInteractive;
     property DelphiName: string read GetDelphiName write SetDelphiName;
+    property DelphiInstallations: TArray<IDNDelphiInstallation> read GetDelphiInstallations;
   end;
 
 implementation

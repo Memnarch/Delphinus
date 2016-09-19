@@ -45,6 +45,7 @@ uses
   DN.Command.List,
   DN.Command.Info,
   DN.Command.About,
+  DN.Command.Delphis,
   DN.PackageProvider.Github,
   DN.PackageProvider.Installed,
   DN.HttpClient.Intf,
@@ -99,6 +100,7 @@ begin
   LCommands.Add(TDNCommandInfo);
   LCommands.Add(TDNCommandExit);
   LCommands.Add(TDNCommandAbout);
+  LCommands.Add(TDNCommandDelphis);
   Result := LCommands.ToArray;
 end;
 

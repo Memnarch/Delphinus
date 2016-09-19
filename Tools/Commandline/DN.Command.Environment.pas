@@ -46,6 +46,7 @@ type
     function CreateSetup: IDNSetup;
     function CreatePackageFinder(const APackages: System.TArray<DN.Package.Intf.IDNPackage>): IDNPackageFinder;
     function VersionFinder: IDNVersionFinder;
+    function GetDelphiInstallations: TArray<IDNDelphiInstallation>;
   end;
 
 implementation
@@ -132,6 +133,11 @@ begin
     mtError: LPostFix := '<error> ';
   end;
   Writeln(LPostFix + AMessage);
+end;
+
+function TDNCommandEnvironment.GetDelphiInstallations: TArray<IDNDelphiInstallation>;
+begin
+  Result := FInstallationProvider.Installations.ToArray;
 end;
 
 function TDNCommandEnvironment.GetDelphiName: string;
