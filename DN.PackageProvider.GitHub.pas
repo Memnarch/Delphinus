@@ -174,6 +174,7 @@ begin
     end;
   finally
     LHeadInfo.Free;
+    FClient.IgnoreCacheExpiration := False;
   end;
 end;
 
