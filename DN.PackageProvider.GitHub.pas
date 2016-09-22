@@ -308,7 +308,7 @@ begin
     end
     else
     begin
-      Result := 'An error occured while doanloading the license information';
+      Result := 'An error occured while downloading the license information';
     end;
   end;
 end;
