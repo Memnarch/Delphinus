@@ -161,8 +161,8 @@ begin
       else
         LPackage.Name := LName;
       LPackage.ID := LHeadInfo.ID;
-      LPackage.CompilerMin := LHeadInfo.CompilerMin;
-      LPackage.CompilerMax := LHeadInfo.CompilerMax;
+      LPackage.CompilerMin := LHeadInfo.PackageCompilerMin;
+      LPackage.CompilerMax := LHeadInfo.PackageCompilerMax;
       LPackage.LicenseType := LHeadInfo.LicenseType;
       LPackage.LicenseFile := LHeadInfo.LicenseFile;
       LPackage.Platforms := LHeadInfo.Platforms;

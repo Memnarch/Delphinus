@@ -84,10 +84,10 @@ begin
   FLicenseType := ReadString(ARoot, 'license_type');
   FLicenseFile := ReadString(ARoot, 'license_file');
   FFirstVersion := ReadString(ARoot, 'first_version');
-  FPackageCompilerMax := ReadFloat(ARoot, 'package_compiler_max');
-  FPackageCompilerMin := ReadFloat(ARoot, 'package_compiler_min');
   FCompilerMin := ReadFloat(ARoot, 'compiler_min');
   FCompilerMax := ReadFloat(ARoot, 'compiler_max');
+  FPackageCompilerMax := ReadFloat(ARoot, 'package_compiler_max', FCompilerMax);
+  FPackageCompilerMin := ReadFloat(ARoot, 'package_compiler_min', FCompilerMin);
   LoadPlatforms(ReadString(ARoot, 'platforms'));
 end;
 
