@@ -297,8 +297,8 @@ end;
 function TDNGitHubPackageProvider.GetLicense(
   const APackage: TDNGitHubPackage): string;
 begin
-  Result := '';
-  if (APackage.LicenseType <> '') then
+  Result := 'No Licensefile has been provided.' + sLineBreak + 'Contact the Packageauthor to fix this issue by using the report-button.';
+  if (APackage.LicenseFile <> '') then
   begin
     if GetFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile, Result) then
     begin
@@ -308,7 +308,7 @@ begin
     end
     else
     begin
-      Result := 'An error occured while downloading the license information';
+      Result := 'An error occured while downloading the license information.' + sLineBreak + 'The file might be missing.';
     end;
   end;
 end;
