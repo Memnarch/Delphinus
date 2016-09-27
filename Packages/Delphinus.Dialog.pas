@@ -50,6 +50,10 @@ type
     actInstallFolder: TAction;
     actAbout: TAction;
     btnAbout: TToolButton;
+    pnlWarning: TPanel;
+    imgMessageSymbol: TImage;
+    imgCloseWarning: TImage;
+    lbMessage: TLabel;
     procedure actRefreshExecute(Sender: TObject);
     procedure btnInstallFolderClick(Sender: TObject);
     procedure actOptionsExecute(Sender: TObject);
@@ -59,6 +63,7 @@ type
     procedure edSearchRightButtonClick(Sender: TObject);
     procedure edSearchLeftButtonClick(Sender: TObject);
     procedure actAboutExecute(Sender: TObject);
+    procedure imgCloseWarningClick(Sender: TObject);
   private
     { Private declarations }
     FOverView: TPackageOverView;
@@ -100,6 +105,7 @@ type
     procedure DoFilter(const AFilter: string);
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
     procedure LoadIcons;
+    procedure ShowWarning(const AMessage: string);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -120,6 +126,7 @@ uses
   DN.Types,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
+  DN.PackageProvider.State.Intf,
   Delphinus.SetupDialog,
   DN.Compiler.Intf,
   DN.Compiler.MSBuild,
@@ -186,25 +193,40 @@ begin
     procedure
     var
       LProgress: IDNProgress;
+      LMessage: string;
     begin
       try
-        if Supports(FPackageProvider, IDNProgress, LProgress) then
-          LProgress.OnProgress := HandleAsyncProgress;
-        if FPackageProvider.Reload() then
-        begin
-          FPackages.Clear;
-          FPackages.AddRange(FPackageProvider.Packages);
-        end;
-      finally
-        if Assigned(LProgress) then
-          LProgress.OnProgress := nil;
-        TThread.Queue(nil,
-          procedure
+        try
+          if Supports(FPackageProvider, IDNProgress, LProgress) then
+            LProgress.OnProgress := HandleAsyncProgress;
+          if FPackageProvider.Reload() then
           begin
-            FCategoryFilteView.OnlineCount := FPackages.Count;
-            RefreshInstalledPackages();
-            FProgressDialog.ModalResult := mrOk;
-          end);
+            FPackages.Clear;
+            FPackages.AddRange(FPackageProvider.Packages);
+          end;
+        finally
+          if Assigned(LProgress) then
+            LProgress.OnProgress := nil;
+          TThread.Queue(nil,
+            procedure
+            begin
+              begin
+                FCategoryFilteView.OnlineCount := FPackages.Count;
+                RefreshInstalledPackages();
+                FProgressDialog.ModalResult := mrOk;
+              end;
+            end);
+        end;
+      except
+        on E: Exception do
+        begin
+          LMessage := E.ToString;
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowWarning('Error occured while reloading packages: ' + LMessage);
+            end);
+        end;
       end;
     end).Start;
   FProgressDialog.Caption := 'Delphinus';
@@ -484,6 +506,11 @@ begin
   ShowDetail(GetActiveOverView().SelectedPackage);
 end;
 
+procedure TDelphinusDialog.imgCloseWarningClick(Sender: TObject);
+begin
+  pnlWarning.Visible := False;
+end;
+
 procedure TDelphinusDialog.InstallPackage(const APackage: IDNPackage);
 var
   LDialog: TSetupDialog;
@@ -544,6 +571,8 @@ begin
   finally
     LResStream.Free;
   end;
+  imgMessageSymbol.Picture.Icon.LoadFromResourceName(HInstance, Ico_Warning);
+  ilSmall.GetIcon(edSearch.RightButton.ImageIndex, imgCloseWarning.Picture.Icon);
   FOverView.DummyPic := FDummyPic;
   FDetailView.DummyPic := FDummyPic;
 end;
@@ -561,7 +590,15 @@ end;
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
   LInstalledPackage: IDNPackage;
+  LState: IDNPackageProviderState;
 begin
+  if Supports(FPackageProvider, IDNPackageProviderState, LState) then
+  begin
+    if LState.State <> psOk then
+      ShowWarning(LState.LastError)
+    else
+      pnlWarning.Visible := False;
+  end;
   if FInstalledPackageProvider.Reload() then
   begin
     FInstalledPackages.Clear;
@@ -588,6 +625,12 @@ procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
 begin
   FDetailView.Package := APackage;
   FDetailView.BringToFront();
+end;
+
+procedure TDelphinusDialog.ShowWarning(const AMessage: string);
+begin
+  lbMessage.Caption := AMessage;
+  pnlWarning.Visible := True;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);

@@ -119,7 +119,10 @@ contains
   DN.Compiler.ValueOverrides.Intf in '..\..\DN.Compiler.ValueOverrides.Intf.pas',
   DN.Compiler.ValueOverrides in '..\..\DN.Compiler.ValueOverrides.pas',
   DN.DPRProperties.Intf in '..\..\DN.DPRProperties.Intf.pas',
-  DN.DPRProperties in '..\..\DN.DPRProperties.pas';
+  DN.DPRProperties in '..\..\DN.DPRProperties.pas',
+  DN.PackageProvider.GitHub.State in '..\..\DN.PackageProvider.GitHub.State.pas',
+  DN.PackageProvider.State.Intf in '..\..\DN.PackageProvider.State.Intf.pas',
+  DN.PackageProvider.State in '..\..\DN.PackageProvider.State.pas';
 
 end.
 

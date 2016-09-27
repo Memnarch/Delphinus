@@ -26,6 +26,7 @@ type
     procedure AddEvents(ARequest: IWinHttpRequest; var ACookie: Integer);
     procedure RemoveEvents(ARequest: IWinHttpRequest; ACookie: Integer);
     procedure RequiresRequest;
+    function GetResponseHeader(const AName: string): string; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -154,7 +155,6 @@ begin
 
     FRequest.Send('');
     Result := FRequest.Status;
-
     if (Result = HTTPErrorNotModified) and Assigned(LEntry) then
     begin
       LEntry.Load(AResponse);
@@ -180,6 +180,16 @@ begin
   finally
     FCache.CloseCache();
   end;
+end;
+
+function TDNWinHttpClient.GetResponseHeader(const AName: string): string;
+var
+  LResult: WideString;
+begin
+  if FRequest.GetResponseHeader(AName, LResult) = S_OK then
+    Result := LResult
+  else
+    Result := '';
 end;
 
 procedure TDNWinHttpClient.HandleResponseDataAvailable(var Data: PSafeArray);

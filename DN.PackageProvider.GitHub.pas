@@ -23,15 +23,17 @@ uses
   DN.Progress.Intf,
   DN.HttpClient.Intf,
   DN.JSon,
-  DN.JSOnFile.Info;
+  DN.JSOnFile.Info,
+  DN.PackageProvider.State.Intf;
 
 type
-  TDNGitHubPackageProvider = class(TDNPackageProvider, IDNProgress)
+  TDNGitHubPackageProvider = class(TDNPackageProvider, IDNProgress, IDNPackageProviderState)
   private
     FProgress: IDNProgress;
     FPushDates: TDictionary<string, string>;
     FExistingIDs: TDictionary<TGUID, Integer>;
     FDateMutex: TMutex;
+    FState: IDNPackageProviderState;
     function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
     procedure AddPackageFromJSon(AJSon: TJSONObject);
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
@@ -41,6 +43,7 @@ type
     function GetFileStream(const AAuthor, ARepository, AVersion, AFilePath: string; AFile: TStream): Boolean;
     function GetReleaseText(const AAuthor, ARepository: string; out AReleases: string): Boolean;
     procedure HandleDownloadProgress(AProgress, AMax: Int64);
+    procedure CheckRateLimit;
   protected
     FClient: IDNHttpClient;
     function GetLicense(const APackage: TDNGitHubPackage): string;
@@ -50,6 +53,7 @@ type
     procedure LoadPushDates;
     //properties for interfaceredirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
+    property State: IDNPackageProviderState read FState implements IDNPackageProviderState;
   public
     constructor Create(const AClient: IDNHttpClient);
     destructor Destroy(); override;
@@ -64,6 +68,7 @@ implementation
 
 uses
   IOUtils,
+  DateUtils,
   DN.IOUtils,
   StrUtils,
   jpeg,
@@ -75,7 +80,8 @@ uses
   DN.Package.Version.Intf,
   DN.Progress,
   DN.Environment,
-  DN.Graphics.Loader;
+  DN.Graphics.Loader,
+  DN.PackageProvider.GitHub.State;
 
 const
   CGithubFileContent = 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s';//user/repo filepath/branch
@@ -83,6 +89,9 @@ const
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
   CMediaTypeRaw = 'application/vnd.github.v3.raw';
   CPushDates = 'PushDates.ini';
+
+type
+  ERateLimitException = EAbort;
 
 { TDCPMPackageProvider }
 
@@ -93,6 +102,19 @@ begin
   if CreatePackageWithMetaInfo(AJSon, LPackage) then
   begin
     Packages.Add(LPackage);
+  end;
+end;
+
+procedure TDNGitHubPackageProvider.CheckRateLimit;
+var
+  LUnixTime: Int64;
+  LResetTime: TDateTime;
+begin
+  if FClient.ResponseHeader['X-RateLimit-Remaining'] = '0' then
+  begin
+    LUnixTime := StrToInt64Def(FClient.ResponseHeader['X-RateLimit-Reset'], 0);
+    LResetTime := TTimeZone.Local.ToLocalTime(UnixToDateTime(LUnixTime));
+    raise ERateLimitException.Create('Ratelimit exceeded. Wait for reset. Reset is at ' + DateTimeToStr(LResetTime));
   end;
 end;
 
@@ -107,6 +129,7 @@ begin
   FExistingIDs := TDictionary<TGUID, Integer>.Create();
   LKey := StringReplace(GetPushDateFile(), '\', '/', [rfReplaceAll]);
   FDateMutex := TMutex.Create(nil, False, LKey);
+  FState := TDNGithubPackageProviderState.Create(FClient);
 end;
 
 function TDNGitHubPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
@@ -264,6 +287,8 @@ begin
   FClient.Accept := CMediaTypeRaw;
   try
     Result := FClient.Get(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AFile) = HTTPErrorOk;
+    if not Result then
+      CheckRateLimit();
   finally
     FClient.Accept := '';
   end;
@@ -275,6 +300,8 @@ begin
   FClient.Accept := CMediaTypeRaw;
   try
     Result := FClient.GetText(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AText) = HTTPErrorOk;
+    if not Result then
+      CheckRateLimit();
   finally
     FClient.Accept := '';
   end;
@@ -289,6 +316,8 @@ begin
   try
     Result := GetFileText(AAuthor, ARepository, AVersion, CInfoFile, LResponse)
       and AInfo.LoadFromString(LResponse);
+    if not Result then
+      CheckRateLimit();
   finally
     FClient.Accept := '';
   end;
@@ -322,6 +351,8 @@ function TDNGitHubPackageProvider.GetReleaseText(const AAuthor,
   ARepository: string; out AReleases: string): Boolean;
 begin
   Result := FClient.GetText(Format(CGithubRepoReleases, [AAuthor, ARepository]), AReleases) = HTTPErrorOk;
+  if not Result then
+    CheckRateLimit();
 end;
 
 function TDNGitHubPackageProvider.GetRepoList(out ARepos: TJSONArray): Boolean;
@@ -393,33 +424,39 @@ var
   i: Integer;
 begin
   Result := False;
-  FProgress.SetTasks(['Reolading']);
   try
-    LoadPushDates();
-    FClient.BeginWork();
+    (FState as TDNGithubPackageProviderState).Reset();
+    FProgress.SetTasks(['Reolading']);
     try
-      if GetRepoList(LRepos) then
-      begin
-        try
-          Packages.Clear();
-          FExistingIDs.Clear();
-          for i := 0 to LRepos.Count - 1 do
-          begin
-            LRepo := LRepos.Items[i] as TJSONObject;
-            FProgress.SetTaskProgress(LRepo.GetValue('name').Value, i, LRepos.Count);
-            AddPackageFromJSon(LRepo);
+      LoadPushDates();
+      FClient.BeginWork();
+      try
+        if GetRepoList(LRepos) then
+        begin
+          try
+            Packages.Clear();
+            FExistingIDs.Clear();
+            for i := 0 to LRepos.Count - 1 do
+            begin
+              LRepo := LRepos.Items[i] as TJSONObject;
+              FProgress.SetTaskProgress(LRepo.GetValue('name').Value, i, LRepos.Count);
+              AddPackageFromJSon(LRepo);
+            end;
+            FProgress.Completed();
+            Result := True;
+          finally
+            LRepos.Free;
           end;
-          FProgress.Completed();
-          Result := True;
-        finally
-          LRepos.Free;
         end;
+      finally
+        FClient.EndWork();
       end;
     finally
-      FClient.EndWork();
+      SavePushDates();
     end;
-  finally
-    SavePushDates();
+  except
+    on E: ERateLimitException do
+      (FState as TDNGithubPackageProviderState).SetError(E.Message)
   end;
 end;
 

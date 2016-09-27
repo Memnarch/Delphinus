@@ -26,6 +26,7 @@ type
   protected
     FLastResponseSource: TResponseSource;
     procedure DoProgress(AProgress, AMax: Int64);
+    function GetResponseHeader(const AName: string): string; virtual;
   public
     function Get(const AUrl: string; AResponse: TStream): Integer; virtual; abstract;
     function GetText(const AUrl: string; out AResponse: string): Integer; virtual;
@@ -36,6 +37,7 @@ type
     property Accept: string read GetAccept write SetAccept;
     property LastResponseSource: TResponseSource read GetLastResponseSoure;
     property IgnoreCacheExpiration: Boolean read GetIgnoreCacheExpiration write SetIgnoreCacheExpiration;
+    property ResponseHeader[const AName: string]: string read GetResponseHeader;
     property OnProgress: TProgressEvent read GetOnProgress write SetOnProgress;
   end;
 
@@ -94,6 +96,11 @@ end;
 function TDNHttpClient.GetOnProgress: TProgressEvent;
 begin
   Result := FOnProgress;
+end;
+
+function TDNHttpClient.GetResponseHeader(const AName: string): string;
+begin
+  Result := '';
 end;
 
 function TDNHttpClient.GetText(const AUrl: string;

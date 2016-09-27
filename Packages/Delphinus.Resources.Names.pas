@@ -34,6 +34,7 @@ const
   Ico_Github_Disabled = 'Ico_Github_Disabled';
   Ico_Bug = 'Ico_Bug';
   Ico_Bug_Disabled = 'Ico_Bug_Disabled';
+  Ico_Warning = 'Ico_Warning';
 
   Png_Package = 'Png_Package';
 

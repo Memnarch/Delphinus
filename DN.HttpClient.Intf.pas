@@ -25,6 +25,7 @@ type
     function GetLastResponseSoure: TResponseSource;
     function GetIgnoreCacheExpiration: Boolean;
     procedure SetIgnoreCacheExpiration(const Value: Boolean);
+    function GetResponseHeader(const AName: string): string;
     //publlic
     function Get(const AUrl: string; AResponse: TStream): Integer;
     function GetText(const AUrl: string; out AResponse: string): Integer;
@@ -35,6 +36,7 @@ type
     property Accept: string read GetAccept write SetAccept;
     property LastResponseSource: TResponseSource read GetLastResponseSoure;
     property IgnoreCacheExpiration: Boolean read GetIgnoreCacheExpiration write SetIgnoreCacheExpiration;
+    property ResponseHeader[const AName: string]: string read GetResponseHeader;
     property OnProgress: TProgressEvent read GetOnProgress write SetOnProgress;
   end;
 

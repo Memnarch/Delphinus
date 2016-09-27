@@ -170,6 +170,9 @@
 			<DCCReference Include="..\..\DN.Compiler.ValueOverrides.pas"/>
 			<DCCReference Include="..\..\DN.DPRProperties.Intf.pas"/>
 			<DCCReference Include="..\..\DN.DPRProperties.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.GitHub.State.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.State.Intf.pas"/>
+			<DCCReference Include="..\..\DN.PackageProvider.State.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

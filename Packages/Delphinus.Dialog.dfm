@@ -26,6 +26,43 @@ object DelphinusDialog: TDelphinusDialog
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
+    object pnlWarning: TPanel
+      Left = 0
+      Top = 0
+      Width = 984
+      Height = 32
+      Align = alTop
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 0
+      DesignSize = (
+        984
+        32)
+      object imgMessageSymbol: TImage
+        Left = 0
+        Top = 0
+        Width = 32
+        Height = 32
+      end
+      object imgCloseWarning: TImage
+        Left = 961
+        Top = 6
+        Width = 16
+        Height = 16
+        Anchors = [akTop, akRight]
+        OnClick = imgCloseWarningClick
+      end
+      object lbMessage: TLabel
+        Left = 38
+        Top = 0
+        Width = 917
+        Height = 29
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        AutoSize = False
+        Caption = 'lbMessage'
+        WordWrap = True
+      end
+    end
   end
   object pnlToolBar: TPanel
     Left = 0
