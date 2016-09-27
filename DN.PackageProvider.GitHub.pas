@@ -403,6 +403,7 @@ var
   i: Integer;
 begin
   FDateMutex.Acquire();
+  FPushDates.Clear;
 
   if not TFile.Exists(GetPushDateFile()) then
     Exit;
