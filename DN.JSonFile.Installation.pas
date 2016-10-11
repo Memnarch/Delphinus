@@ -13,7 +13,7 @@ uses
   Types,
   DN.JSon,
   DN.JSOnFile,
-  DN.Compiler.Intf;
+  DN.Types;
 
 type
   TSearchPath = record

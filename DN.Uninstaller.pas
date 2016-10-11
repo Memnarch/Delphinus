@@ -17,7 +17,7 @@ uses
   DN.Uninstaller.Intf,
   DN.JSonFile.Uninstallation,
   DN.Progress.Intf,
-  DN.ToolsAPi.ExpertService.Intf,
+  DN.ExpertService.Intf,
   DN.FileService.Intf;
 
 type

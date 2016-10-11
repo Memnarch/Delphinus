@@ -43,6 +43,7 @@ contains
   DN.Compiler in '..\..\DN.Compiler.pas',
   DN.Installer.Intf in '..\..\DN.Installer.Intf.pas',
   DN.Installer in '..\..\DN.Installer.pas',
+  DN.Installer.IDE in '..\..\DN.Installer.IDE.pas',
   DN.Package.Intf in '..\..\DN.Package.Intf.pas',
   DN.Package in '..\..\DN.Package.pas',
   DN.PackageOverview in '..\..\DN.PackageOverview.pas',
@@ -58,7 +59,6 @@ contains
   Delphinus.SetupDialog in '..\Delphinus.SetupDialog.pas' {SetupDialog},
   DN.PackageProvider in '..\..\DN.PackageProvider.pas',
   DN.PackageProvider.Installed in '..\..\DN.PackageProvider.Installed.pas',
-  DN.Installer.IDE in '..\..\DN.Installer.IDE.pas',
   DN.ToolsApi in '..\..\DN.ToolsApi.pas',
   DN.Uninstaller.IDE in '..\..\DN.Uninstaller.IDE.pas',
   DN.ProjectGroupInfo in '..\..\DN.ProjectGroupInfo.pas',
@@ -73,8 +73,8 @@ contains
   DN.JSonFile.Uninstallation in '..\..\DN.JSonFile.Uninstallation.pas',
   DN.JSonFile.InstalledInfo in '..\..\DN.JSonFile.InstalledInfo.pas',
   DN.Package.Github in '..\..\DN.Package.Github.pas',
-  DN.ToolsApi.Extension in '..\..\DN.ToolsApi.Extension.pas',
-  DN.ToolsApi.Extension.Intf in '..\..\DN.ToolsApi.Extension.Intf.pas',
+  DN.EnvironmentOptions.IDE in '..\..\DN.EnvironmentOptions.IDE.pas',
+  DN.EnvironmentOptions.Intf in '..\..\DN.EnvironmentOptions.Intf.pas',
   DN.JSonFile.CacheInfo in '..\..\DN.JSonFile.CacheInfo.pas',
   DN.Package.Version.Intf in '..\..\DN.Package.Version.Intf.pas',
   DN.Package.Version in '..\..\DN.Package.Version.pas',
@@ -109,8 +109,8 @@ contains
   DN.VariableResolver.Compiler in '..\..\DN.VariableResolver.Compiler.pas',
   DN.VariableResolver.Intf in '..\..\DN.VariableResolver.Intf.pas',
   DN.VariableResolver in '..\..\DN.VariableResolver.pas',
-  DN.ToolsApi.ExpertService in '..\..\DN.ToolsApi.ExpertService.pas',
-  DN.ToolsApi.ExpertService.Intf in '..\..\DN.ToolsApi.ExpertService.Intf.pas',
+  DN.ExpertService in '..\..\DN.ExpertService.pas',
+  DN.ExpertService.Intf in '..\..\DN.ExpertService.Intf.pas',
   DN.FileService in '..\..\DN.FileService.pas',
   DN.FileService.Intf in '..\..\DN.FileService.Intf.pas',
   DN.Version in '..\..\DN.Version.pas',
@@ -125,7 +125,12 @@ contains
   DN.DPRProperties in '..\..\DN.DPRProperties.pas',
   DN.PackageProvider.State in '..\..\DN.PackageProvider.State.pas',
   DN.PackageProvider.State.Intf in '..\..\DN.PackageProvider.State.Intf.pas',
-  DN.PackageProvider.GitHub.State in '..\..\DN.PackageProvider.GitHub.State.pas';
+  DN.PackageProvider.GitHub.State in '..\..\DN.PackageProvider.GitHub.State.pas',
+  DN.BPLService.Intf in '..\..\DN.BPLService.Intf.pas',
+  DN.BPLService.ToolsApi in '..\..\DN.BPLService.ToolsApi.pas',
+  DN.EnvironmentOptions in '..\..\DN.EnvironmentOptions.pas',
+  DN.VariableResolver.Compiler.Factory in '..\..\DN.VariableResolver.Compiler.Factory.pas',
+  DN.Utils in '..\..\DN.Utils.pas';
 
 end.
 

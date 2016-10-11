@@ -14,11 +14,6 @@ uses
   DN.Types;
 
 type
-  TDNCompilerTarget = (ctBuild, ctCompile);
-  TDNCompilerConfig = (ccRelease, ccDebug);
-  TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32);
-  TDNCompilerPlatforms = set of TDNCompilerPlatform;
-
   IDNCompiler = interface
   ['{AA41BA34-BBD7-454D-A3AA-0730590077A4}']
     function GetExeOutput: string;
@@ -53,30 +48,6 @@ type
     property ParameterOverride[const AProperty: string]: string read GetParameterOverride write SetParameterOverride;
   end;
 
-const
-  TDNCompilerTargetName: array[Low(TDNCompilerTarget)..High(TDNCompilerTarget)] of string = ('Build', 'Compile');
-  TDNCompilerConfigName: array[Low(TDNCompilerConfig)..High(TDNCompilerConfig)] of string = ('Release', 'Debug');
-  TDNCompilerPlatformName: array[Low(TDNCompilerPlatform)..High(TDNCompilerPlatform)] of string = ('Win32', 'Win64', 'OSX32');
-
-function TryPlatformNameToCompilerPlatform(const AName: string; out APlatform: TDNCompilerPlatform): Boolean;
-
 implementation
-
-uses
-  SysUtils;
-
-function TryPlatformNameToCompilerPlatform(const AName: string; out APlatform: TDNCompilerPlatform): Boolean;
-var
-  LPlatform: TDNCompilerPlatform;
-begin
-  for LPlatform := Low(TDNCompilerPlatformName) to High(TDNCompilerPlatformName) do
-    if SameText(TDNCompilerPlatformName[LPlatform], AName) then
-    begin
-      APlatform := LPlatform;
-      Exit(True);
-    end;
-
-  Result := False;
-end;
 
 end.

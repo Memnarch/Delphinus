@@ -14,6 +14,10 @@ type
   TMessageEvent = procedure(AMessageType: TMessageType; const AMessage: string) of object;
   TPathType = (tpSearchPath, tpBrowsingPath);
   TCompilerVersion = Single;
+  TDNCompilerTarget = (ctBuild, ctCompile);
+  TDNCompilerConfig = (ccRelease, ccDebug);
+  TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32);
+  TDNCompilerPlatforms = set of TDNCompilerPlatform;
 
 const
   CSourceSubDir = 'Source';

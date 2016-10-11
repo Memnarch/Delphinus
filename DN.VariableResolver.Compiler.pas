@@ -4,26 +4,26 @@ interface
 
 uses
   DN.VariableResolver,
-  DN.Compiler.Intf;
+  DN.Types;
 
 type
   TCompilerVariableResolver = class(TVariableResolver)
   public
-    constructor Create(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig); reintroduce;
+    constructor Create(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig; const ABDSCommonDir: string); reintroduce;
   end;
 
 implementation
 
 uses
-  SysUtils;
+  DN.Utils;
 
 { TCompilerVariableResolver }
 
 constructor TCompilerVariableResolver.Create(APlatform: TDNCompilerPlatform;
-  AConfig: TDNCompilerConfig);
+  AConfig: TDNCompilerConfig; const ABDSCommonDir: string);
 begin
   inherited Create(['Platform', 'Config', 'BDSCommonDir'],
-    [TDNCompilerPlatformName[APlatform], TDNCompilerConfigName[AConfig], GetEnvironmentVariable('BDSCommonDir')]);
+    [TDNCompilerPlatformName[APlatform], TDNCompilerConfigName[AConfig], ABDSCommonDir]);
 end;
 
 end.

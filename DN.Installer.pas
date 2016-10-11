@@ -23,7 +23,8 @@ uses
   DN.JSonFile.Uninstallation,
   DN.JSonFile.Info,
   DN.Progress.Intf,
-  DN.ToolsApi.ExpertService.Intf;
+  DN.ExpertService.Intf,
+  DN.VariableResolver.Compiler.Factory;
 
 type
   TDNInstaller = class(TInterfacedObject, IDNInstaller, IDNProgress)
@@ -57,6 +58,7 @@ type
     FPackages: TList<TPackage>;
     FExperts: TList<TInstalledExpert>;
     FRawFiles: TStringList;
+    FVariableResolverFactory: TDNCompilerVariableResolverFacory;
     procedure DoMessage(AType: TMessageType; const AMessage: string); virtual;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil); virtual;
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;
@@ -87,7 +89,9 @@ type
     //properties for interface redirection
     property Progress: IDNProgress read FProgress implements IDNProgress;
   public
-    constructor Create(const ACompiler: IDNCompiler; const AExpertService: IDNExpertService = nil);
+    constructor Create(const ACompiler: IDNCompiler;
+      const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+      const AExpertService: IDNExpertService = nil);
     destructor Destroy(); override;
     function Install(const ASourceDirectory, ATargetDirectory: string): Boolean; virtual;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
@@ -100,12 +104,12 @@ uses
   IOUtils,
   StrUtils,
   Masks,
+  DN.Utils,
   DN.ProjectInfo,
   DN.ProjectGroupInfo,
   DN.Uninstaller.Intf,
   DN.Progress,
-  DN.VariableResolver.Intf,
-  DN.VariableResolver.Compiler;
+  DN.VariableResolver.Intf;
 
 const
   CLibDir = 'lib';
@@ -247,10 +251,13 @@ begin
   TFile.Copy(LSourceInstall, LTargetInstall, True);
 end;
 
-constructor TDNInstaller.Create(const ACompiler: IDNCompiler; const AExpertService: IDNExpertService);
+constructor TDNInstaller.Create(const ACompiler: IDNCompiler;
+  const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+  const AExpertService: IDNExpertService);
 begin
   inherited Create();
   FCompiler := ACompiler;
+  FVariableResolverFactory := AVariableResolverFactory;
   FExpertService := AExpertService;
   FPackages := TList<TPackage>.Create();
   FProgress := TDNProgress.Create();
@@ -519,7 +526,7 @@ begin
       DoMessage(mtNotification, TDNCompilerPlatformName[LPlatform]);
       FCompiler.Platform := LPlatform;
       ConfigureCompiler(FCompiler);
-      LResolver := TCompilerVariableResolver.Create(FCompiler.Platform, FCompiler.Config);
+      LResolver := FVariableResolverFactory(FCompiler.Platform, FCompiler.Config);
 
       Result := FCompiler.Compile(AProject.FileName);
       if Result and AProject.IsPackage then
@@ -608,7 +615,7 @@ begin
   begin
     LPlatformName := TDNCompilerPlatformName[LPlatform];
     LPlatformConfig := IncludeTrailingPathDelimiter(LPlatformName) + LConfig;
-    LResolver := TCompilerVariableResolver.Create(LPlatform, ccRelease);
+    LResolver := FVariableResolverFactory(LPlatform, ccRelease);
 
     LSourceFolder := TPath.Combine(LSourceLib, LPlatformName);
     if TDirectory.Exists(LSourceFolder) then

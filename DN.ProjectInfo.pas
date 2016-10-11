@@ -15,7 +15,7 @@ uses
   SysUtils,
   XMLIntf,
   DN.ProjectInfo.Intf,
-  DN.Compiler.Intf,
+  DN.Types,
   DN.DPRProperties.Intf;
 
 type

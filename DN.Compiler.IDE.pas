@@ -21,7 +21,7 @@ uses
   Classes,
   SysUtils,
   DCCStrs,
-  DN.Compiler.Intf;
+  DN.Utils;
 
 { TDNIDECompiler }
 

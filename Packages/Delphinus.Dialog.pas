@@ -27,6 +27,7 @@ uses
   Delphinus.ProgressDialog,
   DN.PackageFilter,
   DN.Version,
+  DN.EnvironmentOptions.Intf,
   ExtCtrls,
   StdCtrls,
   Registry;
@@ -80,6 +81,7 @@ type
     FFilter: string;
     FFileService: IDNFileService;
     FDummyPic: TGraphic;
+    FEnvironmentOptionsService: IDNEnvironmentOptionsService;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -141,9 +143,15 @@ uses
   DN.HttpClient.WinHttp,
   DN.Progress.Intf,
   DN.Settings,
-  DN.ToolsApi.ExpertService,
-  DN.ToolsApi.ExpertService.Intf,
+  DN.ExpertService,
+  DN.ExpertService.Intf,
   DN.FileService,
+  DN.EnvironmentOptions.IDE,
+  DN.BPLService.Intf,
+  DN.BPLService.ToolsApi,
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler,
+  DN.VariableResolver.Compiler.Factory,
   Delphinus.Resources.Names,
   Delphinus.Resources,
   Delphinus.About,
@@ -259,6 +267,7 @@ begin
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
+  FEnvironmentOptionsService := TDNIDEEnvironmentOptionsService.Create();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -307,16 +316,25 @@ var
   LInstaller: IDNInstaller;
   LUninstaller: IDNUninstaller;
   LExpertService: IDNExpertService;
+  LBPLService: IDNBPLService;
+  LVariableResolverFactory: TDNCompilerVariableResolverFacory;
 begin
+  LVariableResolverFactory :=
+    function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver
+    begin
+      Result := TCompilerVariableResolver.Create(APlatform, AConfig, GetEnvironmentVariable('BDSCommonDir'));
+    end;
+
   if IsStarter then
-    LCompiler := TDNIDECompiler.Create()
+    LCompiler := TDNIDECompiler.Create(LVariableResolverFactory)
   else
-    LCompiler := TDNMSBuildCompiler.Create(GetEnvironmentVariable('BDSBIN'));
+    LCompiler := TDNMSBuildCompiler.Create(LVariableResolverFactory, GetEnvironmentVariable('BDSBIN'));
   LCompiler.BPLOutput := GetBPLDirectory();
   LCompiler.DCPOutput := GetDCPDirectory();
   LExpertService := TDNExpertService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey());
-  LInstaller := TDNIDEInstaller.Create(LCompiler, LExpertService);
-  LUninstaller := TDNIDEUninstaller.Create(LExpertService, FFileService);
+  LBPLService := TDNToolsApiBPLService.Create();
+  LInstaller := TDNIDEInstaller.Create(LCompiler, FEnvironmentOptionsService, LBPLService, LVariableResolverFactory, LExpertService);
+  LUninstaller := TDNIDEUninstaller.Create(FEnvironmentOptionsService, LBPLService, LExpertService, FFileService);
   Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
   Result.ComponentDirectory := GetComponentDirectory();
 end;

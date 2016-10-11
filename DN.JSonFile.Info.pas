@@ -55,7 +55,8 @@ type
 implementation
 
 uses
-  StrUtils;
+  StrUtils,
+  DN.Utils;
 
 { TInfoFile }
 

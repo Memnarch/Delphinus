@@ -78,8 +78,6 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Locale>1031</VerInfo_Locale>
-        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
         <Debugger_HostApplication>$(BDS)\bin\bds.exe</Debugger_HostApplication>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
@@ -107,6 +105,7 @@
         <DCCReference Include="..\..\DN.Compiler.pas"/>
         <DCCReference Include="..\..\DN.Installer.Intf.pas"/>
         <DCCReference Include="..\..\DN.Installer.pas"/>
+        <DCCReference Include="..\..\DN.Installer.IDE.pas"/>
         <DCCReference Include="..\..\DN.Package.Intf.pas"/>
         <DCCReference Include="..\..\DN.Package.pas"/>
         <DCCReference Include="..\..\DN.PackageOverview.pas"/>
@@ -124,7 +123,6 @@
         </DCCReference>
         <DCCReference Include="..\..\DN.PackageProvider.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.Installed.pas"/>
-        <DCCReference Include="..\..\DN.Installer.IDE.pas"/>
         <DCCReference Include="..\..\DN.ToolsApi.pas"/>
         <DCCReference Include="..\..\DN.Uninstaller.IDE.pas"/>
         <DCCReference Include="..\..\DN.ProjectGroupInfo.pas"/>
@@ -142,8 +140,8 @@
         <DCCReference Include="..\..\DN.JSonFile.Uninstallation.pas"/>
         <DCCReference Include="..\..\DN.JSonFile.InstalledInfo.pas"/>
         <DCCReference Include="..\..\DN.Package.Github.pas"/>
-        <DCCReference Include="..\..\DN.ToolsApi.Extension.pas"/>
-        <DCCReference Include="..\..\DN.ToolsApi.Extension.Intf.pas"/>
+        <DCCReference Include="..\..\DN.EnvironmentOptions.IDE.pas"/>
+        <DCCReference Include="..\..\DN.EnvironmentOptions.Intf.pas"/>
         <DCCReference Include="..\..\DN.JSonFile.CacheInfo.pas"/>
         <DCCReference Include="..\..\DN.Package.Version.Intf.pas"/>
         <DCCReference Include="..\..\DN.Package.Version.pas"/>
@@ -187,15 +185,14 @@
         <DCCReference Include="..\..\DN.VariableResolver.Compiler.pas"/>
         <DCCReference Include="..\..\DN.VariableResolver.Intf.pas"/>
         <DCCReference Include="..\..\DN.VariableResolver.pas"/>
-        <DCCReference Include="..\..\DN.ToolsApi.ExpertService.pas"/>
-        <DCCReference Include="..\..\DN.ToolsApi.ExpertService.Intf.pas"/>
+        <DCCReference Include="..\..\DN.ExpertService.pas"/>
+        <DCCReference Include="..\..\DN.ExpertService.Intf.pas"/>
         <DCCReference Include="..\..\DN.FileService.pas"/>
         <DCCReference Include="..\..\DN.FileService.Intf.pas"/>
         <DCCReference Include="..\..\DN.Version.pas"/>
         <DCCReference Include="..\Delphinus.Resources.pas"/>
         <DCCReference Include="..\Delphinus.About.pas">
             <Form>AboutDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.Graphics.Loader.pas"/>
         <DCCReference Include="..\..\DN.Compiler.IDE.pas"/>
@@ -207,6 +204,11 @@
         <DCCReference Include="..\..\DN.PackageProvider.State.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.State.Intf.pas"/>
         <DCCReference Include="..\..\DN.PackageProvider.GitHub.State.pas"/>
+        <DCCReference Include="..\..\DN.BPLService.Intf.pas"/>
+        <DCCReference Include="..\..\DN.BPLService.ToolsApi.pas"/>
+        <DCCReference Include="..\..\DN.EnvironmentOptions.pas"/>
+        <DCCReference Include="..\..\DN.VariableResolver.Compiler.Factory.pas"/>
+        <DCCReference Include="..\..\DN.Utils.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
