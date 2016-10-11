@@ -25,6 +25,8 @@ type
     function CreateSetup: IDNSetup;
     function CreatePackageFinder(const APackages: TArray<IDNPackage>): IDNPackageFinder;
     function VersionFinder: IDNVersionFinder;
+    function GetPanicOnError: Boolean;
+    procedure SetPanicOnError(const Value: Boolean);
     property KnownCommands: TArray<TDNCommandClass> read GetKnownCommands;
     property OnlinePackages: TArray<IDNPackage> read GetOnlinePackages;
     property InstalledPackages: TArray<IDNPackage> read GetInstalledPackages;
@@ -32,6 +34,7 @@ type
     property Interactive: Boolean read GetInteractive write SetInteractive;
     property DelphiName: string read GetDelphiName write SetDelphiName;
     property DelphiInstallations: TArray<IDNDelphiInstallation> read GetDelphiInstallations;
+    property PanicOnError: Boolean read GetPanicOnError write SetPanicOnError;
   end;
 
 implementation

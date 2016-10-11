@@ -21,7 +21,9 @@ implementation
 
 uses
   DN.Command.Environment.Intf,
-  DN.Command.Switch.Delphi;
+  DN.Command.Switch.Delphi,
+  DN.Command.Switch.PanicOnError,
+  DN.Command.Types;
 
 { TDNCommandDefault }
 
@@ -43,6 +45,9 @@ begin
   if LDelphi.ShortName <> '' then
     LEnvironment.DelphiName := LDelphi.ShortName;
 
+  if HasSwitch<TDNCommandSwitchPanicOnError>() then
+    LEnvironment.PanicOnError := True;
+
   if LFirstRun or (LDelphi.ShortName <> '') then
     Writeln('Selected Delphi ' + LEnvironment.DelphiName);
 end;
@@ -55,12 +60,17 @@ end;
 class function TDNCommandDefault.SwitchClass(
   AIndex: Integer): TDNCommandSwitchClass;
 begin
-  Result := TDNCommandSwitchDelphi;
+  case AIndex of
+    0: Result := TDNCommandSwitchDelphi;
+    1: Result := TDNCommandSwitchPanicOnError;
+  else
+    raise EInvalidSwitchIndex.Create(AIndex);
+  end;
 end;
 
 class function TDNCommandDefault.SwitchClassCount: Integer;
 begin
-  Result := 1;
+  Result := 2;
 end;
 
 end.

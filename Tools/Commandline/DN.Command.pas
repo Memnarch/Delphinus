@@ -24,15 +24,13 @@ type
     procedure Initialize(const AArgument: IDNCommandArgument); reintroduce;
     procedure Execute; virtual; abstract;
     property Environment: IInterface read FEnvironment write FEnvironment;
-    class procedure Validate(const AArgument: IDNCommandArgument); reintroduce;
+    class procedure Validate(const AArgument: IDNCommandArgument); reintroduce; virtual;
     class function SwitchClassCount: Integer; virtual;
     class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; virtual;
     class function SwitchClassByName(const AName: string): TDNCommandSwitchClass;
   end;
 
   TDNCommandClass = class of TDNCommand;
-
-  ECommandValidation = class(ECommandSwitchValidation);
 
 implementation
 

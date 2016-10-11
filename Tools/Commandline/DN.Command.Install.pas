@@ -27,7 +27,8 @@ uses
   DN.Command.Environment.Intf,
   DN.Setup.Intf,
   DN.Version,
-  DN.Package.Finder.Intf;
+  DN.Package.Finder.Intf,
+  DN.Command.Types;
 
 const
   CID = 'ID';
@@ -61,11 +62,13 @@ begin
     LSetup := LEnvironment.CreateSetup();
     if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
     begin
-      LSetup.Update(LPackage, LVersion);
+      if not LSetup.Update(LPackage, LVersion) then
+        raise ECommandFailed.Create('Update failed');
     end
     else
     begin
-      LSetup.Install(LPackage, LVersion);
+      if not LSetup.Install(LPackage, LVersion)then
+        raise ECommandFailed.Create('Installation failed');
     end;
   finally
     EndBlock();

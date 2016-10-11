@@ -42,7 +42,10 @@ uses
   DN.TextTable.Intf in '..\..\..\DN.TextTable.Intf.pas',
   DN.Command.DelphiBlock in '..\DN.Command.DelphiBlock.pas',
   DN.Command.About in '..\DN.Command.About.pas',
-  DN.Command.Delphis in '..\DN.Command.Delphis.pas';
+  DN.Command.Delphis in '..\DN.Command.Delphis.pas',
+  DN.Command.Switch.PanicOnError in '..\DN.Command.Switch.PanicOnError.pas',
+  DN.Command.Types in '..\DN.Command.Types.pas',
+  DN.Command.Switch.Types in '..\DN.Command.Switch.Types.pas';
 
 var
   GDPM: TDPM;
@@ -51,12 +54,15 @@ begin
   try
     GDPM := TDPM.Create();
     try
-      GDPM.Run();
+      ExitCode := GDPM.Run();
     finally
       GDPM.Free;
     end;
   except
     on E: Exception do
+    begin
       Writeln(E.ClassName, ': ', E.Message);
+      ExitCode := 1;
+    end;
   end;
 end.

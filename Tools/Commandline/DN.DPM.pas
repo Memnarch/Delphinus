@@ -23,7 +23,7 @@ type
     function GetKnownCommands: TArray<TDNCommandClass>;
   public
     constructor Create;
-    procedure Run;
+    function Run: Cardinal;
   end;
 
 implementation
@@ -104,12 +104,13 @@ begin
   Result := LCommands.ToArray;
 end;
 
-procedure TDPM.Run;
+function TDPM.Run: Cardinal;
 var
   LParser: IDNCommandArgumentParser;
   LCommand: IDNCommandArgument;
   LLine: string;
 begin
+  Result := 0;
   LParser := TDNCommandArgumentParser.Create();
   LCommand := LParser.FromText(GetCommandLine());
   FDispatcher.Execute(LCommand);
@@ -122,7 +123,13 @@ begin
     except
       on E:Exception do
       begin
-        Writeln(E.Message);
+        if FEnvironment.PanicOnError then
+          raise
+        else
+        begin
+          Writeln(E.Message);
+          Inc(Result);
+        end;
       end;
     end;
   end;

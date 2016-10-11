@@ -22,6 +22,7 @@ implementation
 uses
   SysUtils,
   DN.Command.Environment.Intf,
+  DN.Command.Types,
   DN.Setup.Intf,
   DN.Package.Intf,
   DN.Package.Finder.Intf;
@@ -50,10 +51,8 @@ begin
     LFinder := LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages);
     LPackage := LFinder.Find(ReadParameter(CID));
     LSetup := LEnvironment.CreateSetup();
-    if LSetup.Uninstall(LPackage) then
-      Exit
-    else
-      raise Exception.Create('Could not uninstall ' + LPackage.Name);
+    if not LSetup.Uninstall(LPackage) then
+      raise ECommandFailed.Create('Could not uninstall ' + LPackage.Name);
   finally
     EndBlock();
   end;

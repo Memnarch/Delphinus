@@ -27,6 +27,7 @@ type
     FCurrentDelphi: IDNDelphiInstallation;
     FInteractive: Boolean;
     FVersionFinder: IDNVersionFinder;
+    FPanicOnError: Boolean;
     function GetInstalledPackageProvider: IDNPackageProvider;
     function GetKnownCommands: TArray<TDNCommandClass>;
     function GetOnlinePackages: TArray<IDNPackage>;
@@ -37,6 +38,8 @@ type
     procedure RequiresCurrentDelphi;
     function GetDelphiName: string;
     procedure SetDelphiName(const Value: string);
+    function GetPanicOnError: Boolean;
+    procedure SetPanicOnError(const Value: Boolean);
     procedure DefaultMessageHandler(AMessageType: TMessageType; const AMessage: string);
   public
     constructor Create(const AKnownCommands: TArray<TDNCommandClass>;
@@ -185,6 +188,11 @@ begin
   Result := FOnlinePackageProvider.Packages.ToArray;
 end;
 
+function TDNCommandEnvironment.GetPanicOnError: Boolean;
+begin
+  Result := FPanicOnError;
+end;
+
 function TDNCommandEnvironment.GetUpdatePackages: TArray<IDNPackage>;
 var
   LUpdates: TList<IDNPackage>;
@@ -258,6 +266,11 @@ end;
 procedure TDNCommandEnvironment.SetInteractive(const Value: Boolean);
 begin
   FInteractive := Value;
+end;
+
+procedure TDNCommandEnvironment.SetPanicOnError(const Value: Boolean);
+begin
+  FPanicOnError := Value;
 end;
 
 function TDNCommandEnvironment.VersionFinder: IDNVersionFinder;

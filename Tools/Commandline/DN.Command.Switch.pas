@@ -31,9 +31,10 @@ type
 
   TDNCommandSwitchClass = class of TDNCommandSwitch;
 
-  ECommandSwitchValidation = class(Exception);
-
 implementation
+
+uses
+  DN.Command.Switch.Types;
 
 { TDNCommandSwitch }
 

@@ -5,6 +5,7 @@ interface
 uses
   DN.Command,
   DN.Command.Switch,
+  DN.Command.Argument.Intf,
   DN.Package.Intf;
 
 type
@@ -22,6 +23,7 @@ type
     class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; override;
     class function SwitchClassCount: Integer; override;
     procedure Execute; override;
+    class procedure Validate(const AArgument: IDNCommandArgument); override;
   end;
 
 implementation
@@ -32,6 +34,7 @@ uses
   DN.Command.Environment.Intf,
   DN.Command.Switch.Versions,
   DN.Command.Switch.License,
+  DN.Command.Types,
   DN.Package.Version.Intf,
   DN.TextTable.Intf,
   DN.TextTable;
@@ -64,9 +67,6 @@ var
   LEnvironment: IDNCommandEnvironment;
 begin
   inherited;
-  if SwitchCount > 1 then
-    raise Exception.Create('you can only display one detail at a time');
-
   LEnvironment := Environment as IDNCommandEnvironment;
   LPackage := LEnvironment.CreatePackageFinder(LEnvironment.OnlinePackages).Find(ReadParameter(CID));
 
@@ -170,6 +170,13 @@ end;
 class function TDNCommandInfo.SwitchClassCount: Integer;
 begin
   Result := 2;
+end;
+
+class procedure TDNCommandInfo.Validate(const AArgument: IDNCommandArgument);
+begin
+  inherited;
+  if Length(AArgument.Switches) > 1 then
+    raise ECommandValidation.Create('you can display only one detail at a time');
 end;
 
 end.
