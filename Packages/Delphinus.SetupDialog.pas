@@ -298,7 +298,7 @@ procedure TSetupDialog.InitVersionSelection;
 var
   i: Integer;
 begin
-  cbVersion.Enabled := FPackage.Versions.Count > 0;
+  cbVersion.Enabled := (FPackage.Versions.Count > 0) and (not FPackage.Versions.First.Value.IsEmpty);
   for i := 0 to FPackage.Versions.Count - 1 do
   begin
     cbVersion.Items.Add(FPackage.Versions[i].Name);

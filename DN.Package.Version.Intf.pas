@@ -10,8 +10,10 @@ unit DN.Package.Version.Intf;
 interface
 
 uses
+  Generics.Collections,
   DN.Types,
-  DN.Version;
+  DN.Version,
+  DN.Package.Dependency.Intf;
 
 type
   IDNPackageVersion = interface
@@ -24,10 +26,12 @@ type
     procedure SetCompilerMin(const Value: TCompilerVersion);
     procedure SetName(const Value: string);
     procedure SetValue(const Value: TDNVersion);
+    function GetDependencies: TList<IDNPackageDependency>;
     property Name: string read GetName write SetName;
     property Value: TDNVersion read GetValue write SetValue;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
+    property Dependencies: TList<IDNPackageDependency> read GetDependencies;
   end;
 
 implementation

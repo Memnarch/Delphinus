@@ -130,7 +130,9 @@ contains
   DN.BPLService.ToolsApi in '..\..\DN.BPLService.ToolsApi.pas',
   DN.EnvironmentOptions in '..\..\DN.EnvironmentOptions.pas',
   DN.VariableResolver.Compiler.Factory in '..\..\DN.VariableResolver.Compiler.Factory.pas',
-  DN.Utils in '..\..\DN.Utils.pas';
+  DN.Utils in '..\..\DN.Utils.pas',
+  DN.Package.Dependency.Intf in '..\..\DN.Package.Dependency.Intf.pas',
+  DN.Package.Dependency in '..\..\DN.Package.Dependency.pas';
 
 end.
 

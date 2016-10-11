@@ -24,7 +24,8 @@ uses
   DN.HttpClient.Intf,
   DN.JSon,
   DN.JSOnFile.Info,
-  DN.PackageProvider.State.Intf;
+  DN.PackageProvider.State.Intf,
+  DN.Package.Version.Intf;
 
 type
   TDNGitHubPackageProvider = class(TDNPackageProvider, IDNProgress, IDNPackageProviderState)
@@ -36,6 +37,7 @@ type
     FState: IDNPackageProviderState;
     FLoadPictures: Boolean;
     function LoadVersionInfo(const APackage: IDNPackage; const AAuthor, AName, AFirstVersion, AReleases: string): Boolean;
+    procedure AddDependencies(const AVersion: IDNPackageVersion; AInf: TInfoFile);
     procedure AddPackageFromJSon(AJSon: TJSONObject);
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);
@@ -74,11 +76,13 @@ uses
   StrUtils,
   jpeg,
   pngimage,
+  DN.Version,
   DN.Types,
   DN.Package,
   DN.Zip,
   DN.Package.Version,
-  DN.Package.Version.Intf,
+  DN.Package.Dependency,
+  DN.Package.Dependency.Intf,
   DN.Progress,
   DN.Environment,
   DN.Graphics.Loader,
@@ -95,6 +99,19 @@ type
   ERateLimitException = EAbort;
 
 { TDCPMPackageProvider }
+
+procedure TDNGitHubPackageProvider.AddDependencies(
+  const AVersion: IDNPackageVersion; AInf: TInfoFile);
+var
+  LInfDependency: TInfoDependency;
+  LDependency: IDNPackageDependency;
+begin
+  for LInfDependency in AInf.Dependencies do
+  begin
+    LDependency := TDNPackageDependency.Create(LInfDependency.ID, LInfDependency.Version);
+    AVersion.Dependencies.Add(LDependency);
+  end;
+end;
 
 procedure TDNGitHubPackageProvider.AddPackageFromJSon(AJSon: TJSONObject);
 var
@@ -142,6 +159,7 @@ var
   LFullName, LPushDate, LOldPushDate: string;
   LHeadInfo: TInfoFile;
   LHomePage: TJSONValue;
+  LHeadVersion: TDNPackageVersion;
 const
   CArchivePlaceholder = '{archive_format}{/ref}';
 begin
@@ -195,6 +213,13 @@ begin
       if FLoadPictures then
         LoadPicture(APackage.Picture, LAuthor, LPackage.RepositoryName, LPackage.DefaultBranch, LHeadInfo.Picture);
       LoadVersionInfo(APackage, LAuthor, LName, LHeadInfo.FirstVersion, LReleases);
+      LHeadVersion := TDNPackageVersion.Create();
+      LHeadVersion.Name := 'HEAD';
+      LHeadVersion.Value := TDNVersion.Create();
+      LHeadVersion.CompilerMin := LHeadInfo.CompilerMin;
+      LHeadVersion.CompilerMax := LHeadInfo.CompilerMax;
+      AddDependencies(LHeadVersion, LHeadInfo);
+      APackage.Versions.Add(LHeadVersion);
       FPushDates.AddOrSetValue(LFullName, LPushDate);
       Result := True;
     end;
@@ -271,6 +296,7 @@ begin
           LVersion.Name := LVersionName;
           LVersion.CompilerMin := LInfo.CompilerMin;
           LVersion.CompilerMax := LInfo.CompilerMax;
+          AddDependencies(LVersion, LInfo);
           APackage.Versions.Add(LVersion);
         end;
         if SameText(AFirstVersion, LVersionName) then

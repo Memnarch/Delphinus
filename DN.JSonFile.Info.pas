@@ -13,12 +13,19 @@ uses
   Classes,
   Types,
   SysUtils,
+  Generics.Collections,
+  DN.Version,
   DN.Types,
   DN.JSon,
   DN.JSonFile,
   DN.Compiler.Intf;
 
 type
+  TInfoDependency = record
+    ID: TGUID;
+    Version: TDNVersion;
+  end;
+
   TInfoFile = class(TJSonFile)
   private
     FID: TGUID;
@@ -32,13 +39,18 @@ type
     FLicenseFile: string;
     FLicenseType: string;
     FPlatforms: TDNCompilerPlatforms;
+    FDependencies: TList<TInfoDependency>;
   protected
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
     procedure LoadPlatforms(const APlatforms: string);
+    procedure LoadDependencies(const ADependencies: TJSONArray);
+    procedure SaveDependencies(const ADependencies: TJSONArray);
     function GetPlatformString: string;
     function ReadID(const AObject: TJSONObject): TGUID;
   public
+    constructor Create;
+    destructor Destroy; override;
     property Picture: string read FPicture;
     property ID: TGUID read FID write FID;
     property Name: string read FName write FName;
@@ -50,6 +62,7 @@ type
     property CompilerMin: TCompilerVersion read FCompilerMin;
     property CompilerMax: TCompilerVersion read FCompilerMax;
     property Platforms: TDNCompilerPlatforms read FPlatforms;
+    property Dependencies: TList<TInfoDependency> read FDependencies;
   end;
 
 implementation
@@ -59,6 +72,18 @@ uses
   DN.Utils;
 
 { TInfoFile }
+
+constructor TInfoFile.Create;
+begin
+  inherited Create();
+  FDependencies := TList<TInfoDependency>.Create();
+end;
+
+destructor TInfoFile.Destroy;
+begin
+  FDependencies.Free;
+  inherited;
+end;
 
 function TInfoFile.GetPlatformString: string;
 var
@@ -77,6 +102,8 @@ begin
 end;
 
 procedure TInfoFile.Load(const ARoot: TJSONObject);
+var
+  LDependencies: TJSONArray;
 begin
   inherited;
   FPicture := ReadString(ARoot, 'picture');
@@ -90,6 +117,23 @@ begin
   FPackageCompilerMax := ReadFloat(ARoot, 'package_compiler_max', FCompilerMax);
   FPackageCompilerMin := ReadFloat(ARoot, 'package_compiler_min', FCompilerMin);
   LoadPlatforms(ReadString(ARoot, 'platforms'));
+  if ARoot.TryGetValue<TJSONArray>('dependencies', LDependencies) then
+    LoadDependencies(LDependencies);
+end;
+
+procedure TInfoFile.LoadDependencies(const ADependencies: TJSONArray);
+var
+  LValue: TJSONValue;
+  LObject: TJSONObject;
+  LDependency: TInfoDependency;
+begin
+  for LValue in ADependencies do
+  begin
+    LObject := LValue as TJSONObject;
+    LDependency.ID := ReadID(LObject);
+    LDependency.Version := TDNVersion.Parse(ReadString(LObject, 'version_min'));
+    FDependencies.Add(LDependency);
+  end;
 end;
 
 procedure TInfoFile.LoadPlatforms(const APlatforms: string);
@@ -125,6 +169,8 @@ begin
 end;
 
 procedure TInfoFile.Save(const ARoot: TJSONObject);
+var
+  LDependencies: TJSONArray;
 begin
   inherited;
   WritePath(ARoot, 'picture', FPicture);
@@ -138,6 +184,21 @@ begin
   WriteFloat(ARoot, 'compiler_min', FCompilerMin);
   WriteFloat(ARoot, 'compiler_max', FCompilerMax);
   WriteString(ARoot, 'platforms', GetPlatformString());
+  LDependencies := WriteArray(ARoot, 'dependencies');
+  SaveDependencies(LDependencies);
+end;
+
+procedure TInfoFile.SaveDependencies(const ADependencies: TJSONArray);
+var
+  LObject: TJSONObject;
+  LDependency: TInfoDependency;
+begin
+  for LDependency in FDependencies do
+  begin
+    LObject := WriteArrayObject(ADependencies);
+    WriteString(LObject, 'id', LDependency.ID.ToString);
+    WriteString(LObject, 'version_min', LDependency.Version.ToString);
+  end;
 end;
 
 end.

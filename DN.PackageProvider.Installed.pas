@@ -73,11 +73,11 @@ begin
         APackage.ProjectUrl := LInfo.ProjectUrl;
         APackage.HomepageUrl := LInfo.HomepageUrl;
         APackage.ReportUrl := LInfo.ReportUrl;
-        if LInfo.Version <> '' then
+        if not LInfo.Version.IsEmpty then
         begin
           LVersion := TDNPackageVersion.Create();
-          if LInfo.Version <> '' then
-            LVersion.Name := LInfo.Version;
+          LVersion.Name := LInfo.Version.ToString;
+          LVersion.Value := LInfo.Version;
 
           LVersion.CompilerMin := LInfo.CompilerMin;
           LVersion.CompilerMax := LInfo.CompilerMax;

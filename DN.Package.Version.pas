@@ -10,9 +10,11 @@ unit DN.Package.Version;
 interface
 
 uses
+  Generics.Collections,
   DN.Types,
   DN.Version,
-  DN.Package.Version.Intf;
+  DN.Package.Version.Intf,
+  DN.Package.Dependency.Intf;
 
 type
   TDNPackageVersion = class(TInterfacedObject, IDNPackageVersion)
@@ -21,6 +23,7 @@ type
     FValue: TDNVersion;
     FCompilerMin: TCompilerVersion;
     FCompilerMax: TCompilerVersion;
+    FDependencies: TList<IDNPackageDependency>;
     function GetCompilerMax: TCompilerVersion;
     function GetCompilerMin: TCompilerVersion;
     function GetName: string;
@@ -29,16 +32,32 @@ type
     procedure SetName(const Value: string);
     function GetValue: TDNVersion;
     procedure SetValue(const Value: TDNVersion);
+    function GetDependencies: TList<IDNPackageDependency>;
   public
+    constructor Create;
+    destructor Destroy; override;
     property Name: string read GetName write SetName;
     property Value: TDNVersion read GetValue write SetValue;
     property CompilerMin: TCompilerVersion read GetCompilerMin write SetCompilerMin;
     property CompilerMax: TCompilerVersion read GetCompilerMax write SetCompilerMax;
+    property Dependencies: TList<IDNPackageDependency> read GetDependencies;
   end;
 
 implementation
 
 { TDNPackageVersion }
+
+constructor TDNPackageVersion.Create;
+begin
+  inherited;
+  FDependencies := TList<IDNPackageDependency>.Create();
+end;
+
+destructor TDNPackageVersion.Destroy;
+begin
+  FDependencies.Free;
+  inherited;
+end;
 
 function TDNPackageVersion.GetCompilerMax: TCompilerVersion;
 begin
@@ -48,6 +67,11 @@ end;
 function TDNPackageVersion.GetCompilerMin: TCompilerVersion;
 begin
   Result := FCompilerMin;
+end;
+
+function TDNPackageVersion.GetDependencies: TList<IDNPackageDependency>;
+begin
+  Result := FDependencies;
 end;
 
 function TDNPackageVersion.GetName: string;

@@ -170,7 +170,7 @@ begin
       LInstalledInfo.Author := APackage.Author;
       LInstalledInfo.Description := APackage.Description;
       if Assigned(AVersion) then
-        LInstalledInfo.Version := AVersion.Name;
+        LInstalledInfo.Version := AVersion.Value;
 
       LInstalledInfo.ProjectUrl := APackage.ProjectUrl;
       LInstalledInfo.HomepageUrl := APackage.HomepageUrl;
