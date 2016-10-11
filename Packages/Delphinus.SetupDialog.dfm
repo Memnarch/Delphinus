@@ -5,7 +5,7 @@ object SetupDialog: TSetupDialog
   BorderStyle = bsSingle
   Caption = 'Setup'
   ClientHeight = 175
-  ClientWidth = 461
+  ClientWidth = 469
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,7 +22,7 @@ object SetupDialog: TSetupDialog
   object pcSteps: TPageControl
     Left = 0
     Top = 0
-    Width = 461
+    Width = 469
     Height = 175
     ActivePage = tsMainPage
     Align = alClient
@@ -32,7 +32,7 @@ object SetupDialog: TSetupDialog
       Caption = 'tsMainPage'
       TabVisible = False
       DesignSize = (
-        453
+        461
         165)
       object Image1: TImage
         Left = 3
@@ -45,7 +45,7 @@ object SetupDialog: TSetupDialog
         AlignWithMargins = True
         Left = 137
         Top = 3
-        Width = 313
+        Width = 321
         Height = 30
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
@@ -56,6 +56,7 @@ object SetupDialog: TSetupDialog
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentFont = False
+        ExplicitWidth = 313
       end
       object Label1: TLabel
         Left = 137
@@ -91,7 +92,7 @@ object SetupDialog: TSetupDialog
         Caption = 'License:'
       end
       object btnOK: TButton
-        Left = 294
+        Left = 302
         Top = 137
         Width = 75
         Height = 25
@@ -101,7 +102,7 @@ object SetupDialog: TSetupDialog
         OnClick = HandleOK
       end
       object btnCancel: TButton
-        Left = 375
+        Left = 383
         Top = 137
         Width = 75
         Height = 25
@@ -117,6 +118,7 @@ object SetupDialog: TSetupDialog
         Height = 21
         Style = csDropDownList
         TabOrder = 2
+        OnChange = cbVersionChange
       end
       object btnLicense: TButton
         Left = 375
@@ -128,13 +130,24 @@ object SetupDialog: TSetupDialog
         TabOrder = 3
         OnClick = btnLicenseClick
       end
+      object btnDependencies: TButton
+        Left = 420
+        Top = 50
+        Width = 38
+        Height = 38
+        Hint = 'Show License'
+        Enabled = False
+        Images = ilButtons
+        TabOrder = 4
+        OnClick = btnDependenciesClick
+      end
     end
     object tsProgress: TTabSheet
       Caption = 'tsProgress'
       ImageIndex = 2
       TabVisible = False
       DesignSize = (
-        453
+        461
         165)
       object lbAction: TLabel
         Left = 3
@@ -146,13 +159,13 @@ object SetupDialog: TSetupDialog
       object pbProgress: TProgressBar
         Left = 3
         Top = 72
-        Width = 447
+        Width = 455
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
       end
       object btnCloseProgress: TButton
-        Left = 375
+        Left = 383
         Top = 139
         Width = 75
         Height = 25
@@ -163,7 +176,7 @@ object SetupDialog: TSetupDialog
         TabOrder = 1
       end
       object btnShowLog: TButton
-        Left = 294
+        Left = 302
         Top = 139
         Width = 75
         Height = 25
@@ -182,7 +195,7 @@ object SetupDialog: TSetupDialog
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 447
+        Width = 455
         Height = 159
         Align = alClient
         ReadOnly = True

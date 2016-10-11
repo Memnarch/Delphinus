@@ -35,6 +35,8 @@ const
   Ico_Bug = 'Ico_Bug';
   Ico_Bug_Disabled = 'Ico_Bug_Disabled';
   Ico_Warning = 'Ico_Warning';
+  Ico_Dependency = 'Ico_Dependency';
+  Ico_Dependency_Disabled = 'Ico_Dependency_Disabled';
 
   Png_Package = 'Png_Package';
 

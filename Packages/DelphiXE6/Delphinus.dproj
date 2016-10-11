@@ -211,6 +211,8 @@
         <DCCReference Include="..\..\DN.Utils.pas"/>
         <DCCReference Include="..\..\DN.Package.Dependency.Intf.pas"/>
         <DCCReference Include="..\..\DN.Package.Dependency.pas"/>
+        <DCCReference Include="..\..\DN.Package.DirectoryLoader.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Package.DirectoryLoader.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

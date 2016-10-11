@@ -15,6 +15,7 @@ uses
   DN.PackageProvider.Intf,
   DN.Package.Intf,
   DN.Package.Version.Intf,
+  DN.Package.DirectoryLoader.Intf,
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
   StdCtrls,
@@ -53,11 +54,14 @@ type
     lbAction: TLabel;
     btnShowLog: TButton;
     ilButtons: TImageList;
+    btnDependencies: TButton;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnShowLogClick(Sender: TObject);
+    procedure cbVersionChange(Sender: TObject);
+    procedure btnDependenciesClick(Sender: TObject);
   private
     { Private declarations }
     FMode: TSetupDialogMode;
@@ -66,6 +70,7 @@ type
     FDirectoryToInstall: string;
     FSetup: IDNSetup;
     FSetupIsRunning: Boolean;
+    FLoader: IDNPackageDirectoryLoader;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
     procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
@@ -74,6 +79,7 @@ type
     procedure Execute();
     procedure SetupFinished;
     function GetSelectedVersion: IDNPackageVersion;
+    function LoadPackage(const ADirectory: string): IDNPackage;
   public
     { Public declarations }
     constructor Create(const ASetup: IDNSetup); reintroduce;
@@ -95,11 +101,18 @@ uses
   DN.JSonFile.InstalledInfo,
   Delphinus.LicenseDialog,
   Delphinus.Resources.Names,
-  Delphinus.Resources;
+  Delphinus.Resources,
+  DN.Package.DirectoryLoader,
+  DN.Package;
 
 {$R *.dfm}
 
 { TSetupDialog }
+
+procedure TSetupDialog.btnDependenciesClick(Sender: TObject);
+begin
+//
+end;
 
 procedure TSetupDialog.btnLicenseClick(Sender: TObject);
 var
@@ -119,6 +132,18 @@ begin
   pcSteps.ActivePage := tsLog;
 end;
 
+procedure TSetupDialog.cbVersionChange(Sender: TObject);
+begin
+  if cbVersion.ItemIndex > -1 then
+  begin
+    btnDependencies.Enabled := FPackage.Versions[cbVersion.ItemIndex].Dependencies.Count > 0;
+  end
+  else
+  begin
+    btnDependencies.Enabled := False;
+  end;
+end;
+
 constructor TSetupDialog.Create(const ASetup: IDNSetup);
 begin
   inherited Create(nil);
@@ -127,6 +152,8 @@ begin
   FSetup.OnProgress := HandleProgress;
   btnLicense.ImageIndex := AddIconToImageList(ilButtons, Ico_Agreement);
   btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
+  btnDependencies.ImageIndex := AddIconToImageList(ilButtons, Ico_Dependency);
+  btnDependencies.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Dependency_Disabled);
 end;
 
 procedure TSetupDialog.Execute;
@@ -173,6 +200,7 @@ function TSetupDialog.ExecuteInstallationFromDirectory(
 begin
   FDirectoryToInstall := ADirectory;
   FMode := sdmInstallDirectory;
+  FPackage := LoadPackage(ADirectory);
   Result := ShowModal() <> mrCancel;
 end;
 
@@ -188,6 +216,7 @@ function TSetupDialog.ExecuteUninstallationFromDirectory(
 begin
   FInstalledComponentDirectory := ADirectory;
   FMode := sdmUninstallDirectory;
+  FPackage := LoadPackage(ADirectory);
   Result := ShowModal() <> mrCancel;
 end;
 
@@ -258,19 +287,21 @@ end;
 procedure TSetupDialog.InitMainPage;
 begin
   pcSteps.ActivePage := tsMainPage;
+  if not Assigned(FPackage) then
+    Exit;
   case FMode of
-    sdmInstall:
+    sdmInstall, sdmInstallDirectory:
     begin
       btnOK.Caption := 'Install';
       lbNameInstallUpdate.Caption := FPackage.Name;
       lbLicenseType.Caption := FPackage.LicenseType;
-      btnLicense.Visible := lbLicenseType.Caption <> '';
+      btnLicense.Enabled := lbLicenseType.Caption <> '';
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       InitVersionSelection();
     end;
-//    sdmInstallDirectory: ;
-    sdmUninstall:
+
+    sdmUninstall, sdmUninstallDirectory:
     begin
       btnOK.Caption := 'Uninstall';
       lbNameInstallUpdate.Caption := FPackage.Name;
@@ -279,10 +310,10 @@ begin
         Image1.Picture.Assign(FPackage.Picture);
       Label1.Visible := False;
       cbVersion.Visible := False;
-      lbLicenseAnotation.Visible := False;
       btnLicense.Visible := False;
+      lbLicenseAnotation.Visible := False;
     end;
-//    sdmUninstallDirectory: ;
+
     sdmUpdate:
     begin
       btnOK.Caption := 'Update';
@@ -304,6 +335,15 @@ begin
     cbVersion.Items.Add(FPackage.Versions[i].Name);
   end;
   cbVersion.ItemIndex := 0;
+  cbVersionChange(cbVersion);
+end;
+
+function TSetupDialog.LoadPackage(const ADirectory: string): IDNPackage;
+begin
+  if not Assigned(FLoader) then
+    FLoader := TDNPackageDirectoryLoader.Create();
+  Result := TDNPackage.Create();
+  FLoader.Load(ADirectory, Result);
 end;
 
 procedure TSetupDialog.Log(const AMessage: string);
