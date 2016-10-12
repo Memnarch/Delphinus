@@ -135,7 +135,7 @@ object SetupDialog: TSetupDialog
         Top = 50
         Width = 38
         Height = 38
-        Hint = 'Show License'
+        Hint = 'Show Dependencies'
         Enabled = False
         Images = ilButtons
         TabOrder = 4

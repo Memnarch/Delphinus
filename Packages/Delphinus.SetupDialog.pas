@@ -16,6 +16,8 @@ uses
   DN.Package.Intf,
   DN.Package.Version.Intf,
   DN.Package.DirectoryLoader.Intf,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Intf,
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
   StdCtrls,
@@ -71,6 +73,8 @@ type
     FSetup: IDNSetup;
     FSetupIsRunning: Boolean;
     FLoader: IDNPackageDirectoryLoader;
+    FInstallResolver: IDNSetupDependencyResolver;
+    FDependencies: TArray<IDNSetupDependency>;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
     procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
@@ -80,9 +84,10 @@ type
     procedure SetupFinished;
     function GetSelectedVersion: IDNPackageVersion;
     function LoadPackage(const ADirectory: string): IDNPackage;
+    procedure ResolveInstallDependencies;
   public
     { Public declarations }
-    constructor Create(const ASetup: IDNSetup); reintroduce;
+    constructor Create(const ASetup: IDNSetup; const AInstallResolver: IDNSetupDependencyResolver); reintroduce;
     function ExecuteInstallation(const APackage: IDNPackage): Boolean;
     function ExecuteInstallationFromDirectory(const ADirectory: string): Boolean;
     function ExecuteUninstallation(const APackage: IDNPackage): Boolean;
@@ -103,15 +108,24 @@ uses
   Delphinus.Resources.Names,
   Delphinus.Resources,
   DN.Package.DirectoryLoader,
-  DN.Package;
+  DN.Package,
+  Delphinus.DependencyDialog;
 
 {$R *.dfm}
 
 { TSetupDialog }
 
 procedure TSetupDialog.btnDependenciesClick(Sender: TObject);
+var
+  LDialog: TDependencyDialog;
 begin
-//
+  LDialog := TDependencyDialog.Create(nil);
+  try
+    LDialog.Dependencies := FDependencies;
+    LDialog.ShowModal();
+  finally
+    LDialog.Free();
+  end;
 end;
 
 procedure TSetupDialog.btnLicenseClick(Sender: TObject);
@@ -137,6 +151,8 @@ begin
   if cbVersion.ItemIndex > -1 then
   begin
     btnDependencies.Enabled := FPackage.Versions[cbVersion.ItemIndex].Dependencies.Count > 0;
+    if FMode in [sdmInstall, sdmInstallDirectory] then
+      ResolveInstallDependencies();
   end
   else
   begin
@@ -144,16 +160,17 @@ begin
   end;
 end;
 
-constructor TSetupDialog.Create(const ASetup: IDNSetup);
+constructor TSetupDialog.Create(const ASetup: IDNSetup; const AInstallResolver: IDNSetupDependencyResolver);
 begin
   inherited Create(nil);
+  FInstallResolver := AInstallResolver;
   FSetup := ASetup;
   FSetup.OnMessage := HandleLogMessage;
   FSetup.OnProgress := HandleProgress;
   btnLicense.ImageIndex := AddIconToImageList(ilButtons, Ico_Agreement);
   btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
-  btnDependencies.ImageIndex := AddIconToImageList(ilButtons, Ico_Dependency);
-  btnDependencies.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Dependency_Disabled);
+  btnDependencies.ImageIndex := AddIconToImageList(ilButtons, Ico_Dependencies);
+  btnDependencies.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Dependencies_Disabled);
 end;
 
 procedure TSetupDialog.Execute;
@@ -349,6 +366,11 @@ end;
 procedure TSetupDialog.Log(const AMessage: string);
 begin
   mLog.Lines.Add(AMessage);
+end;
+
+procedure TSetupDialog.ResolveInstallDependencies;
+begin
+  FDependencies := FInstallResolver.Resolver(FPackage, FPackage.Versions[cbVersion.ItemIndex]);
 end;
 
 procedure TSetupDialog.SetupFinished;

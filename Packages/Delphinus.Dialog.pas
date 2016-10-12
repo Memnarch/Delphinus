@@ -22,6 +22,7 @@ uses
   Delphinus.Forms,
   DN.Settings.Intf,
   DN.Setup.Intf,
+  DN.Setup.Dependency.Resolver.Intf,
   DN.FileService.Intf,
   Delphinus.CategoryFilterView,
   Delphinus.ProgressDialog,
@@ -82,6 +83,7 @@ type
     FFileService: IDNFileService;
     FDummyPic: TGraphic;
     FEnvironmentOptionsService: IDNEnvironmentOptionsService;
+    procedure ReloadPackages;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
@@ -98,6 +100,7 @@ type
     procedure ShowDetail(const APackage: IDNPackage);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
+    function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
     function IsStarter: Boolean;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     procedure HandleSelectedPackageChanged(Sender: TObject);
@@ -126,6 +129,8 @@ uses
   Types,
   PNGImage,
   DN.Types,
+  DN.Package.Finder.Intf,
+  DN.Package.Finder,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   DN.PackageProvider.State.Intf,
@@ -138,6 +143,7 @@ uses
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
   DN.Setup,
+  DN.Setup.Dependency.Resolver,
   Delphinus.OptionsDialog,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
@@ -197,50 +203,7 @@ end;
 
 procedure TDelphinusDialog.actRefreshExecute(Sender: TObject);
 begin
-  TThread.CreateAnonymousThread(
-    procedure
-    var
-      LProgress: IDNProgress;
-      LMessage: string;
-    begin
-      try
-        try
-          if Supports(FPackageProvider, IDNProgress, LProgress) then
-            LProgress.OnProgress := HandleAsyncProgress;
-          if FPackageProvider.Reload() then
-          begin
-            FPackages.Clear;
-            FPackages.AddRange(FPackageProvider.Packages);
-          end;
-        finally
-          if Assigned(LProgress) then
-            LProgress.OnProgress := nil;
-          TThread.Queue(nil,
-            procedure
-            begin
-              begin
-                FCategoryFilteView.OnlineCount := FPackages.Count;
-                RefreshInstalledPackages();
-                FProgressDialog.ModalResult := mrOk;
-              end;
-            end);
-        end;
-      except
-        on E: Exception do
-        begin
-          LMessage := E.ToString;
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowWarning('Error occured while reloading packages: ' + LMessage);
-            end);
-        end;
-      end;
-    end).Start;
-  FProgressDialog.Caption := 'Delphinus';
-  FProgressDialog.Task := 'Refreshing';
-  FProgressDialog.Progress := -1;
-  FProgressDialog.ShowModal();
+  ReloadPackages();
 end;
 
 procedure TDelphinusDialog.btnInstallFolderClick(Sender: TObject);
@@ -249,7 +212,7 @@ var
 begin
   if dlgSelectInstallFile.Execute() then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
     try
       if LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName)) then
         RefreshInstalledPackages();
@@ -308,6 +271,22 @@ begin
   FFileService.Cleanup();
   if IsStarter then
     Caption := Caption + ' (Starter Edition)';
+end;
+
+function TDelphinusDialog.CreateInstallDependencyResolver: IDNSetupDependencyResolver;
+begin
+  Result := TDNSetupDependencyResolver.Create(
+    function: IDNPackageFinder
+    begin
+      Result := TDNPackageFinder.Create(FInstalledPackages.ToArray);
+    end,
+    function: IDNPackageFinder
+    begin
+      if FPackages.Count = 0 then
+        ReloadPackages();
+      Result := TDNPackageFinder.Create(FPackages.ToArray);
+    end
+  );
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -535,7 +514,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
     try
       if LDialog.ExecuteInstallation(APackage) then
         RefreshInstalledPackages();
@@ -639,6 +618,54 @@ begin
   GetActiveOverView().Packages.AddRange(GetActivePackageSource());
 end;
 
+procedure TDelphinusDialog.ReloadPackages;
+begin
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      LProgress: IDNProgress;
+      LMessage: string;
+    begin
+      try
+        try
+          if Supports(FPackageProvider, IDNProgress, LProgress) then
+            LProgress.OnProgress := HandleAsyncProgress;
+          if FPackageProvider.Reload() then
+          begin
+            FPackages.Clear;
+            FPackages.AddRange(FPackageProvider.Packages);
+          end;
+        finally
+          if Assigned(LProgress) then
+            LProgress.OnProgress := nil;
+          TThread.Queue(nil,
+            procedure
+            begin
+              begin
+                FCategoryFilteView.OnlineCount := FPackages.Count;
+                RefreshInstalledPackages();
+                FProgressDialog.ModalResult := mrOk;
+              end;
+            end);
+        end;
+      except
+        on E: Exception do
+        begin
+          LMessage := E.ToString;
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowWarning('Error occured while reloading packages: ' + LMessage);
+            end);
+        end;
+      end;
+    end).Start;
+  FProgressDialog.Caption := 'Delphinus';
+  FProgressDialog.Task := 'Refreshing';
+  FProgressDialog.Progress := -1;
+  FProgressDialog.ShowModal();
+end;
+
 procedure TDelphinusDialog.ShowDetail(const APackage: IDNPackage);
 begin
   FDetailView.Package := APackage;
@@ -657,7 +684,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
     try
       if LDialog.ExecuteUninstallation(APackage) then
         RefreshInstalledPackages();
@@ -673,7 +700,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
     try
       if LDialog.ExecuteUpdate(GetOnlinePackage(APackage))then
         RefreshInstalledPackages();

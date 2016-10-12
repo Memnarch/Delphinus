@@ -213,6 +213,16 @@
         <DCCReference Include="..\..\DN.Package.Dependency.pas"/>
         <DCCReference Include="..\..\DN.Package.DirectoryLoader.Intf.pas"/>
         <DCCReference Include="..\..\DN.Package.DirectoryLoader.pas"/>
+        <DCCReference Include="..\Delphinus.DependencyDialog.pas">
+            <Form>DependencyDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\DN.Setup.Dependency.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.pas"/>
+        <DCCReference Include="..\..\DN.Package.Finder.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Package.Finder.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
