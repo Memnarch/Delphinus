@@ -95,6 +95,11 @@
         <DCCReference Include="..\..\DN.Settings.pas"/>
         <DCCReference Include="..\..\DN.Settings.Intf.pas"/>
         <DCCReference Include="..\..\DN.Uninstaller.Delphinus.pas"/>
+        <DCCReference Include="..\..\DN.DelphiInstallation.Editions.pas"/>
+        <DCCReference Include="..\..\DN.VariableResolver.Compiler.Factory.pas"/>
+        <DCCReference Include="..\..\DN.VariableResolver.Compiler.pas"/>
+        <DCCReference Include="..\..\DN.VariableResolver.Intf.pas"/>
+        <DCCReference Include="..\..\DN.VariableResolver.pas"/>
         <RcItem Include="..\..\Icons\Package.jpg">
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>Jpg_Package</ResourceId>

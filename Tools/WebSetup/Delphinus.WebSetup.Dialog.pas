@@ -13,6 +13,8 @@ uses
   DN.Settings.Intf,
   DN.DelphiInstallation.Intf,
   DN.Setup.Intf,
+  DN.VariableResolver.Intf,
+  DN.VariableResolver.Compiler.Factory,
   Buttons, ActnList,
   pngimage;
 
@@ -74,6 +76,7 @@ type
     function CanExitPage: Boolean;
     function IsDelphinusInstalled(const ADelphi: IDNDelphiInstallation): Boolean;
     function CreateSetup(const AInstallations: TArray<IDNDelphiInstallation>): IDNSetup;
+    function BuildVariableResolverFactory(const ABDSCommonDir: string): TDNCompilerVariableResolverFacory;
   //PageEventHandlers
     procedure RoutineSelectionEnter;
     procedure DelphiSelectionEnter;
@@ -111,6 +114,8 @@ uses
   DN.Progress,
   DN.Settings,
   DN.Package.Version.Intf,
+  DN.VariableResolver.Compiler,
+  DN.DelphiInstallation.Editions,
   Delphinus.WebSetup;
 
 {$R *.dfm}
@@ -152,6 +157,14 @@ begin
   PageChanged();
 end;
 
+function TDNWebSetupDialog.BuildVariableResolverFactory(const ABDSCommonDir: string): TDNCompilerVariableResolverFacory;
+begin
+  Result := function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver
+            begin
+              Result := TCompilerVariableResolver.Create(APlatform, AConfig, ABDSCommonDir);
+            end;
+end;
+
 function TDNWebSetupDialog.CanExitPage: Boolean;
 var
   LFunc: TFunc<Boolean>;
@@ -169,7 +182,7 @@ end;
 constructor TDNWebSetupDialog.Create(AOwner: TComponent);
 begin
   inherited;
-  FProvider := TDNDelphiInstallationProvider.Create();
+  FProvider := TDNDelphiInstallationProvider.Create([CDelphiEditionStarter]);
   FPackageProvider := TDNGithubRepoPackageProvider.Create(TDNWinHttpClient.Create() as IDNHttpClient, 'Memnarch', 'Delphinus');
   FEnterPage := TDictionary<TTabSheet, TProc>.Create();
   FCanExitPage := TDictionary<TTabSheet, TFunc<Boolean>>.Create();
@@ -210,14 +223,16 @@ var
   LSubFolders: TArray<string>;
   LCompiler: IDNCompiler;
   i: Integer;
+  LFactory: TDNCompilerVariableResolverFacory;
 begin
   SetLength(LInstallers, Length(AInstallations));
   SetLength(LUninstallers, Length(AInstallations));
   SetLength(LSubFolders, Length(AInstallations));
   for i := 0 to High(LInstallers) do
   begin
-    LCompiler := TDNMSBuildCompiler.Create(TPath.Combine(AInstallations[i].Directory, 'bin'));
-    LInstallers[i] := TDNDelphinusInstaller.Create(LCompiler, AInstallations[i].Root);
+    LFactory := BuildVariableResolverFactory(AInstallations[i].BDSCommonDir);
+    LCompiler := TDNMSBuildCompiler.Create(LFactory, TPath.Combine(AInstallations[i].Directory, 'bin'));
+    LInstallers[i] := TDNDelphinusInstaller.Create(LCompiler, LFactory, AInstallations[i].Root);
     LUninstallers[i] := TDNDelphinusUninstaller.Create(AInstallations[i].Root);
     LSubFolders[i] := AInstallations[i].BDSVersion;
   end;

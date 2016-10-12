@@ -3,9 +3,11 @@ unit DN.Installer.Delphinus;
 interface
 
 uses
+  DN.Types,
   DN.Installer,
   DN.Compiler.Intf,
-  DN.ProjectInfo.Intf;
+  DN.ProjectInfo.Intf,
+  DN.VariableResolver.Compiler.Factory;
 
 type
   TDNDelphinusInstaller = class(TDNInstaller)
@@ -17,7 +19,9 @@ type
     function GetBPLDir(APlatform: TDNCompilerPlatform): string; override;
     function GetDCPDir(APlatform: TDNCompilerPlatform): string; override;
   public
-    constructor Create(const ACompiler: IDNCompiler; const ARegistryKey: string); reintroduce;
+    constructor Create(const ACompiler: IDNCompiler;
+      const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+      const ARegistryKey: string); reintroduce;
   end;
 
 implementation
@@ -30,9 +34,10 @@ uses
 { TDNDelphinusInstaller }
 
 constructor TDNDelphinusInstaller.Create(const ACompiler: IDNCompiler;
+  const AVariableResolverFactory: TDNCompilerVariableResolverFacory;
   const ARegistryKey: string);
 begin
-  inherited Create(ACompiler);
+  inherited Create(ACompiler, AVariableResolverFactory);
   FRegistryKey := ARegistryKey;
 end;
 

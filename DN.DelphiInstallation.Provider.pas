@@ -11,9 +11,12 @@ type
   TDNDelphiInstallationProvider = class(TInterfacedObject, IDNDelphiInstallationProvider)
   private
     FInstallations: TList<IDNDelphiInstallation>;
+    FIgnoredEditions: TArray<string>;
     function GetInstallations: TList<IDNDelphiInstallation>;
     procedure LoadInstallations;
+    procedure RemoveIgnoredInstallations;
   public
+    constructor Create(const AIgnoredEditions: array of string);
     destructor Destroy; override;
     property Installations: TList<IDNDelphiInstallation> read GetInstallations;
   end;
@@ -24,9 +27,21 @@ uses
   Classes,
   Registry,
   IOUtils,
+  StrUtils,
   DN.DelphiInstallation;
 
 { TDNDelphiInstallationInfo }
+
+constructor TDNDelphiInstallationProvider.Create(
+  const AIgnoredEditions: array of string);
+var
+  i: Integer;
+begin
+  inherited Create();
+  SetLength(FIgnoredEditions, Length(AIgnoredEditions));
+  for i := 0 to Length(FIgnoredEditions) - 1 do
+    FIgnoredEditions[i] := AIgnoredEditions[i];
+end;
 
 destructor TDNDelphiInstallationProvider.Destroy;
 begin
@@ -64,10 +79,22 @@ begin
         LInstallation := TDNDelphInstallation.Create(TPath.Combine(CRootKey, LKey));
         FInstallations.Add(LInstallation);
       end;
+      RemoveIgnoredInstallations();
     end;
   finally
     LKeyNames.Free;
     LRegistry.Free;
+  end;
+end;
+
+procedure TDNDelphiInstallationProvider.RemoveIgnoredInstallations;
+var
+  i: Integer;
+begin
+  for i := FInstallations.Count - 1 downto 0 do
+  begin
+    if AnsiIndexText(FInstallations[i].Edition, FIgnoredEditions) > -1 then
+      FInstallations.Delete(i);
   end;
 end;
 
