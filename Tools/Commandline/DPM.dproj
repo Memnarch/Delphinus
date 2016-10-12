@@ -45,7 +45,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_UnitSearchPath>..\..\..;..\..\..\Packages;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\;..\..\Packages;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1031</VerInfo_Locale>
@@ -98,45 +98,38 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\DN.DPM.pas"/>
-        <DCCReference Include="..\DN.Command.Argument.Parser.pas"/>
-        <DCCReference Include="..\DN.Command.Argument.Parser.Intf.pas"/>
-        <DCCReference Include="..\DN.Command.Argument.pas"/>
-        <DCCReference Include="..\DN.Command.Argument.Intf.pas"/>
-        <DCCReference Include="..\DN.Command.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.pas"/>
-        <DCCReference Include="..\DN.Command.Dispatcher.pas"/>
-        <DCCReference Include="..\DN.Command.Dispatcher.Intf.pas"/>
-        <DCCReference Include="..\DN.Command.Help.pas"/>
-        <DCCReference Include="..\DN.Command.Install.pas"/>
-        <DCCReference Include="..\DN.Command.Environment.Intf.pas"/>
-        <DCCReference Include="..\DN.Command.Environment.pas"/>
-        <DCCReference Include="..\DN.Command.Default.pas"/>
-        <DCCReference Include="..\DN.Command.Exit.pas"/>
-        <DCCReference Include="..\DN.Command.List.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.Delphi.pas"/>
-        <DCCReference Include="..\..\..\DN.EnvironmentOptions.Registry.pas"/>
-        <DCCReference Include="..\..\..\DN.EnvironmentOptions.pas"/>
-        <DCCReference Include="..\..\..\DN.BPLService.Registry.pas"/>
-        <DCCReference Include="..\DN.Command.Uninstall.pas"/>
-        <DCCReference Include="..\..\..\DN.VariableResolver.Compiler.Factory.pas"/>
-        <DCCReference Include="..\..\..\DN.Package.Finder.Intf.pas"/>
-        <DCCReference Include="..\..\..\DN.Package.Finder.pas"/>
-        <DCCReference Include="..\..\..\DN.Package.Version.Finder.Intf.pas"/>
-        <DCCReference Include="..\..\..\DN.Package.Version.Finder.pas"/>
-        <DCCReference Include="..\DN.Command.Info.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.Versions.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.License.pas"/>
-        <DCCReference Include="..\DN.Command.Update.pas"/>
-        <DCCReference Include="..\..\..\DN.TextTable.pas"/>
-        <DCCReference Include="..\..\..\DN.TextTable.Intf.pas"/>
-        <DCCReference Include="..\DN.Command.DelphiBlock.pas"/>
-        <DCCReference Include="..\DN.Command.About.pas"/>
-        <DCCReference Include="..\DN.Command.Delphis.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.PanicOnError.pas"/>
-        <DCCReference Include="..\DN.Command.Types.pas"/>
-        <DCCReference Include="..\DN.Command.Switch.Types.pas"/>
-        <RcItem Include="..\..\..\Icons\Console.ico">
+        <RcCompile Include="DPM.rc">
+            <Form>DPM.res</Form>
+        </RcCompile>
+        <DCCReference Include="DN.DPM.pas"/>
+        <DCCReference Include="DN.Command.Argument.Parser.pas"/>
+        <DCCReference Include="DN.Command.Argument.Parser.Intf.pas"/>
+        <DCCReference Include="DN.Command.Argument.pas"/>
+        <DCCReference Include="DN.Command.Argument.Intf.pas"/>
+        <DCCReference Include="DN.Command.pas"/>
+        <DCCReference Include="DN.Command.Switch.pas"/>
+        <DCCReference Include="DN.Command.Dispatcher.pas"/>
+        <DCCReference Include="DN.Command.Dispatcher.Intf.pas"/>
+        <DCCReference Include="DN.Command.Help.pas"/>
+        <DCCReference Include="DN.Command.Install.pas"/>
+        <DCCReference Include="DN.Command.Environment.Intf.pas"/>
+        <DCCReference Include="DN.Command.Environment.pas"/>
+        <DCCReference Include="DN.Command.Default.pas"/>
+        <DCCReference Include="DN.Command.Exit.pas"/>
+        <DCCReference Include="DN.Command.List.pas"/>
+        <DCCReference Include="DN.Command.Switch.Delphi.pas"/>
+        <DCCReference Include="DN.Command.Uninstall.pas"/>
+        <DCCReference Include="DN.Command.Info.pas"/>
+        <DCCReference Include="DN.Command.Switch.Versions.pas"/>
+        <DCCReference Include="DN.Command.Switch.License.pas"/>
+        <DCCReference Include="DN.Command.Update.pas"/>
+        <DCCReference Include="DN.Command.DelphiBlock.pas"/>
+        <DCCReference Include="DN.Command.About.pas"/>
+        <DCCReference Include="DN.Command.Delphis.pas"/>
+        <DCCReference Include="DN.Command.Switch.PanicOnError.pas"/>
+        <DCCReference Include="DN.Command.Types.pas"/>
+        <DCCReference Include="DN.Command.Switch.Types.pas"/>
+        <RcItem Include="..\..\Icons\Console.ico">
             <ResourceType>ICON</ResourceType>
             <ResourceId>ApplicationIcon</ResourceId>
         </RcItem>

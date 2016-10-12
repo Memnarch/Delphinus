@@ -54,7 +54,7 @@ var
 begin
   for LSwitch in FSwitches do
     if LSwitch is T then
-      Exit(LSwitch as T);
+      Exit(T(LSwitch));
 
   Result := nil;
 end;

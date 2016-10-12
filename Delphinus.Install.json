@@ -19,6 +19,11 @@
 		{
 			"project": "Packages\\DelphiXE6\\Delphinus.dproj",
 			"compiler_min": 27
+		},
+		
+				{
+			"project": "Tools\\Commandline\\DPM.dproj",
+			"compiler_min": 22
 		}
 	]
 }
