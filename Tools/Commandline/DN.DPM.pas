@@ -51,6 +51,7 @@ uses
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
   DN.Settings,
+  DN.DelphiInstallation.Editions,
   DN.DelphiInstallation.Provider;
 
 { TDPM }
@@ -66,7 +67,7 @@ begin
   if FSettings.OAuthToken <> '' then
     LHTTP.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
   FOnlinePackageProvider := TDNGitHubPackageProvider.Create(LHTTP, False);
-  FDelphiProvider := TDNDelphiInstallationProvider.Create();
+  FDelphiProvider := TDNDelphiInstallationProvider.Create([CDelphiEditionStarter]);
   LFactory :=
     function (const AComponentDirectory: string): IDNPackageProvider
     begin
