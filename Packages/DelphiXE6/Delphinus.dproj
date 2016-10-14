@@ -220,9 +220,12 @@
         <DCCReference Include="..\..\DN.Setup.Dependency.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Intf.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Intf.pas"/>
-        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.pas"/>
         <DCCReference Include="..\..\DN.Package.Finder.Intf.pas"/>
         <DCCReference Include="..\..\DN.Package.Finder.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Processor.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Processor.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Install.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.UnInstall.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

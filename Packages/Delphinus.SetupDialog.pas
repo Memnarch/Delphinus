@@ -18,6 +18,7 @@ uses
   DN.Package.DirectoryLoader.Intf,
   DN.Setup.Dependency.Resolver.Intf,
   DN.Setup.Dependency.Intf,
+  DN.Setup.Dependency.Processor.Intf,
   DN.Installer.Intf,
   DN.Uninstaller.Intf,
   StdCtrls,
@@ -73,21 +74,26 @@ type
     FSetup: IDNSetup;
     FSetupIsRunning: Boolean;
     FLoader: IDNPackageDirectoryLoader;
-    FInstallResolver: IDNSetupDependencyResolver;
+    FDependencyResolver: IDNSetupDependencyResolver;
     FDependencies: TArray<IDNSetupDependency>;
+    FDependencyCount: Integer;
+    FDependencyProcessor: IDNSetupDependencyProcessor;
     procedure Log(const AMessage: string);
     procedure HandleLogMessage(AType: TMessageType; const AMessage: string);
     procedure HandleProgress(const ATask, AItem: string; AProgress, AMax: Int64);
+    procedure HandleDependencyProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     procedure InitMainPage();
     procedure InitVersionSelection();
     procedure Execute();
     procedure SetupFinished;
     function GetSelectedVersion: IDNPackageVersion;
     function LoadPackage(const ADirectory: string): IDNPackage;
-    procedure ResolveInstallDependencies;
+    procedure ResolvelDependencies;
   public
     { Public declarations }
-    constructor Create(const ASetup: IDNSetup; const AInstallResolver: IDNSetupDependencyResolver); reintroduce;
+    constructor Create(const ASetup: IDNSetup;
+      const ADependencyResolver: IDNSetupDependencyResolver;
+      const ADependencyProcessor: IDNSetupDependencyProcessor); reintroduce;
     function ExecuteInstallation(const APackage: IDNPackage): Boolean;
     function ExecuteInstallationFromDirectory(const ADirectory: string): Boolean;
     function ExecuteUninstallation(const APackage: IDNPackage): Boolean;
@@ -150,9 +156,7 @@ procedure TSetupDialog.cbVersionChange(Sender: TObject);
 begin
   if cbVersion.ItemIndex > -1 then
   begin
-    btnDependencies.Enabled := FPackage.Versions[cbVersion.ItemIndex].Dependencies.Count > 0;
-    if FMode in [sdmInstall, sdmInstallDirectory] then
-      ResolveInstallDependencies();
+    ResolvelDependencies();
   end
   else
   begin
@@ -160,10 +164,15 @@ begin
   end;
 end;
 
-constructor TSetupDialog.Create(const ASetup: IDNSetup; const AInstallResolver: IDNSetupDependencyResolver);
+constructor TSetupDialog.Create(const ASetup: IDNSetup;
+  const ADependencyResolver: IDNSetupDependencyResolver;
+  const ADependencyProcessor: IDNSetupDependencyProcessor);
 begin
   inherited Create(nil);
-  FInstallResolver := AInstallResolver;
+  FDependencyResolver := ADependencyResolver;
+  FDependencyProcessor := ADependencyProcessor;
+  FDependencyProcessor.OnMessage := HandleLogMessage;
+  FDependencyProcessor.OnProgress := HandleDependencyProgress;
   FSetup := ASetup;
   FSetup.OnMessage := HandleLogMessage;
   FSetup.OnProgress := HandleProgress;
@@ -187,12 +196,15 @@ begin
     procedure
     begin
       try
-        case FMode of
-          sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
-          sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
-          sdmUninstall: FSetup.Uninstall(FPackage);
-          sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
-          sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
+        if FDependencyProcessor.Execute(FDependencies) then
+        begin
+          case FMode of
+            sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
+            sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
+            sdmUninstall: FSetup.Uninstall(FPackage);
+            sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
+            sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());
+          end;
         end;
       except
         on E: Exception do
@@ -266,6 +278,18 @@ begin
     Result := nil;
 end;
 
+procedure TSetupDialog.HandleDependencyProgress(const ATask, AItem: string;
+  AProgress, AMax: Int64);
+begin
+  TThread.Queue(nil,
+  procedure
+  begin
+    lbAction.Caption := ATask + ' ' + AItem;
+    pbProgress.Position := Round(AProgress / AMax * pbProgress.Max / (FDependencyCount + 1) * FDependencyCount);
+  end
+  );
+end;
+
 procedure TSetupDialog.HandleLogMessage(AType: TMessageType;
   const AMessage: string);
 begin
@@ -294,9 +318,23 @@ procedure TSetupDialog.HandleProgress(const ATask, AItem: string; AProgress, AMa
 begin
   TThread.Queue(nil,
   procedure
+  var
+    LBase: Single;
+    LScale: Single;
+    LElements: Integer;
   begin
     lbAction.Caption := IfThen(AItem <> '', AItem, ATask);
-    pbProgress.Position := Round(AProgress / AMax * pbProgress.Max);
+    LElements := FDependencyCount + 1;
+    if LElements > 1 then
+    begin
+      LBase := pbProgress.Max / LElements * FDependencyCount;
+    end
+    else
+    begin
+      LBase := 0;
+    end;
+    LScale := 1 / LElements;
+    pbProgress.Position := Round(LBase + (AProgress / AMax * pbProgress.Max * LScale));
   end
   );
 end;
@@ -329,6 +367,7 @@ begin
       cbVersion.Visible := False;
       btnLicense.Visible := False;
       lbLicenseAnotation.Visible := False;
+      ResolvelDependencies();
     end;
 
     sdmUpdate:
@@ -368,9 +407,19 @@ begin
   mLog.Lines.Add(AMessage);
 end;
 
-procedure TSetupDialog.ResolveInstallDependencies;
+procedure TSetupDialog.ResolvelDependencies;
+var
+  LDependency: IDNSetupDependency;
 begin
-  FDependencies := FInstallResolver.Resolver(FPackage, FPackage.Versions[cbVersion.ItemIndex]);
+  FDependencyCount := 0;
+  if cbVersion.Visible then
+    FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions[cbVersion.ItemIndex])
+  else
+    FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions.First);
+  for LDependency in FDependencies do
+      if LDependency.Action <> daNone then
+        Inc(FDependencyCount);
+  btnDependencies.Enabled := Length(FDependencies) > 0;
 end;
 
 procedure TSetupDialog.SetupFinished;

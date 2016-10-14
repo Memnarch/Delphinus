@@ -1,4 +1,4 @@
-unit DN.Setup.Dependency.Resolver;
+unit DN.Setup.Dependency.Resolver.Install;
 
 interface
 
@@ -12,7 +12,7 @@ uses
   DN.Version;
 
 type
-  TDNSetupDependencyResolver = class(TInterfacedObject, IDNSetupDependencyResolver)
+  TDNSetupInstallDependencyResolver = class(TInterfacedObject, IDNSetupDependencyResolver)
   private
     FInstalledFinderFactory: TFunc<IDNPackageFinder>;
     FOnlineFinderFactory: TFunc<IDNPackageFinder>;
@@ -38,7 +38,7 @@ uses
 
 { TDNSetupDependencyResolver }
 
-constructor TDNSetupDependencyResolver.Create(const AInstalledFinderFactory,
+constructor TDNSetupInstallDependencyResolver.Create(const AInstalledFinderFactory,
   AOnlineFinderFactory: TFunc<IDNPackageFinder>);
 begin
   inherited Create();
@@ -46,7 +46,7 @@ begin
   FOnlineFinderFactory := AOnlineFinderFactory;
 end;
 
-procedure TDNSetupDependencyResolver.EvaluateAction(
+procedure TDNSetupInstallDependencyResolver.EvaluateAction(
   const ADependency: IDNSetupDependency);
 begin
   if Assigned(ADependency) and Assigned(ADependency.Version) then
@@ -61,21 +61,21 @@ begin
   end;
 end;
 
-function TDNSetupDependencyResolver.InstalledFinder: IDNPackageFinder;
+function TDNSetupInstallDependencyResolver.InstalledFinder: IDNPackageFinder;
 begin
   if not Assigned(FInstalledFinder) then
     FInstalledFinder := FInstalledFinderFactory();
   Result := FInstalledFinder;
 end;
 
-function TDNSetupDependencyResolver.OnlineFinder: IDNPackageFinder;
+function TDNSetupInstallDependencyResolver.OnlineFinder: IDNPackageFinder;
 begin
   if not Assigned(FOnlineFinder) then
     FOnlineFinder := FOnlineFinderFactory();
   Result := FOnlineFinder;
 end;
 
-function TDNSetupDependencyResolver.Resolver(const APackage: IDNPackage;
+function TDNSetupInstallDependencyResolver.Resolver(const APackage: IDNPackage;
   const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
 var
   LDependency: IDNSetupDependency;
@@ -85,29 +85,33 @@ var
   LVersion: IDNPackageVersion;
 begin
   LResult := TList<IDNSetupDependency>.Create();
-  for LPackageDependency in AVersion.Dependencies do
-  begin
-    LDependency := TDNSetupDependency.Create();
-    LDependency.ID := LPackageDependency.ID;
-    if TryFindAvailable(LPackageDependency.ID.ToString, LPackageDependency.Version, LPackage) then
+  try
+    for LPackageDependency in AVersion.Dependencies do
     begin
-      LDependency.Package := LPackage;
-      if TryFindVersion(LPackage, LPackageDependency.Version, LVersion) then
-        LDependency.Version := LVersion;
-    end;
-    if TryFindInstalled(LPackageDependency.ID.ToString, LPackage) then
-    begin
-      if not Assigned(LDependency.Package) then
+      LDependency := TDNSetupDependency.Create();
+      LDependency.ID := LPackageDependency.ID;
+      if TryFindAvailable(LPackageDependency.ID.ToString, LPackageDependency.Version, LPackage) then
+      begin
         LDependency.Package := LPackage;
-      LDependency.InstalledVersion := LPackage.Versions.First;
+        if TryFindVersion(LPackage, LPackageDependency.Version, LVersion) then
+          LDependency.Version := LVersion;
+      end;
+      if TryFindInstalled(LPackageDependency.ID.ToString, LPackage) then
+      begin
+        if not Assigned(LDependency.Package) then
+          LDependency.Package := LPackage;
+        LDependency.InstalledVersion := LPackage.Versions.First;
+      end;
+      EvaluateAction(LDependency);
+      LResult.Add(LDependency);
     end;
-    EvaluateAction(LDependency);
-    LResult.Add(LDependency);
+    Result := LResult.ToArray();
+  finally
+    LResult.Free;
   end;
-  Result := LResult.ToArray();
 end;
 
-function TDNSetupDependencyResolver.TryFindAvailable(const AID: string;
+function TDNSetupInstallDependencyResolver.TryFindAvailable(const AID: string;
   ARequiredVersion: TDNVersion;
   out APackage: IDNPackage): Boolean;
 var
@@ -118,13 +122,13 @@ begin
     Result := OnlineFinder.TryFind(AID, APackage);
 end;
 
-function TDNSetupDependencyResolver.TryFindInstalled(const AID: string;
+function TDNSetupInstallDependencyResolver.TryFindInstalled(const AID: string;
   out APackage: IDNPackage): Boolean;
 begin
   Result := InstalledFinder.TryFind(AID, APackage);
 end;
 
-function TDNSetupDependencyResolver.TryFindVersion(const APackage: IDNPackage;
+function TDNSetupInstallDependencyResolver.TryFindVersion(const APackage: IDNPackage;
   const ARequiredVersion: TDNVersion; out AVersion: IDNPackageVersion): Boolean;
 var
   LVersion: IDNPackageVersion;

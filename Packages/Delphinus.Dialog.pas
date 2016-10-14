@@ -21,6 +21,7 @@ uses
   DN.PackageDetailView,
   Delphinus.Forms,
   DN.Settings.Intf,
+  DN.Setup.Dependency.Processor.Intf,
   DN.Setup.Intf,
   DN.Setup.Dependency.Resolver.Intf,
   DN.FileService.Intf,
@@ -31,7 +32,7 @@ uses
   DN.EnvironmentOptions.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions;
 
 type
   TDelphinusDialog = class(TForm)
@@ -100,7 +101,9 @@ type
     procedure ShowDetail(const APackage: IDNPackage);
     procedure RecreatePackageProvider();
     function CreateSetup: IDNSetup;
+    function CreateDependencyProcessor: IDNSetupDependencyProcessor;
     function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
+    function CreateUninstallDependencyResolver: IDNSetupDependencyResolver;
     function IsStarter: Boolean;
     procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
     procedure HandleSelectedPackageChanged(Sender: TObject);
@@ -143,7 +146,9 @@ uses
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
   DN.Setup,
-  DN.Setup.Dependency.Resolver,
+  DN.Setup.Dependency.Resolver.Install,
+  DN.Setup.Dependency.Resolver.Uninstall,
+  DN.Setup.Dependency.Processor,
   Delphinus.OptionsDialog,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp,
@@ -212,7 +217,7 @@ var
 begin
   if dlgSelectInstallFile.Execute() then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver(), CreateDependencyProcessor());
     try
       if LDialog.ExecuteInstallationFromDirectory(ExtractFilePath(dlgSelectInstallFile.FileName)) then
         RefreshInstalledPackages();
@@ -273,9 +278,14 @@ begin
     Caption := Caption + ' (Starter Edition)';
 end;
 
+function TDelphinusDialog.CreateDependencyProcessor: IDNSetupDependencyProcessor;
+begin
+  Result := TDNSetupDependencyProcessor.Create(CreateSetup());
+end;
+
 function TDelphinusDialog.CreateInstallDependencyResolver: IDNSetupDependencyResolver;
 begin
-  Result := TDNSetupDependencyResolver.Create(
+  Result := TDNSetupInstallDependencyResolver.Create(
     function: IDNPackageFinder
     begin
       Result := TDNPackageFinder.Create(FInstalledPackages.ToArray);
@@ -316,6 +326,16 @@ begin
   LUninstaller := TDNIDEUninstaller.Create(FEnvironmentOptionsService, LBPLService, LExpertService, FFileService);
   Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
   Result.ComponentDirectory := GetComponentDirectory();
+end;
+
+function TDelphinusDialog.CreateUninstallDependencyResolver: IDNSetupDependencyResolver;
+begin
+  Result := TDNSetupUninstallDependencyResolver.Create(
+    function: TArray<IDNPackage>
+    begin
+      Result := FInstalledPackages.ToArray;
+    end
+  );
 end;
 
 destructor TDelphinusDialog.Destroy;
@@ -437,11 +457,10 @@ function TDelphinusDialog.GetInstalledVersion(
 var
   LPackage: IDNPackage;
 begin
-  Result := TDNVersion.Create();
   LPackage := GetInstalledPackage(APackage);
   if Assigned(LPackage) then
   begin
-    if LPackage.Versions.Count > 0 then
+    if (LPackage.Versions.Count > 0) and not LPackage.Versions.First.Value.IsEmpty then
       Result := LPackage.Versions[0].Value
     else
       Result := TDNVersion.Create(0, 0, 0, 'none');
@@ -514,7 +533,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver(), CreateDependencyProcessor());
     try
       if LDialog.ExecuteInstallation(APackage) then
         RefreshInstalledPackages();
@@ -684,7 +703,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateUninstallDependencyResolver(), CreateDependencyProcessor());
     try
       if LDialog.ExecuteUninstallation(APackage) then
         RefreshInstalledPackages();
@@ -700,7 +719,7 @@ var
 begin
   if Assigned(APackage) then
   begin
-    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver());
+    LDialog := TSetupDialog.Create(CreateSetup(), CreateInstallDependencyResolver(), CreateDependencyProcessor());
     try
       if LDialog.ExecuteUpdate(GetOnlinePackage(APackage))then
         RefreshInstalledPackages();

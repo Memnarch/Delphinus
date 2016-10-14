@@ -139,9 +139,12 @@ contains
   DN.Setup.Dependency in '..\..\DN.Setup.Dependency.pas',
   DN.Setup.Dependency.Intf in '..\..\DN.Setup.Dependency.Intf.pas',
   DN.Setup.Dependency.Resolver.Intf in '..\..\DN.Setup.Dependency.Resolver.Intf.pas',
-  DN.Setup.Dependency.Resolver in '..\..\DN.Setup.Dependency.Resolver.pas',
   DN.Package.Finder.Intf in '..\..\DN.Package.Finder.Intf.pas',
-  DN.Package.Finder in '..\..\DN.Package.Finder.pas';
+  DN.Package.Finder in '..\..\DN.Package.Finder.pas',
+  DN.Setup.Dependency.Processor.Intf in '..\..\DN.Setup.Dependency.Processor.Intf.pas',
+  DN.Setup.Dependency.Processor in '..\..\DN.Setup.Dependency.Processor.pas',
+  DN.Setup.Dependency.Resolver.Install in '..\..\DN.Setup.Dependency.Resolver.Install.pas',
+  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas';
 
 end.
 
