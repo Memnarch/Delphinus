@@ -58,6 +58,7 @@ type
     btnShowLog: TButton;
     ilButtons: TImageList;
     btnDependencies: TButton;
+    cbIgnoreDependencies: TCheckBox;
     procedure HandleOK(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnLicenseClick(Sender: TObject);
@@ -196,7 +197,7 @@ begin
     procedure
     begin
       try
-        if FDependencyProcessor.Execute(FDependencies) then
+        if cbIgnoreDependencies.Checked or FDependencyProcessor.Execute(FDependencies) then
         begin
           case FMode of
             sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
@@ -363,9 +364,8 @@ begin
       lbLicenseType.Caption := FPackage.LicenseType;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
-      Label1.Visible := False;
-      cbVersion.Visible := False;
-      btnLicense.Visible := False;
+      cbVersion.Enabled := False;
+      btnLicense.Enabled := False;
       lbLicenseAnotation.Visible := False;
       ResolvelDependencies();
     end;
@@ -412,7 +412,7 @@ var
   LDependency: IDNSetupDependency;
 begin
   FDependencyCount := 0;
-  if cbVersion.Visible then
+  if cbVersion.ItemIndex > -1 then
     FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions[cbVersion.ItemIndex])
   else
     FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions.First);
@@ -420,6 +420,7 @@ begin
       if LDependency.Action <> daNone then
         Inc(FDependencyCount);
   btnDependencies.Enabled := Length(FDependencies) > 0;
+  cbIgnoreDependencies.Enabled := btnDependencies.Enabled;
 end;
 
 procedure TSetupDialog.SetupFinished;
