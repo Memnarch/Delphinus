@@ -10,7 +10,7 @@ uses
 type
   IDNSetupDependencyResolver = interface
     ['{EFCBFDA4-6A78-43EE-B481-05D56DC4590B}']
-    function Resolver(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
+    function Resolve(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
   end;
 
 implementation

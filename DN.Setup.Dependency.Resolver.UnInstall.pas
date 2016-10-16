@@ -4,6 +4,7 @@ interface
 
 uses
   SysUtils,
+  Generics.Collections,
   DN.Setup.Dependency.Intf,
   DN.Setup.Dependency.Resolver.Intf,
   DN.Package.Intf,
@@ -15,15 +16,15 @@ type
   private
     FGetInstalledPackages: TFunc<TArray<IDNPackage>>;
     function PackageRequires(const APackage: IDNPackage; const ARequiredID: TGUID): Boolean;
+    procedure InternalResolve(const APackage: IDNPackage; ATarget: TList<IDNSetupDependency>; AProcessed: TDictionary<string, IDNSetupDependency>);
   public
     constructor Create(const AGetInstalledPackages: TFunc<TArray<IDNPackage>>);
-    function Resolver(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
+    function Resolve(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
   end;
 
 implementation
 
 uses
-  Generics.Collections,
   DN.Setup.Dependency;
 
 { TDNSetupUninstallDependencyResolver }
@@ -33,6 +34,29 @@ constructor TDNSetupUninstallDependencyResolver.Create(
 begin
   inherited Create();
   FGetInstalledPackages := AGetInstalledPackages;
+end;
+
+procedure TDNSetupUninstallDependencyResolver.InternalResolve(
+  const APackage: IDNPackage; ATarget: TList<IDNSetupDependency>;
+  AProcessed: TDictionary<string, IDNSetupDependency>);
+var
+  LSetupDependency: IDNSetupDependency;
+  LPackage: IDNPackage;
+begin
+  for LPackage in FGetInstalledPackages do
+  begin
+    if not AProcessed.ContainsKey(LPackage.ID.ToString) and PackageRequires(LPackage, APackage.ID) then
+    begin
+      LSetupDependency := TDNSetupDependency.Create();
+      LSetupDependency.ID := LPackage.ID;
+      LSetupDependency.Package := LPackage;
+      LSetupDependency.InstalledVersion := LPackage.Versions.First;
+      LSetupDependency.Action := daUninstall;
+      AProcessed.Add(LPackage.ID.ToString, LSetupDependency);
+      InternalResolve(LPackage, ATarget, AProcessed);
+      ATarget.Add(LSetupDependency);
+    end;
+  end;
 end;
 
 function TDNSetupUninstallDependencyResolver.PackageRequires(
@@ -46,30 +70,21 @@ begin
   Result := False;
 end;
 
-function TDNSetupUninstallDependencyResolver.Resolver(
+function TDNSetupUninstallDependencyResolver.Resolve(
   const APackage: IDNPackage;
   const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
 var
-  LSetupDependency: IDNSetupDependency;
-  LPackage: IDNPackage;
   LItems: TList<IDNSetupDependency>;
+  LProcessed: TDictionary<string, IDNSetupDependency>;
 begin
   LItems := TList<IDNSetupDependency>.Create();
+  LProcessed := TDictionary<string, IDNSetupDependency>.Create();
   try
-    for LPackage in FGetInstalledPackages do
-    begin
-      if PackageRequires(LPackage, APackage.ID) then
-      begin
-        LSetupDependency := TDNSetupDependency.Create();
-        LSetupDependency.ID := LPackage.ID;
-        LSetupDependency.Package := LPackage;
-        LSetupDependency.Action := daUninstall;
-        LItems.Add(LSetupDependency);
-      end;
-    end;
+    InternalResolve(APackage, LItems, LProcessed);
     Result := LItems.ToArray;
   finally
     LItems.Free;
+    LProcessed.Free;
   end;
 end;
 

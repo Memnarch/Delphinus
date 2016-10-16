@@ -9,7 +9,8 @@ uses
   DN.Setup.Dependency.Intf,
   DN.Setup.Dependency.Resolver.Intf,
   DN.Package.Finder.Intf,
-  DN.Version;
+  DN.Version,
+  Generics.Collections;
 
 type
   TDNSetupInstallDependencyResolver = class(TInterfacedObject, IDNSetupDependencyResolver)
@@ -24,17 +25,17 @@ type
     function TryFindInstalled(const AID: string; out APackage: IDNPackage): Boolean;
     function TryFindVersion(const APackage: IDNPackage; const ARequiredVersion: TDNVersion; out AVersion: IDNPackageVersion): Boolean;
     procedure EvaluateAction(const ADependency: IDNSetupDependency);
+    procedure InternalResolve(const APackage: IDNPackage; const AVersion: IDNPackageVersion; ATarget: TList<IDNSetupDependency>; AProcessed: TDictionary<string, IDNSetupDependency>);
   public
     constructor Create(const AInstalledFinderFactory, AOnlineFinderFactory: TFunc<IDNPackageFinder>);
-    function Resolver(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
+    function Resolve(const APackage: IDNPackage; const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
   end;
 
 implementation
 
 uses
   DN.Setup.Dependency,
-  DN.Package.Dependency.Intf,
-  Generics.Collections;
+  DN.Package.Dependency.Intf;
 
 { TDNSetupDependencyResolver }
 
@@ -68,6 +69,43 @@ begin
   Result := FInstalledFinder;
 end;
 
+procedure TDNSetupInstallDependencyResolver.InternalResolve(
+  const APackage: IDNPackage; const AVersion: IDNPackageVersion;
+  ATarget: TList<IDNSetupDependency>;
+  AProcessed: TDictionary<string, IDNSetupDependency>);
+var
+  LDependency: IDNSetupDependency;
+  LPackageDependency: IDNPackageDependency;
+  LPackage: IDNPackage;
+  LVersion: IDNPackageVersion;
+begin
+  for LPackageDependency in AVersion.Dependencies do
+  begin
+    if AProcessed.ContainsKey(LPackageDependency.ID.ToString) then
+      Continue;
+
+    LDependency := TDNSetupDependency.Create();
+    LDependency.ID := LPackageDependency.ID;
+    if TryFindAvailable(LPackageDependency.ID.ToString, LPackageDependency.Version, LPackage) then
+    begin
+      LDependency.Package := LPackage;
+      if TryFindVersion(LPackage, LPackageDependency.Version, LVersion) then
+        LDependency.Version := LVersion;
+    end;
+    if TryFindInstalled(LPackageDependency.ID.ToString, LPackage) then
+    begin
+      if not Assigned(LDependency.Package) then
+        LDependency.Package := LPackage;
+      LDependency.InstalledVersion := LPackage.Versions.First;
+    end;
+    EvaluateAction(LDependency);
+    AProcessed.Add(LDependency.ID.ToString, LDependency);
+    if Assigned(LDependency.Package) and Assigned(LDependency.Version) then
+      InternalResolve(LDependency.Package, LDependency.Version, ATarget, AProcessed);
+    ATarget.Add(LDependency);
+  end;
+end;
+
 function TDNSetupInstallDependencyResolver.OnlineFinder: IDNPackageFinder;
 begin
   if not Assigned(FOnlineFinder) then
@@ -75,38 +113,19 @@ begin
   Result := FOnlineFinder;
 end;
 
-function TDNSetupInstallDependencyResolver.Resolver(const APackage: IDNPackage;
+function TDNSetupInstallDependencyResolver.Resolve(const APackage: IDNPackage;
   const AVersion: IDNPackageVersion): TArray<IDNSetupDependency>;
 var
-  LDependency: IDNSetupDependency;
-  LPackageDependency: IDNPackageDependency;
   LResult: TList<IDNSetupDependency>;
-  LPackage: IDNPackage;
-  LVersion: IDNPackageVersion;
+  LProcessed: TDictionary<string, IDNSetupDependency>;
 begin
   LResult := TList<IDNSetupDependency>.Create();
+  LProcessed := TDictionary<string, IDNSetupDependency>.Create();
   try
-    for LPackageDependency in AVersion.Dependencies do
-    begin
-      LDependency := TDNSetupDependency.Create();
-      LDependency.ID := LPackageDependency.ID;
-      if TryFindAvailable(LPackageDependency.ID.ToString, LPackageDependency.Version, LPackage) then
-      begin
-        LDependency.Package := LPackage;
-        if TryFindVersion(LPackage, LPackageDependency.Version, LVersion) then
-          LDependency.Version := LVersion;
-      end;
-      if TryFindInstalled(LPackageDependency.ID.ToString, LPackage) then
-      begin
-        if not Assigned(LDependency.Package) then
-          LDependency.Package := LPackage;
-        LDependency.InstalledVersion := LPackage.Versions.First;
-      end;
-      EvaluateAction(LDependency);
-      LResult.Add(LDependency);
-    end;
+    InternalResolve(APackage, AVersion, LResult, LProcessed);
     Result := LResult.ToArray();
   finally
+    LProcessed.Free;
     LResult.Free;
   end;
 end;

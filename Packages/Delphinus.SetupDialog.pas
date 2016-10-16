@@ -413,9 +413,9 @@ var
 begin
   FDependencyCount := 0;
   if cbVersion.ItemIndex > -1 then
-    FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions[cbVersion.ItemIndex])
+    FDependencies := FDependencyResolver.Resolve(FPackage, FPackage.Versions[cbVersion.ItemIndex])
   else
-    FDependencies := FDependencyResolver.Resolver(FPackage, FPackage.Versions.First);
+    FDependencies := FDependencyResolver.Resolve(FPackage, FPackage.Versions.First);
   for LDependency in FDependencies do
       if LDependency.Action <> daNone then
         Inc(FDependencyCount);
