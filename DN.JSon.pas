@@ -52,6 +52,7 @@ type
   {$IFNDEF DelphiXe6_Up}
   TJSonObjectHelper = class helper for TJSonObject
     function GetValue(const AName: string): TJSONValue;
+    function TryGetValue<T: TJSONValue>(const AName: string; out AValue: T): Boolean;
   end;
 
   TJSonArrayHelper = class helper for TJSonArray
@@ -77,6 +78,17 @@ begin
   LPair := Get(AName);
   if Assigned(LPair) then
     Result := LPair.JsonValue;
+end;
+
+function TJSonObjectHelper.TryGetValue<T>(const AName: string;
+  out AValue: T): Boolean;
+var
+  LValue: TJSONValue;
+begin
+  LValue := GetValue(AName);
+  Result := LValue is T;
+  if Result then
+    AValue := T(LValue);
 end;
 
 { TJSonArrayHelper }

@@ -32,7 +32,7 @@ uses
   DN.EnvironmentOptions.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry, System.Actions;
+  Registry;
 
 type
   TDelphinusDialog = class(TForm)

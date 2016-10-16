@@ -123,14 +123,14 @@ end;
 
 procedure TInfoFile.LoadDependencies(const ADependencies: TJSONArray);
 var
-  LValue: TJSONValue;
   LObject: TJSONObject;
-  LDependency: TInfoDependency,
+  LDependency: TInfoDependency;
   LVersion: TDNVersion;
+  i: Integer;
 begin
-  for LValue in ADependencies do
+  for i := 0 to Pred(ADependencies.Count) do
   begin
-    LObject := LValue as TJSONObject;
+    LObject := ADependencies.Items[i] as TJSONObject;
     if TDNVersion.TryParse(ReadString(LObject, 'version_min'), LVersion) then
     begin
       LDependency.ID := ReadID(LObject);
