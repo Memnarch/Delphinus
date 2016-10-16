@@ -8,6 +8,8 @@ uses
   DN.Setup.Intf,
   DN.Package.Finder.Intf,
   DN.Package.Version.Finder.Intf,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Processor.Intf,
   DN.DelphiInstallation.Intf;
 
 type
@@ -25,6 +27,9 @@ type
     function CreateSetup: IDNSetup;
     function CreatePackageFinder(const APackages: TArray<IDNPackage>): IDNPackageFinder;
     function VersionFinder: IDNVersionFinder;
+    function GetInstallDependencyResolver: IDNSetupDependencyResolver;
+    function GetUninstallDependencyResolver: IDNSetupDependencyResolver;
+    function GetDependencyProcessor: IDNSetupDependencyProcessor;
     function GetPanicOnError: Boolean;
     procedure SetPanicOnError(const Value: Boolean);
     property KnownCommands: TArray<TDNCommandClass> read GetKnownCommands;
@@ -34,6 +39,9 @@ type
     property Interactive: Boolean read GetInteractive write SetInteractive;
     property DelphiName: string read GetDelphiName write SetDelphiName;
     property DelphiInstallations: TArray<IDNDelphiInstallation> read GetDelphiInstallations;
+    property InstallDependencyResolver: IDNSetupDependencyResolver read GetInstallDependencyResolver;
+    property UninstallDependencyResolver: IDNSetupDependencyResolver read GetUninstallDependencyResolver;
+    property DependencyProcessor: IDNSetupDependencyProcessor read GetDependencyProcessor;
     property PanicOnError: Boolean read GetPanicOnError write SetPanicOnError;
   end;
 

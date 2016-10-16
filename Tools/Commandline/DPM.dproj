@@ -129,6 +129,15 @@
         <DCCReference Include="DN.Command.Switch.PanicOnError.pas"/>
         <DCCReference Include="DN.Command.Types.pas"/>
         <DCCReference Include="DN.Command.Switch.Types.pas"/>
+        <DCCReference Include="DN.Command.Switch.Dependencies.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Processor.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Processor.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Install.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.UnInstall.pas"/>
+        <DCCReference Include="DN.Command.Switch.IgnoreDependencies.pas"/>
         <RcItem Include="..\..\Icons\Console.ico">
             <ResourceType>ICON</ResourceType>
             <ResourceId>ApplicationIcon</ResourceId>

@@ -14,6 +14,7 @@ type
     procedure PrintDescription(const APackage: IDNPackage);
     procedure PrintVersions(const APackage: IDNPackage);
     procedure PrintLicense(const APackage: IDNPackage);
+    procedure PrintDependencies(const APackage: IDNPackage);
   public
     class function Name: string; override;
     class function Description: string; override;
@@ -34,10 +35,13 @@ uses
   DN.Command.Environment.Intf,
   DN.Command.Switch.Versions,
   DN.Command.Switch.License,
+  DN.Command.Switch.Dependencies,
   DN.Command.Types,
   DN.Package.Version.Intf,
   DN.TextTable.Intf,
-  DN.TextTable;
+  DN.TextTable,
+  DN.Setup.Dependency.Intf,
+  DN.Setup.Dependency.Resolver.Intf;
 
 const
   CID = 'ID';
@@ -76,6 +80,9 @@ begin
   if HasSwitch<TDNCommandSwitchLicense>() then
     PrintLicense(LPackage);
 
+  if HasSwitch<TDNCommandSwitchDependencies>() then
+    PrintDependencies(LPackage);
+
   if SwitchCount = 0 then
     PrintDescription(LPackage);
 end;
@@ -104,6 +111,28 @@ begin
     Result := 'Name or ID of package'
   else
     Result := inherited;
+end;
+
+procedure TDNCommandInfo.PrintDependencies(const APackage: IDNPackage);
+var
+  LEnvironment: IDNCommandEnvironment;
+  LResolver: IDNSetupDependencyResolver;
+  LDependency: IDNSetupDependency;
+  LTable: IDNTextTable;
+begin
+  LEnvironment := Environment as IDNCommandEnvironment;
+  LResolver := LEnvironment.InstallDependencyResolver;
+  LTable := TDNTextTable.Create();
+  LTable.AddColumn('Name', 50);
+  LTable.AddColumn('License', 15);
+  LTable.AddColumn('Version', 10);
+  for LDependency in LResolver.Resolve(APackage, APackage.Versions.First) do
+  begin
+    if Assigned(LDependency.Package) then
+      LTable.AddRecord([LDependency.Package.Name, LDependency.Package.LicenseType, LDependency.Version.Value.ToString])
+    else
+      LTable.AddRecord([LDependency.ID.ToString, '', '']);
+  end;
 end;
 
 procedure TDNCommandInfo.PrintDescription(const APackage: IDNPackage);
@@ -163,13 +192,15 @@ begin
     Result := TDNCommandSwitchVersions
   else if AIndex = 1 then
     Result := TDNCommandSwitchLicense
+  else if AIndex = 2 then
+    Result := TDNCommandSwitchDependencies
   else
     Result := inherited;
 end;
 
 class function TDNCommandInfo.SwitchClassCount: Integer;
 begin
-  Result := 2;
+  Result := 3;
 end;
 
 class procedure TDNCommandInfo.Validate(const AArgument: IDNCommandArgument);

@@ -34,7 +34,16 @@ uses
   DN.Command.Delphis in 'DN.Command.Delphis.pas',
   DN.Command.Switch.PanicOnError in 'DN.Command.Switch.PanicOnError.pas',
   DN.Command.Types in 'DN.Command.Types.pas',
-  DN.Command.Switch.Types in 'DN.Command.Switch.Types.pas';
+  DN.Command.Switch.Types in 'DN.Command.Switch.Types.pas',
+  DN.Command.Switch.Dependencies in 'DN.Command.Switch.Dependencies.pas',
+  DN.Setup.Dependency.Intf in '..\..\DN.Setup.Dependency.Intf.pas',
+  DN.Setup.Dependency in '..\..\DN.Setup.Dependency.pas',
+  DN.Setup.Dependency.Processor.Intf in '..\..\DN.Setup.Dependency.Processor.Intf.pas',
+  DN.Setup.Dependency.Processor in '..\..\DN.Setup.Dependency.Processor.pas',
+  DN.Setup.Dependency.Resolver.Install in '..\..\DN.Setup.Dependency.Resolver.Install.pas',
+  DN.Setup.Dependency.Resolver.Intf in '..\..\DN.Setup.Dependency.Resolver.Intf.pas',
+  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas',
+  DN.Command.Switch.IgnoreDependencies in 'DN.Command.Switch.IgnoreDependencies.pas';
 
 var
   GDPM: TDPM;

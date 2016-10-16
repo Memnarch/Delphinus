@@ -12,7 +12,9 @@ uses
   DN.DelphiInstallation.Intf,
   DN.Setup.Intf,
   DN.Package.Finder.Intf,
-  DN.Package.Version.Finder.Intf;
+  DN.Package.Version.Finder.Intf,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Processor.Intf;
 
 type
   TInstalledPackageProviderFactory = reference to function(const AComponentDirectory: string): IDNPackageProvider;
@@ -41,6 +43,9 @@ type
     function GetPanicOnError: Boolean;
     procedure SetPanicOnError(const Value: Boolean);
     procedure DefaultMessageHandler(AMessageType: TMessageType; const AMessage: string);
+    function GetInstallDependencyResolver: IDNSetupDependencyResolver;
+    function GetUninstallDependencyResolver: IDNSetupDependencyResolver;
+    function GetDependencyProcessor: IDNSetupDependencyProcessor;
   public
     constructor Create(const AKnownCommands: TArray<TDNCommandClass>;
       const AOnlinePackageProvider: IDNPackageProvider;
@@ -75,7 +80,10 @@ uses
   DN.VariableResolver.Compiler,
   DN.VariableResolver.Compiler.Factory,
   DN.Package.Finder,
-  DN.Package.Version.Finder;
+  DN.Package.Version.Finder,
+  DN.Setup.Dependency.Resolver.Install,
+  DN.Setup.Dependency.Resolver.Uninstall,
+  DN.Setup.Dependency.Processor;
 
 const
   CStarterEdition = 'Starter';
@@ -152,6 +160,25 @@ begin
   Result := FCurrentDelphi.ShortName;
 end;
 
+function TDNCommandEnvironment.GetDependencyProcessor: IDNSetupDependencyProcessor;
+begin
+  Result := TDNSetupDependencyProcessor.Create(CreateSetup());
+end;
+
+function TDNCommandEnvironment.GetInstallDependencyResolver: IDNSetupDependencyResolver;
+begin
+  Result := TDNSetupInstallDependencyResolver.Create(
+    function: IDNPackageFinder
+    begin
+      Result := CreatePackageFinder(GetInstalledPackages());
+    end,
+    function: IDNPackageFinder
+    begin
+      Result := CreatePackageFinder(GetOnlinePackages());
+    end
+  );
+end;
+
 function TDNCommandEnvironment.GetInstalledPackageProvider: IDNPackageProvider;
 var
   LCompDir: string;
@@ -191,6 +218,11 @@ end;
 function TDNCommandEnvironment.GetPanicOnError: Boolean;
 begin
   Result := FPanicOnError;
+end;
+
+function TDNCommandEnvironment.GetUninstallDependencyResolver: IDNSetupDependencyResolver;
+begin
+  Result := TDNSetupUninstallDependencyResolver.Create(GetInstalledPackages);
 end;
 
 function TDNCommandEnvironment.GetUpdatePackages: TArray<IDNPackage>;

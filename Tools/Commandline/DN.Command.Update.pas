@@ -4,7 +4,8 @@ interface
 
 uses
   DN.Command.DelphiBlock,
-  DN.Package.Intf;
+  DN.Package.Intf,
+  DN.Command.Switch;
 
 type
   TDNCommandUpdate = class(TDNCommandDelphiBlock)
@@ -13,16 +14,23 @@ type
   public
     class function Name: string; override;
     class function Description: string; override;
+    class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; override;
+    class function SwitchClassCount: Integer; override;
+
     procedure Execute; override;
   end;
 
 implementation
 
 uses
+  DN.Command.Types,
   DN.Command.Environment.Intf,
   DN.Setup.Intf,
   DN.TextTable.Intf,
-  DN.TextTable;
+  DN.TextTable,
+  DN.Command.Switch.IgnoreDependencies,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Processor.Intf;
 
 const
   CTableHeader = 'Name              UpdateTo';
@@ -40,6 +48,8 @@ var
   LSetup: IDNSetup;
   LPackage: IDNPackage;
   LUpdates: TArray<IDNPackage>;
+  LResolver: IDNSetupDependencyResolver;
+  LProcessor: IDNSetupDependencyProcessor;
 begin
   inherited;
   BeginBlock();
@@ -51,7 +61,19 @@ begin
       PrintUpdateTable(LUpdates);
       LSetup := LEnvironment.CreateSetup();
       for LPackage in LUpdates do
-        LSetup.Update(LPackage, LPackage.Versions.First);
+      begin
+        LResolver := LEnvironment.InstallDependencyResolver;
+        LProcessor := LEnvironment.DependencyProcessor;
+        if HasSwitch<TDNCommandSwitchIgnoreDependencies> or LProcessor.Execute(LResolver.Resolve(LPackage, LPackage.Versions.First)) then
+        begin
+          if not LSetup.Update(LPackage, LPackage.Versions.First) then
+            raise ECommandFailed.Create('Failed to update ' + LPackage.Name);
+        end
+        else
+        begin
+          raise ECommandFailed.Create('failed to process dependencies of ' + LPackage.Name);
+        end;
+      end;
     end
     else
     begin
@@ -81,6 +103,20 @@ begin
 
   Writeln('');
   Writeln(LTable.Text);
+end;
+
+class function TDNCommandUpdate.SwitchClass(
+  AIndex: Integer): TDNCommandSwitchClass;
+begin
+  if AIndex = 0 then
+    Result := TDNCommandSwitchIgnoreDependencies
+  else
+    Result := inherited;
+end;
+
+class function TDNCommandUpdate.SwitchClassCount: Integer;
+begin
+  Result := 1;
 end;
 
 end.

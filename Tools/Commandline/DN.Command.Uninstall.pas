@@ -3,6 +3,7 @@ unit DN.Command.Uninstall;
 interface
 
 uses
+  DN.Command.Switch,
   DN.Command.DelphiBlock;
 
 type
@@ -13,6 +14,8 @@ type
     class function Parameter(AIndex: Integer): string; override;
     class function ParameterCount: Integer; override;
     class function ParameterDescription(AIndex: Integer): string; override;
+    class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; override;
+    class function SwitchClassCount: Integer; override;
 
     procedure Execute; override;
   end;
@@ -25,7 +28,10 @@ uses
   DN.Command.Types,
   DN.Setup.Intf,
   DN.Package.Intf,
-  DN.Package.Finder.Intf;
+  DN.Package.Finder.Intf,
+  DN.Command.Switch.IgnoreDependencies,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Processor.Intf;
 
 const
   CID = 'ID';
@@ -43,6 +49,8 @@ var
   LSetup: IDNSetup;
   LPackage: IDNPackage;
   LFinder: IDNPackageFinder;
+  LResolver: IDNSetupDependencyResolver;
+  LProcessor: IDNSetupDependencyProcessor;
 begin
   inherited;
   BeginBlock();
@@ -50,9 +58,18 @@ begin
     LEnvironment := Environment as IDNCommandEnvironment;
     LFinder := LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages);
     LPackage := LFinder.Find(ReadParameter(CID));
-    LSetup := LEnvironment.CreateSetup();
-    if not LSetup.Uninstall(LPackage) then
-      raise ECommandFailed.Create('Could not uninstall ' + LPackage.Name);
+    LResolver := LEnvironment.UninstallDependencyResolver;
+    LProcessor := LEnvironment.DependencyProcessor;
+    if HasSwitch<TDNCommandSwitchIgnoreDependencies> or LProcessor.Execute(LResolver.Resolve(LPackage, LPackage.Versions.First)) then
+    begin
+      LSetup := LEnvironment.CreateSetup();
+      if not LSetup.Uninstall(LPackage) then
+        raise ECommandFailed.Create('Could not uninstall ' + LPackage.Name);
+    end
+    else
+    begin
+      raise ECommandFailed.Create('Failed to process dependencies');
+    end;
   finally
     EndBlock();
   end;
@@ -83,6 +100,20 @@ begin
     Result := 'GUID or Name of the package to uninstall'
   else
     Result := inherited;
+end;
+
+class function TDNCommandUninstall.SwitchClass(
+  AIndex: Integer): TDNCommandSwitchClass;
+begin
+  if AIndex = 0 then
+    Result := TDNCommandSwitchIgnoreDependencies
+  else
+    Result := inherited;
+end;
+
+class function TDNCommandUninstall.SwitchClassCount: Integer;
+begin
+  Result := 1;
 end;
 
 end.

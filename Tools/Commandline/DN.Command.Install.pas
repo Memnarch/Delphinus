@@ -3,6 +3,7 @@ unit DN.Command.Install;
 interface
 
 uses
+  DN.Command.Switch,
   DN.Command.DelphiBlock,
   DN.Package.Intf,
   DN.Package.Version.Intf;
@@ -16,6 +17,8 @@ type
     class function Parameter(AIndex: Integer): string; override;
     class function ParameterCount: Integer; override;
     class function ParameterDescription(AIndex: Integer): string; override;
+    class function SwitchClass(AIndex: Integer): TDNCommandSwitchClass; override;
+    class function SwitchClassCount: Integer; override;
 
     procedure Execute; override;
   end;
@@ -28,7 +31,10 @@ uses
   DN.Setup.Intf,
   DN.Version,
   DN.Package.Finder.Intf,
-  DN.Command.Types;
+  DN.Command.Types,
+  DN.Command.Switch.IgnoreDependencies,
+  DN.Setup.Dependency.Resolver.Intf,
+  DN.Setup.Dependency.Processor.Intf;
 
 const
   CID = 'ID';
@@ -48,6 +54,8 @@ var
   LPackage, LInstalledPackage: IDNPackage;
   LVersion: IDNPackageVersion;
   LFinder: IDNPackageFinder;
+  LResolver: IDNSetupDependencyResolver;
+  LProcessor: IDNSetupDependencyProcessor;
 begin
   inherited;
   BeginBlock();
@@ -59,16 +67,26 @@ begin
       LVersion := LEnvironment.VersionFinder.Find(LPackage, ReadParameter(CVersion))
     else if LPackage.Versions.Count > 0 then
       LVersion := LPackage.Versions[0];
-    LSetup := LEnvironment.CreateSetup();
-    if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
+
+    LProcessor := LEnvironment.DependencyProcessor;
+    LResolver := LEnvironment.InstallDependencyResolver;
+    if HasSwitch<TDNCommandSwitchIgnoreDependencies>() or LProcessor.Execute(LResolver.Resolve(LPackage, LVersion)) then
     begin
-      if not LSetup.Update(LPackage, LVersion) then
-        raise ECommandFailed.Create('Update failed');
+      LSetup := LEnvironment.CreateSetup();
+      if LEnvironment.CreatePackageFinder(LEnvironment.InstalledPackages).TryFind(LPackage.ID.ToString, LInstalledPackage) then
+      begin
+        if not LSetup.Update(LPackage, LVersion) then
+          raise ECommandFailed.Create('Update failed');
+      end
+      else
+      begin
+        if not LSetup.Install(LPackage, LVersion)then
+          raise ECommandFailed.Create('Installation failed');
+      end;
     end
     else
     begin
-      if not LSetup.Install(LPackage, LVersion)then
-        raise ECommandFailed.Create('Installation failed');
+      raise ECommandFailed.Create('Failed to process dependencies');
     end;
   finally
     EndBlock();
@@ -106,5 +124,19 @@ begin
   end;
 end;
 
+
+class function TDNCommandInstall.SwitchClass(
+  AIndex: Integer): TDNCommandSwitchClass;
+begin
+  if AIndex = 0 then
+    Result := TDNCommandSwitchIgnoreDependencies
+  else
+    Result := inherited;
+end;
+
+class function TDNCommandInstall.SwitchClassCount: Integer;
+begin
+  Result := 1;
+end;
 
 end.
