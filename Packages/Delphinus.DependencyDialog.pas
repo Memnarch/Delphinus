@@ -6,13 +6,15 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
   DN.Setup.Dependency.Intf,
-  Delphinus.Forms, Vcl.ImgList;
+  Delphinus.Forms, Vcl.ImgList, Vcl.StdCtrls;
 
 type
   TDependencyDialog = class(TForm)
     lvDependencies: TListView;
     ilIcons: TImageList;
+    Label1: TLabel;
     procedure FormShow(Sender: TObject);
+    procedure lvDependenciesDblClick(Sender: TObject);
   private
     FDependencies: TArray<IDNSetupDependency>;
     { Private declarations }
@@ -29,7 +31,8 @@ implementation
 
 uses
   Delphinus.Resources,
-  Delphinus.Resources.Names;
+  Delphinus.Resources.Names,
+  Delphinus.LicenseDialog;
 
 {$R *.dfm}
 
@@ -51,6 +54,7 @@ begin
     if Assigned(LDependency.Package) then
     begin
       LItem.Caption := LDependency.Package.Name;
+      LItem.SubItems.Add(LDependency.Package.LicenseType);
       if Assigned(LDependency.Version) then
         LItem.SubItems.Add(LDependency.Version.Value.ToString)
       else
@@ -70,6 +74,22 @@ begin
     end
     else
       LItem.Caption := LDependency.ID.ToString;
+  end;
+end;
+
+procedure TDependencyDialog.lvDependenciesDblClick(Sender: TObject);
+var
+  LDialog: TLicenseDialog;
+begin
+  if lvDependencies.ItemIndex > -1 then
+  begin
+    LDialog := TLicenseDialog.Create(nil);
+    try
+      LDialog.Package := FDependencies[lvDependencies.ItemIndex].Package;
+      LDialog.ShowModal();
+    finally
+      LDialog.Free();
+    end;
   end;
 end;
 
