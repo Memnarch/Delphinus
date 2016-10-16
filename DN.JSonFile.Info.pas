@@ -125,14 +125,18 @@ procedure TInfoFile.LoadDependencies(const ADependencies: TJSONArray);
 var
   LValue: TJSONValue;
   LObject: TJSONObject;
-  LDependency: TInfoDependency;
+  LDependency: TInfoDependency,
+  LVersion: TDNVersion;
 begin
   for LValue in ADependencies do
   begin
     LObject := LValue as TJSONObject;
-    LDependency.ID := ReadID(LObject);
-    LDependency.Version := TDNVersion.Parse(ReadString(LObject, 'version_min'));
-    FDependencies.Add(LDependency);
+    if TDNVersion.TryParse(ReadString(LObject, 'version_min'), LVersion) then
+    begin
+      LDependency.ID := ReadID(LObject);
+      LDependency.Version := LVersion;
+      FDependencies.Add(LDependency);
+    end;
   end;
 end;
 
