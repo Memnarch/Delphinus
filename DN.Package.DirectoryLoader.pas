@@ -42,6 +42,8 @@ var
 begin
   Result := False;
   LInfoFile := TPath.Combine(ADirectory, CInfoFile);
+  APackage.Versions.Add(TDNPackageVersion.Create() as IDNPackageVersion);
+  APackage.Name := ExtractFileName(ExcludeTrailingPathDelimiter(ADirectory));
   if TFile.Exists(LInfoFile) then
   begin
     LInfo := TInstalledInfoFile.Create();
@@ -49,9 +51,8 @@ begin
       if LInfo.LoadFromFile(LInfoFile) then
       begin
         if LInfo.Name <> '' then
-          APackage.Name := LInfo.Name
-        else
-          APackage.Name := ExtractFileName(ExcludeTrailingPathDelimiter(ADirectory));
+          APackage.Name := LInfo.Name;
+
         APackage.Author := LInfo.Author;
         APackage.Description := LInfo.Description;
         APackage.ID := LInfo.ID;
@@ -63,7 +64,7 @@ begin
         APackage.ProjectUrl := LInfo.ProjectUrl;
         APackage.HomepageUrl := LInfo.HomepageUrl;
         APackage.ReportUrl := LInfo.ReportUrl;
-        LVersion := TDNPackageVersion.Create();
+        LVersion := APackage.Versions.First;
         LVersion.Name := LInfo.Version.ToString;
         LVersion.Value := LInfo.Version;
 
