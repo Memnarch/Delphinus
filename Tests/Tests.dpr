@@ -29,7 +29,8 @@ uses
   Tests.Uninstaller.Interceptor in 'Tests.Uninstaller.Interceptor.pas',
   Tests.Uninstaller in 'Tests.Uninstaller.pas',
   Tests.Version in 'Tests.Version.pas',
-  DN.Version in '..\DN.Version.pas';
+  DN.Version in '..\DN.Version.pas',
+  Tests.Mocks.VariableResolver in 'Tests.Mocks.VariableResolver.pas';
 
 {$R *.RES}
 

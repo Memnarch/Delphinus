@@ -6,7 +6,7 @@ uses
   Generics.Collections,
   DN.Uninstaller,
   DN.JSonFile.Uninstallation,
-  DN.ToolsAPi.ExpertService.Intf,
+  DN.ExpertService.Intf,
   DN.FileService.Intf;
 
 type

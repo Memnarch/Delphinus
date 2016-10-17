@@ -6,6 +6,7 @@ uses
   Classes,
   Types,
   Generics.Collections,
+  DN.Types,
   DN.Installer,
   DN.JSonFile.Installation,
   DN.JSonFile.Uninstallation,
@@ -13,7 +14,8 @@ uses
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
   DN.ProjectGroupInfo.Intf,
-  DN.ToolsApi.ExpertService.Intf;
+  DN.VariableResolver.Compiler.Factory,
+  DN.ExpertService.Intf;
 
 type
   TMockedDirectory = record
@@ -64,7 +66,9 @@ type
     function LoadProjectGroup(const AGroupFile: string;
       out AGroup: IDNProjectGroupInfo): Boolean; override;
   public
-    constructor Create(const ACompiler: IDNCompiler; const AExpertService: IDNExpertService = nil);
+    constructor Create(const ACompiler: IDNCompiler;
+      AVariableResolverFactory: TDNCompilerVariableResolverFacory;
+      const AExpertService: IDNExpertService = nil);
     destructor Destroy; override;
     property SearchPathes: string read FSearchPathes;
     property BrowsingPathes: string read FBrowsingPathes;
@@ -121,9 +125,10 @@ begin
 end;
 
 constructor TDNInstallerInterceptor.Create(const ACompiler: IDNCompiler;
+  AVariableResolverFactory: TDNCompilerVariableResolverFacory;
   const AExpertService: IDNExpertService);
 begin
-  inherited Create(ACompiler, AExpertService);
+  inherited Create(ACompiler, AVariableResolverFactory, AExpertService);
   FMockedGroupProjects := TDictionary<string, IDNProjectGroupInfo>.Create();
   FMockedProjects := TDictionary<string, IDNProjectInfo>.Create();
   FCopiedDirectories := TList<TMockedDirectory>.Create();

@@ -12,6 +12,7 @@ type
     FVersion: TCompilerVersion;
     function GetVersion: Single; override;
   public
+    constructor Create;
     function Compile(const AProjectFile: string): Boolean; override;
     property Version: TCompilerVersion read GetVersion write FVersion;
   end;
@@ -27,6 +28,11 @@ implementation
 function TDNCompilerMock.Compile(const AProjectFile: string): Boolean;
 begin
   Result := True;
+end;
+
+constructor TDNCompilerMock.Create;
+begin
+  inherited Create(nil);
 end;
 
 function TDNCompilerMock.GetVersion: Single;

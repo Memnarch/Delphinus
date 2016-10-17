@@ -105,6 +105,7 @@
         <DCCReference Include="Tests.Uninstaller.pas"/>
         <DCCReference Include="Tests.Version.pas"/>
         <DCCReference Include="..\DN.Version.pas"/>
+        <DCCReference Include="Tests.Mocks.VariableResolver.pas"/>
         <RcItem Include="TestData\BasicInfo.json">
             <ContainerId>ResourceItem</ContainerId>
             <ResourceType>RCDATA</ResourceType>

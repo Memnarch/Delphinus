@@ -9,6 +9,7 @@ uses
   DN.JsonFile.Installation,
   DN.ProjectInfo.Intf,
   DN.ProjectGroupInfo.Intf,
+  DN.VariableResolver.Intf,
   Tests.Installer.Interceptor,
   Tests.Mocks.Compiler;
 
@@ -74,9 +75,12 @@ implementation
 uses
   SysUtils,
   IOUtils,
+  DN.Types,
   DN.Compiler.Intf,
+  DN.VariableResolver,
   Tests.Data,
-  Tests.Mocks.Projects;
+  Tests.Mocks.Projects,
+  Tests.Mocks.VariableResolver;
 
 const
   CSourceDir = 'SourceDir';
@@ -441,7 +445,7 @@ begin
   inherited;
   FCompiler := TDNCompilerMock.Create();
   FCompiler.Version := CCompilerXE;
-  FSut := TDNInstallerInterceptor.Create(FCompiler as IDNCompiler);
+  FSut := TDNInstallerInterceptor.Create(FCompiler as IDNCompiler, MockedVariableResolverFactory);
   FSut.SupportedPlatforms := [cpWin32];
 end;
 

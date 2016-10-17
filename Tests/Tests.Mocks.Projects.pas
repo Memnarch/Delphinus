@@ -4,8 +4,10 @@ interface
 
 uses
   Generics.Collections,
+  DN.Types,
   DN.Compiler.Intf,
   DN.ProjectInfo.Intf,
+  DN.DPRProperties.Intf,
   DN.ProjectGroupInfo.Intf;
 
 type
@@ -27,6 +29,7 @@ type
     function GetSupportedPlatforms: TDNCompilerPlatforms;
   public
     function LoadFromFile(const AProjectFile: string): Boolean;
+    function CreateDPRProperties: IDPRProperties;
     property IsPackage: Boolean read GetIsPackage write FIsPackage;
     property IsRuntimeOnlyPackage: Boolean read GetIsRuntimeOnlyPackage write FIsRuntimeOnlyPackage;
     property BinaryName: string read GetBinaryName write FBinaryName;
@@ -58,6 +61,9 @@ type
   function MockGroupProject(const AName: string; AProjects: array of IDNProjectInfo): IDNProjectGroupInfo;
 
 implementation
+
+uses
+  DN.DPRProperties;
 
 //factory functions
 function MockProjectExe(const AName: string; APlatforms: TDNCompilerPlatforms): IDNProjectInfo;
@@ -96,6 +102,11 @@ begin
 end;
 
 { TMockedProjectInfo }
+
+function TMockedProjectInfo.CreateDPRProperties: IDPRProperties;
+begin
+  Result := TDPRProperties.Create(FFileName);
+end;
 
 function TMockedProjectInfo.GetBinaryName: string;
 begin
