@@ -30,7 +30,10 @@ uses
   Tests.Uninstaller in 'Tests.Uninstaller.pas',
   Tests.Version in 'Tests.Version.pas',
   DN.Version in '..\DN.Version.pas',
-  Tests.Mocks.VariableResolver in 'Tests.Mocks.VariableResolver.pas';
+  Tests.Mocks.VariableResolver in 'Tests.Mocks.VariableResolver.pas',
+  Tests.SetupDependencyResolver.Install in 'Tests.SetupDependencyResolver.Install.pas',
+  Tests.Mocks.Package in 'Tests.Mocks.Package.pas',
+  Tests.SetupDependencyResolver.Uninstall in 'Tests.SetupDependencyResolver.Uninstall.pas';
 
 {$R *.RES}
 
