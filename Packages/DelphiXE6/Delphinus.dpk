@@ -144,7 +144,18 @@ contains
   DN.Setup.Dependency.Processor.Intf in '..\..\DN.Setup.Dependency.Processor.Intf.pas',
   DN.Setup.Dependency.Processor in '..\..\DN.Setup.Dependency.Processor.pas',
   DN.Setup.Dependency.Resolver.Install in '..\..\DN.Setup.Dependency.Resolver.Install.pas',
-  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas';
+  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas',
+  DN.PackageSource.Registry.Intf in '..\..\DN.PackageSource.Registry.Intf.pas',
+  DN.PackageSource.Registry in '..\..\DN.PackageSource.Registry.pas',
+  DN.PackageSource.Intf in '..\..\DN.PackageSource.Intf.pas',
+  DN.PackageSource in '..\..\DN.PackageSource.pas',
+  DN.PackageSource.Settings.Intf in '..\..\DN.PackageSource.Settings.Intf.pas',
+  DN.PackageSource.Settings in '..\..\DN.PackageSource.Settings.pas',
+  DN.PackageSource.Settings.Field.Intf in '..\..\DN.PackageSource.Settings.Field.Intf.pas',
+  DN.PackageSource.Settings.Field in '..\..\DN.PackageSource.Settings.Field.pas',
+  DN.PackageSource.Github in '..\..\DN.PackageSource.Github.pas',
+  DN.PackageSource.Settings.Github in '..\..\DN.PackageSource.Settings.Github.pas',
+  DN.Character in '..\..\DN.Character.pas';
 
 end.
 

@@ -30,9 +30,11 @@ uses
   DN.PackageFilter,
   DN.Version,
   DN.EnvironmentOptions.Intf,
+  DN.PackageSource.Registry.Intf,
+  DN.PackageSource.Settings.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions;
 
 type
   TDelphinusDialog = class(TForm)
@@ -84,6 +86,7 @@ type
     FFileService: IDNFileService;
     FDummyPic: TGraphic;
     FEnvironmentOptionsService: IDNEnvironmentOptionsService;
+    FSourceRegistry: IDNPackageSourceRegistry;
     procedure ReloadPackages;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
@@ -114,6 +117,7 @@ type
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
     procedure LoadIcons;
     procedure ShowWarning(const AMessage: string);
+    function SourceSettingsFactory(const ASourceName: string; out ASettings: IDNPackageSourceSettings): Boolean;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -134,7 +138,6 @@ uses
   DN.Types,
   DN.Package.Finder.Intf,
   DN.Package.Finder,
-  DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   DN.PackageProvider.State.Intf,
   Delphinus.SetupDialog,
@@ -150,8 +153,6 @@ uses
   DN.Setup.Dependency.Resolver.Uninstall,
   DN.Setup.Dependency.Processor,
   Delphinus.OptionsDialog,
-  DN.HttpClient.Intf,
-  DN.HttpClient.WinHttp,
   DN.Progress.Intf,
   DN.Settings,
   DN.ExpertService,
@@ -163,6 +164,9 @@ uses
   DN.VariableResolver.Intf,
   DN.VariableResolver.Compiler,
   DN.VariableResolver.Compiler.Factory,
+  DN.PackageSource.Registry,
+  DN.PackageSource.Intf,
+  DN.PackageSource.GitHub,
   Delphinus.Resources.Names,
   Delphinus.Resources,
   Delphinus.About,
@@ -230,7 +234,9 @@ end;
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
-  FSettings := TDNSettings.Create();
+  FSourceRegistry := TDNPackageSourceRegistry.Create();
+  FSourceRegistry.RegisterSource(TDNGithubPackageSource.Create() as IDNPackageSource);
+  FSettings := TDNSettings.Create(SourceSettingsFactory);
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
@@ -595,12 +601,18 @@ end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;
 var
-  LClient: IDNHttpClient;
+  LSource: IDNPackageSource;
+  LSetting: IDNPackageSourceSettings;
 begin
-  LClient := TDNWinHttpClient.Create();
-  if FSettings.OAuthToken <> '' then
-    LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
-  FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
+  FPackageProvider := nil;
+  for LSetting in FSettings.SourceSettings do
+  begin
+    if FSourceRegistry.TryGetSource(LSetting.SourceName, LSource) then
+    begin
+      FPackageProvider := LSource.NewProvider(LSetting);
+      Break;
+    end;
+  end;
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
@@ -695,6 +707,16 @@ procedure TDelphinusDialog.ShowWarning(const AMessage: string);
 begin
   lbMessage.Caption := AMessage;
   pnlWarning.Visible := True;
+end;
+
+function TDelphinusDialog.SourceSettingsFactory(const ASourceName: string;
+  out ASettings: IDNPackageSourceSettings): Boolean;
+var
+  LSource: IDNPackageSource;
+begin
+  Result := FSourceRegistry.TryGetSource(ASourceName, LSource);
+  if Result then
+    ASettings := LSource.NewSettings;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);

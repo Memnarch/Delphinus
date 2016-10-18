@@ -3,11 +3,17 @@ unit DN.Settings;
 interface
 
 uses
-  DN.Settings.Intf;
+  Generics.Collections,
+  DN.Settings.Intf,
+  DN.PackageSource.Settings.Intf;
 
 type
+  TDNPackageSourceSettingsFactory = reference to function(const ASourceName: string; out ASettings: IDNPackageSourceSettings): Boolean;
+
   TDNSettings = class(TInterfacedObject, IDNSettings, IDNElevatedSettings)
   private
+    FSourceSettings: TList<IDNPackageSourceSettings>;
+    FSettingsFactory: TDNPackageSourceSettingsFactory;
     function ReadString(const AValueName: string): string;
     procedure WriteString(const AValueName, AContent: string);
     function GetInstallationDirectory: string;
@@ -18,12 +24,17 @@ type
     procedure SetVersion(const Value: string);
     function GetInstallDate: TDateTime;
     procedure SetInstallDate(const Value: TDateTime);
+    function GetSourceSettings: TArray<IDNPackageSourceSettings>;
+    procedure LoadSources;
   public
+    constructor Create(const ASettingsFactory: TDNPackageSourceSettingsFactory);
+    destructor Destroy; override;
     procedure Clear();
     property InstallationDirectory: string read GetInstallationDirectory write SetInstallationDirectory;
     property OAuthToken: string read GetOAuthToken write SetOAuthToken;
     property Version: string read GetVersion write SetVersion;
     property InstallDate: TDateTime read GetInstallDate write SetInstallDate;
+    property SourceSettings: TArray<IDNPackageSourceSettings> read GetSourceSettings;
   end;
 
 implementation
@@ -63,6 +74,19 @@ begin
   end;
 end;
 
+constructor TDNSettings.Create(const ASettingsFactory: TDNPackageSourceSettingsFactory);
+begin
+  inherited Create();
+  FSourceSettings := TList<IDNPackageSourceSettings>.Create();
+  FSettingsFactory := ASettingsFactory;
+end;
+
+destructor TDNSettings.Destroy;
+begin
+  FSourceSettings.Free();
+  inherited;
+end;
+
 function TDNSettings.GetInstallationDirectory: string;
 begin
   Result := ReadString(CInstallationDirectory)
@@ -92,9 +116,28 @@ begin
   Result := ReadString(COAuthToken);
 end;
 
+function TDNSettings.GetSourceSettings: TArray<IDNPackageSourceSettings>;
+begin
+  if FSourceSettings.Count = 0 then
+    LoadSources();
+  Result := FSourceSettings.ToArray;
+end;
+
 function TDNSettings.GetVersion: string;
 begin
   Result := ReadString(CVersion);
+end;
+
+procedure TDNSettings.LoadSources;
+var
+  LSetting: IDNPackageSourceSettings;
+begin
+  if FSettingsFactory('GitHub', LSetting) then
+  begin
+    LSetting.Name := 'GitHub';
+    LSetting.Field['OAuthToken'].Value := OAuthToken;
+    FSourceSettings.Add(LSetting);
+  end;
 end;
 
 function TDNSettings.ReadString(const AValueName: string): string;

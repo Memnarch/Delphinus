@@ -4,8 +4,8 @@ object DelphinusOptionsDialog: TDelphinusOptionsDialog
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Options'
-  ClientHeight = 166
-  ClientWidth = 395
+  ClientHeight = 160
+  ClientWidth = 382
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,55 +14,49 @@ object DelphinusOptionsDialog: TDelphinusOptionsDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  DesignSize = (
+    382
+    160)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 8
-    Top = 8
-    Width = 64
-    Height = 13
-    Caption = 'OAuth-Token'
-  end
-  object lbResponse: TLabel
-    Left = 8
-    Top = 54
-    Width = 298
-    Height = 13
-    AutoSize = False
-  end
-  object edToken: TEdit
-    Left = 8
-    Top = 27
-    Width = 298
-    Height = 21
-    PasswordChar = '*'
-    TabOrder = 0
-  end
-  object btnTest: TButton
-    Left = 312
-    Top = 25
-    Width = 75
-    Height = 25
-    Caption = 'Test'
-    TabOrder = 1
-    OnClick = btnTestClick
-  end
   object btnOK: TButton
-    Left = 231
+    Left = 221
     Top = 133
     Width = 75
     Height = 25
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 2
+    TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 312
+    Left = 302
     Top = 133
     Width = 75
     Height = 25
     Caption = 'Cancel'
     ModalResult = 2
+    TabOrder = 1
+  end
+  object lvSources: TListView
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 126
+    Height = 154
+    Align = alLeft
+    Columns = <>
+    TabOrder = 2
+    OnSelectItem = lvSourcesSelectItem
+  end
+  object vleSettings: TValueListEditor
+    Left = 135
+    Top = 3
+    Width = 242
+    Height = 124
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 3
+    ColWidths = (
+      103
+      133)
   end
 end

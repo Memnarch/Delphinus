@@ -226,6 +226,17 @@
         <DCCReference Include="..\..\DN.Setup.Dependency.Processor.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Install.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.UnInstall.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Registry.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Registry.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Settings.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Settings.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Settings.Field.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Settings.Field.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Github.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.Settings.Github.pas"/>
+        <DCCReference Include="..\..\DN.Character.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
