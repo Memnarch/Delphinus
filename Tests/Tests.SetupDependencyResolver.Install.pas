@@ -175,8 +175,10 @@ end;
 
 procedure TSetupInstallDependencyResolverTest.TearDown;
 begin
+  FSut := nil;
+  FOnline.Free;
+  FInstalled.Free;
   inherited;
-
 end;
 
 initialization

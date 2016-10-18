@@ -98,8 +98,9 @@ end;
 
 procedure TSetupUninstallDependencyResolverTest.TearDown;
 begin
-  inherited;
+  FSut := nil;
   FInstalled.Free;
+  inherited;
 end;
 
 initialization
