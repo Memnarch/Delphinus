@@ -109,7 +109,7 @@ begin
   begin
     for LField in FSettings[Item.Index].Fields do
     begin
-      vleSettings.InsertRow(LField.Name, LField.Value.ToString, True);
+      vleSettings.InsertRow(LField.Name, LField.Value.AsString, True);
     end;
   end;
 end;
@@ -125,6 +125,7 @@ end;
 
 procedure TDelphinusOptionsDialog.StoreSettings(const ASettings: IDNSettings);
 begin
+  ASettings.SourceSettings := FSettings.ToArray;
 //  ASettings.OAuthToken := Trim(edToken.Text);
 end;
 

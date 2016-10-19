@@ -13,12 +13,13 @@ type
     function GetVersion: string;
     function GetInstallDate: TDateTime;
     function GetSourceSettings: TArray<IDNPackageSourceSettings>;
+    procedure SetSourceSettings(const Value: TArray<IDNPackageSourceSettings>);
     procedure SetOAuthToken(const Value: string);
     property InstallationDirectory: string read GetInstallationDirectory;
     property OAuthToken: string read GetOAuthToken write SetOAuthToken;
     property Version: string read GetVersion;
     property InstallDate: TDateTime read GetInstallDate;
-    property SourceSettings: TArray<IDNPackageSourceSettings> read GetSourceSettings;
+    property SourceSettings: TArray<IDNPackageSourceSettings> read GetSourceSettings write SetSourceSettings;
   end;
 
   IDNElevatedSettings = interface(IDNSettings)

@@ -25,7 +25,10 @@ type
     function GetInstallDate: TDateTime;
     procedure SetInstallDate(const Value: TDateTime);
     function GetSourceSettings: TArray<IDNPackageSourceSettings>;
+    procedure CreateDefaultSource;
     procedure LoadSources;
+    procedure SaveSources;
+    procedure SetSourceSettings(const Value: TArray<IDNPackageSourceSettings>);
   public
     constructor Create(const ASettingsFactory: TDNPackageSourceSettingsFactory);
     destructor Destroy; override;
@@ -34,17 +37,20 @@ type
     property OAuthToken: string read GetOAuthToken write SetOAuthToken;
     property Version: string read GetVersion write SetVersion;
     property InstallDate: TDateTime read GetInstallDate write SetInstallDate;
-    property SourceSettings: TArray<IDNPackageSourceSettings> read GetSourceSettings;
+    property SourceSettings: TArray<IDNPackageSourceSettings> read GetSourceSettings write SetSourceSettings;
   end;
 
 implementation
 
 uses
+  Classes,
   Windows,
   Registry,
   SysUtils,
   DateUtils,
-  StrUtils;
+  StrUtils,
+  IOUtils,
+  DN.PackageSource.Settings.Field.Intf;
 
 const
   CInstallationDirectory = 'InstallationDirectory';
@@ -52,12 +58,14 @@ const
   CVersion = 'Version';
   CInstallDate = 'InstallDate';
   CDelphinusKey = 'Software\Delphinus';
+  CDelphinusSourcesKey = CDelphinusKey + '\Sources';
   CRootKey = HKEY_CURRENT_USER;
   CDateFormat = 'yyyy-mm-dd';
   CDateSeperator = '-';
   CTimeFormat = 'hh:nn:ss:zzz';
   CTimeSeperator = ':';
   CDateTimeFormat = CDateFormat + ' ' + CTimeFormat;
+  CSourceType = 'SourceType';
 
 { TDNSettings }
 
@@ -79,6 +87,18 @@ begin
   inherited Create();
   FSourceSettings := TList<IDNPackageSourceSettings>.Create();
   FSettingsFactory := ASettingsFactory;
+end;
+
+procedure TDNSettings.CreateDefaultSource;
+var
+  LSetting: IDNPackageSourceSettings;
+begin
+  if FSettingsFactory('GitHub', LSetting) then
+  begin
+    LSetting.Name := 'GitHub';
+    LSetting.Field['OAuthToken'].Value := OAuthToken;
+    FSourceSettings.Add(LSetting);
+  end;
 end;
 
 destructor TDNSettings.Destroy;
@@ -120,6 +140,8 @@ function TDNSettings.GetSourceSettings: TArray<IDNPackageSourceSettings>;
 begin
   if FSourceSettings.Count = 0 then
     LoadSources();
+  if FSourceSettings.Count = 0 then
+    CreateDefaultSource();
   Result := FSourceSettings.ToArray;
 end;
 
@@ -130,13 +152,49 @@ end;
 
 procedure TDNSettings.LoadSources;
 var
-  LSetting: IDNPackageSourceSettings;
+  LRegistry: TRegistry;
+  LKeys: TStringList;
+  LKey, LSourceType, LPath: string;
+  LSettings: IDNPackageSourceSettings;
+  LField: IDNPackageSourceSettingsField;
 begin
-  if FSettingsFactory('GitHub', LSetting) then
-  begin
-    LSetting.Name := 'GitHub';
-    LSetting.Field['OAuthToken'].Value := OAuthToken;
-    FSourceSettings.Add(LSetting);
+  FSourceSettings.Clear();
+  LRegistry := TRegistry.Create();
+  try
+    LRegistry.RootKey := CRootKey;
+    if LRegistry.OpenKeyReadOnly(CDelphinusSourcesKey) then
+    begin
+      LKeys := TStringList.Create();
+      try
+        LRegistry.GetKeyNames(LKeys);
+        for LKey in LKeys do
+        begin
+          if LRegistry.OpenKeyReadOnly(LKey) and LRegistry.ValueExists(CSourceType) then
+          begin
+            LSourceType := LRegistry.ReadString(CSourceType);
+            if FSettingsFactory(LSourceType, LSettings) then
+            begin
+              LSettings.Name := LKey;
+              for LField in LSettings.Fields do
+              begin
+                if LRegistry.ValueExists(LField.Name) then
+                begin
+                  case LField.ValueType of
+                    ftString: LField.Value := LRegistry.ReadString(LField.Name);
+                    ftInteger: LField.Value := LRegistry.ReadInteger(LField.Name);
+                  end;
+                end;
+              end;
+              FSourceSettings.Add(LSettings);
+            end;
+          end;
+        end;
+      finally
+        LKeys.Free();
+      end;
+    end;
+  finally
+    LRegistry.Free;
   end;
 end;
 
@@ -158,6 +216,46 @@ begin
   end;
 end;
 
+procedure TDNSettings.SaveSources;
+var
+  LRegistry: TRegistry;
+  LSetting: IDNPackageSourceSettings;
+  LField: IDNPackageSourceSettingsField;
+  LPath: string;
+begin
+  LRegistry := TRegistry.Create();
+  try
+    LRegistry.RootKey := CRootKey;
+    if (not LRegistry.KeyExists(CDelphinusSourcesKey) or LRegistry.DeleteKey(CDelphinusSourcesKey)) then
+    begin
+      for LSetting in FSourceSettings do
+      begin
+        LPath := TPath.Combine(CDelphinusSourcesKey, LSetting.Name);
+        if LRegistry.OpenKey(LPath, True) then
+        begin
+          try
+            LRegistry.WriteString(CSourceType, LSetting.SourceName);
+            for LField in LSetting.Fields do
+            begin
+              if not LField.Value.IsEmpty then
+              begin
+                case LField.ValueType of
+                  ftString: LRegistry.WriteString(LField.Name, LField.Value.AsString);
+                  ftInteger: LRegistry.WriteInteger(LField.Name, LField.Value.AsInteger);
+                end;
+              end;
+            end;
+          finally
+            LRegistry.CloseKey();
+          end;
+        end;
+      end;
+    end;
+  finally
+    LRegistry.Free;
+  end;
+end;
+
 procedure TDNSettings.SetInstallationDirectory(const Value: string);
 begin
   WriteString(CInstallationDirectory, Value);
@@ -171,6 +269,14 @@ end;
 procedure TDNSettings.SetOAuthToken(const Value: string);
 begin
   WriteString(COAuthToken, Value);
+end;
+
+procedure TDNSettings.SetSourceSettings(
+  const Value: TArray<IDNPackageSourceSettings>);
+begin
+  FSourceSettings.Clear();
+  FSourceSettings.AddRange(Value);
+  SaveSources();
 end;
 
 procedure TDNSettings.SetVersion(const Value: string);
