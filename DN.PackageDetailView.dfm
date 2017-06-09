@@ -47,6 +47,7 @@ object PackageDetailView: TPackageDetailView
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'This is the repository Description'
+      EllipsisPosition = epEndEllipsis
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -19
@@ -186,6 +187,7 @@ object PackageDetailView: TPackageDetailView
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       Caption = 'Author'#39's Name'
+      EllipsisPosition = epEndEllipsis
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -15

@@ -178,7 +178,10 @@ begin
   if Assigned(FPackage) then
   begin
     lbAuthor.Caption := FPackage.Author;
-    lbDescription.Caption := FPackage.Description;
+    case string.IsNullOrWhiteSpace(FPackage.Description) of
+      False: lbDescription.Caption := FPackage.Description;
+      True: lbDescription.Caption := FPackage.Name;
+    end;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     if Assigned(FPackage.Picture.Graphic) then
       imgRepo.Picture := FPackage.Picture

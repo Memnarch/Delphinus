@@ -184,7 +184,8 @@ begin
       FExistingIDs.Add(LHeadInfo.ID, 0);
       LPackage := TDNGitHubPackage.Create();
       LPackage.OnGetLicense := GetLicense;
-      LPackage.Description := AItem.GetValue('description').Value;
+      if not AItem.GetValue('description').Null then
+        LPackage.Description := AItem.GetValue('description').Value;
       LPackage.DownloadLoaction := AItem.GetValue('archive_url').Value;
       LPackage.DownloadLoaction := StringReplace(LPackage.DownloadLoaction, CArchivePlaceholder, 'zipball/', []);
       LPackage.Author := LAuthor;
