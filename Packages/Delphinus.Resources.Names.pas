@@ -25,6 +25,7 @@ const
   Ico_Android = 'Ico_Android';
   Ico_Mac = 'Ico_Mac';
   Ico_IOS = 'Ico_IOS';
+  Ico_Linux = 'Ico_Linux';
   Ico_Folder = 'Ico_Folder';
   Ico_Refresh = 'Ico_Refresh';
   Ico_Options = 'Ico_Options';
