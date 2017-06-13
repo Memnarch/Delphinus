@@ -102,6 +102,14 @@ begin
         Result := Result + [cpWin64]
       else if SameText(LPlatform, 'OSX32') then
         Result := Result + [cpOSX32]
+      else if SameText(LPlatform, 'Android') then
+        Result := Result + [cpAndroid]
+      else if SameText(LPlatform, 'IOSDevice32') then
+        Result := Result + [cpIOSDevice32]
+      else if SameText(LPlatform, 'IOSDevice64') then
+        Result := Result + [cpIOSDevice64]
+      else if SameText(LPlatform, 'Linux64') then
+        Result := Result + [cpLinux64]
     end;
   end
   else
