@@ -244,7 +244,7 @@ begin
                       FSupportedPlatforms := FSupportedPlatforms + [cpOSX32]
                     else if SameText(LPlatform.Attributes['value'], 'Android') then
                       FSupportedPlatforms := FSupportedPlatforms + [cpAndroid]
-                    else if SameText(LPlatform.Attributes['value'], 'cpIOSDevice32') then
+                    else if SameText(LPlatform.Attributes['value'], 'iOSDevice32') then
                       FSupportedPlatforms := FSupportedPlatforms + [cpIOSDevice32]
                     else if SameText(LPlatform.Attributes['value'], 'iOSDevice64') then
                       FSupportedPlatforms := FSupportedPlatforms + [cpIOSDevice64]
