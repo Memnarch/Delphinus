@@ -161,8 +161,8 @@ begin
   btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
   btnHome.ImageIndex := AddIconToImageList(ilButtons, Ico_Home);
   btnHome.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Home_Disabled);
-  btnProject.ImageIndex := AddIconToImageList(ilButtons, Ico_Github);
-  btnProject.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Github_Disabled);
+  btnProject.ImageIndex := AddIconToImageList(ilButtons, Ico_Repo);
+  btnProject.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Repo_Disabled);
   btnReport.ImageIndex := AddIconToImageList(ilButtons, Ico_Bug);
   btnReport.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Bug_Disabled);
 end;

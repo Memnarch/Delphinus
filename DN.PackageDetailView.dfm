@@ -256,7 +256,7 @@ object PackageDetailView: TPackageDetailView
       Top = 443
       Width = 38
       Height = 38
-      Hint = 'Visit project on Github'
+      Hint = 'Visit project'
       Anchors = [akLeft, akBottom]
       ImageIndex = 1
       Images = ilButtons
