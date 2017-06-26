@@ -196,7 +196,7 @@ begin
 
     Canvas.Draw(CPadding, CPadding, FTarget);
     Canvas.Font.Style := [TFontStyle.fsBold];
-    Canvas.Font.Color := clCaptionText;
+    Canvas.Font.Color := clWindowText;
     Canvas.TextOut(CLeftMargin, CMargin, FPackage.Name);
     Canvas.Font.Style := [];
     Canvas.Font.Color := clGrayText;
