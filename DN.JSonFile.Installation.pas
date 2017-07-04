@@ -80,7 +80,8 @@ implementation
 
 uses
   SysUtils,
-  StrUtils;
+  StrUtils,
+  DN.Utils;
 
 { TInstallationFile }
 
@@ -89,33 +90,21 @@ function TInstallationFile.GetPlatforms(
 var
   LPlatforms: TStringDynArray;
   LPlatform: string;
+  LCompilerPlatform: TDNCompilerPlatform;
 begin
+  Result := [];
   LPlatforms := SplitString(APlatforms, ';');
   if Length(LPlatforms) > 0 then
   begin
     Result := [];
     for LPlatform in LPlatforms do
     begin
-      if SameText(LPlatform, 'Win32') then
-        Result := Result + [cpWin32]
-      else if SameText(LPlatform, 'Win64') then
-        Result := Result + [cpWin64]
-      else if SameText(LPlatform, 'OSX32') then
-        Result := Result + [cpOSX32]
-      else if SameText(LPlatform, 'Android') then
-        Result := Result + [cpAndroid]
-      else if SameText(LPlatform, 'IOSDevice32') then
-        Result := Result + [cpIOSDevice32]
-      else if SameText(LPlatform, 'IOSDevice64') then
-        Result := Result + [cpIOSDevice64]
-      else if SameText(LPlatform, 'Linux64') then
-        Result := Result + [cpLinux64]
+      if TryPlatformNameToCompilerPlatform(LPlatform, LCompilerPlatform) then
+        Result := Result + [LCompilerPlatform];
     end;
-  end
-  else
-  begin
-    Result := [cpWin32];
   end;
+  if Result = [] then
+    Result := [cpWin32];
 end;
 
 procedure TInstallationFile.Load(const ARoot: TJSONObject);
