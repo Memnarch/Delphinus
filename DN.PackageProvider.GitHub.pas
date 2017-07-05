@@ -176,7 +176,7 @@ function TDNGitHubPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
 var
   LPackage: TDNGitHubPackage;
   LName, LAuthor, LDefaultBranch, LReleases: string;
-  LFullName, LPushDate, LOldPushDate, LReportUrl: string;
+  LFullName, LPushDate, LOldPushDate: string;
   LHeadInfo: TInfoFile;
   LHomePage: TJSONValue;
   LHeadVersion: TDNPackageVersion;
