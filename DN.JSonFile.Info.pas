@@ -56,17 +56,17 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    property Picture: string read FPicture;
+    property Picture: string read FPicture write FPicture;
     property ID: TGUID read FID write FID;
     property Name: string read FName write FName;
     property LicenseType: string read FLicenseType write FLicenseType;
     property LicenseFile: string read FLicenseFile write FLicenseFile;
-    property FirstVersion: string read FFirstVersion;
+    property FirstVersion: string read FFirstVersion write FFirstVersion;
     property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin;
     property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax;
-    property CompilerMin: TCompilerVersion read FCompilerMin;
-    property CompilerMax: TCompilerVersion read FCompilerMax;
-    property Platforms: TDNCompilerPlatforms read FPlatforms;
+    property CompilerMin: TCompilerVersion read FCompilerMin write FCompilerMin;
+    property CompilerMax: TCompilerVersion read FCompilerMax write FCompilerMax;
+    property Platforms: TDNCompilerPlatforms read FPlatforms write FPlatforms;
     property Dependencies: TList<TInfoDependency> read FDependencies;
     property RepositoryType: string read FRepositoryType write FRepositoryType;
     property RepositoryUser: string read FRepositoryUser write FRepositoryUser;

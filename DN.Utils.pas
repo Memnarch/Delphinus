@@ -7,7 +7,7 @@ uses
 
 function GetDelphiName(const ACompilerVersion: TCompilerVersion): string;
 function GenerateSupportsString(const AMin, AMax: TCompilerVersion): string;
-function GeneratePlatformString(APlatforms: TDNCompilerPlatforms): string;
+function GeneratePlatformString(APlatforms: TDNCompilerPlatforms; const ASeperator: string = ', '): string;
 
 const
   TDNCompilerTargetName: array[Low(TDNCompilerTarget)..High(TDNCompilerTarget)] of string = ('Build', 'Compile');
@@ -59,7 +59,7 @@ begin
   end;
 end;
 
-function GeneratePlatformString(APlatforms: TDNCompilerPlatforms): string;
+function GeneratePlatformString(APlatforms: TDNCompilerPlatforms; const ASeperator: string = ', '): string;
 var
   LPlatform: TDNCompilerPlatform;
   LRequiresSeperator: Boolean;
@@ -69,7 +69,7 @@ begin
   for LPlatform in APlatforms do
   begin
     if LRequiresSeperator then
-      Result := Result + ', ';
+      Result := Result + ASeperator;
 
     Result := Result + TDNCompilerPlatformName[LPlatform];
     LRequiresSeperator := True;
