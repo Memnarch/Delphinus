@@ -62,8 +62,8 @@ type
     property LicenseType: string read FLicenseType write FLicenseType;
     property LicenseFile: string read FLicenseFile write FLicenseFile;
     property FirstVersion: string read FFirstVersion write FFirstVersion;
-    property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin;
-    property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax;
+    property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin write FPackageCompilerMin;
+    property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax write FPackageCompilerMax;
     property CompilerMin: TCompilerVersion read FCompilerMin write FCompilerMin;
     property CompilerMax: TCompilerVersion read FCompilerMax write FCompilerMax;
     property Platforms: TDNCompilerPlatforms read FPlatforms write FPlatforms;
