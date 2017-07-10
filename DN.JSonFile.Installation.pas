@@ -11,6 +11,7 @@ interface
 
 uses
   Types,
+  Generics.Collections,
   DN.JSon,
   DN.JSOnFile,
   DN.Types;
@@ -53,33 +54,35 @@ type
 
   TInstallationFile = class(TJSonFile)
   private
-    FSourceFolders: TArray<TFolder>;
-    FSearchPath: TArray<TSearchPath>;
-    FProjects: TArray<TProject>;
-    FBrowsingPathes: TArray<TSearchPath>;
-    FRawFolders: TArray<TRawFolder>;
-    FExperts: TArray<TExpert>;
+    FSourceFolders: TList<TFolder>;
+    FSearchPath: TList<TSearchPath>;
+    FProjects: TList<TProject>;
+    FBrowsingPathes: TList<TSearchPath>;
+    FRawFolders: TList<TRawFolder>;
+    FExperts: TList<TExpert>;
   protected
-    procedure LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TArray<TSearchPath>);
+    procedure LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TList<TSearchPath>);
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
     procedure LoadSourceFolders(const AFolders: TJSONArray);
     procedure LoadRawFolders(const ARawFolders: TJSONArray);
     procedure LoadProjects(const AProjects: TJSONArray);
-    procedure LoadExperts(const AExperts: TJSonArray);
+    procedure LoadExperts(const AExperts: TJSONArray);
     procedure SaveSourceFolders(const AFolders: TJSONArray);
     procedure SaveRawFolders(const ARawFolders: TJSONArray);
     procedure SaveProjects(const AProjects: TJSONArray);
-    procedure SaveExperts(const AExperts: TJSonArray);
+    procedure SaveExperts(const AExperts: TJSONArray);
     procedure SavePathes(const ARoot: TJSONArray; const APathes: TArray<TSearchPath>);
     function GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
   public
-    property SearchPathes: TArray<TSearchPath> read FSearchPath write FSearchPath;
-    property BrowsingPathes: TArray<TSearchPath> read FBrowsingPathes write FBrowsingPathes;
-    property SourceFolders: TArray<TFolder> read FSourceFolders write FSourceFolders;
-    property RawFolders: TArray<TRawFolder> read FRawFolders write FRawFolders;
-    property Projects: TArray<TProject> read FProjects write FProjects;
-    property Experts: TArray<TExpert> read FExperts write FExperts;
+    constructor Create;
+    destructor Destroy; override;
+    property SearchPathes: TArray<TSearchPath> read FSearchPath;
+    property BrowsingPathes: TArray<TSearchPath> read FBrowsingPathes;
+    property SourceFolders: TArray<TFolder> read FSourceFolders;
+    property RawFolders: TArray<TRawFolder> read FRawFolders;
+    property Projects: TArray<TProject> read FProjects;
+    property Experts: TArray<TExpert> read FExperts;
   end;
 
 implementation
@@ -91,8 +94,28 @@ uses
 
 { TInstallationFile }
 
-function TInstallationFile.GetPlatforms(
-  const APlatforms: string): TDNCompilerPlatforms;
+constructor TInstallationFile.Create;
+begin
+  FSourceFolders := TList<TFolder>.Create;
+  FSearchPath := TList<TSearchPath>.Create;
+  FProjects := TList<TProject>.Create;
+  FBrowsingPathes := TList<TSearchPath>.Create;
+  FRawFolders := TList<TRawFolder>.Create;
+  FExperts := TList<TExpert>.Create;
+end;
+
+destructor TInstallationFile.Destroy;
+begin
+  FExperts.Free;
+  FRawFolders.Free;
+  FBrowsingPathes.Free;
+  FProjects.Free;
+  FSearchPath.Free;
+  FSourceFolders.Free;
+  inherited;
+end;
+
+function TInstallationFile.GetPlatforms(const APlatforms: string): TDNCompilerPlatforms;
 var
   LPlatforms: TStringDynArray;
   LPlatform: string;
@@ -115,7 +138,7 @@ end;
 
 procedure TInstallationFile.Load(const ARoot: TJSONObject);
 var
-  LArray: TJSonArray;
+  LArray: TJSONArray;
 begin
   inherited;
   LoadPathes(ARoot, 'search_pathes', FSearchPath);
@@ -134,59 +157,62 @@ begin
     LoadExperts(LArray);
 end;
 
-procedure TInstallationFile.LoadExperts(const AExperts: TJSonArray);
+procedure TInstallationFile.LoadExperts(const AExperts: TJSONArray);
 var
   i: Integer;
   LItem: TJSONObject;
   LCompiler: Integer;
+  LExpert: TExpert;
 begin
-  SetLength(FExperts, AExperts.Count);
   for i := 0 to Pred(AExperts.Count) do
   begin
     LItem := AExperts.Items[i] as TJSONObject;
-    FExperts[i].Expert := ReadString(LItem, 'expert');
-    FExperts[i].HotReload := ReadBoolean(LItem, 'hot_reload');
+    LExpert := FExperts[i];
+    LExpert.Expert := ReadString(LItem, 'expert');
+    LExpert.HotReload := ReadBoolean(LItem, 'hot_reload');
     LCompiler := ReadInteger(LItem, 'compiler');
     if LCompiler > 0 then
     begin
-      FExperts[i].CompilerMin := LCompiler;
-      FExperts[i].CompilerMax := LCompiler;
+      LExpert.CompilerMin := LCompiler;
+      LExpert.CompilerMax := LCompiler;
     end
     else
     begin
-      FExperts[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-      FExperts[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+      LExpert.CompilerMin := ReadInteger(LItem, 'compiler_min');
+      LExpert.CompilerMax := ReadInteger(LItem, 'compiler_max');
     end;
+    FExperts[i] := LExpert;
   end;
 end;
 
-procedure TInstallationFile.LoadPathes(const ARoot: TJSONObject;
-  const AName: string; out APathes: TArray<TSearchPath>);
+procedure TInstallationFile.LoadPathes(const ARoot: TJSONObject; const AName: string; out APathes: TList<TSearchPath>);
 var
-  LArray: TJSonArray;
+  LArray: TJSONArray;
   LItem: TJSONObject;
+  LPath: TSearchPath;
   i: Integer;
   LCompiler: Integer;
 begin
   if ReadArray(ARoot, AName, LArray) then
   begin
-    SetLength(APathes, LArray.Count);
     for i := 0 to Pred(LArray.Count) do
     begin
       LItem := LArray.Items[i] as TJSONObject;
-      APathes[i].Path := ReadString(LItem, 'pathes');
+      LPath := APathes[i];
+      LPath.Path := ReadString(LItem, 'pathes');
       LCompiler := ReadInteger(LItem, 'compiler');
       if LCompiler > 0 then
       begin
-        APathes[i].CompilerMin := LCompiler;
-        APathes[i].CompilerMax := LCompiler;
+        LPath.CompilerMin := LCompiler;
+        LPath.CompilerMax := LCompiler;
       end
       else
       begin
-        APathes[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-        APathes[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+        LPath.CompilerMin := ReadInteger(LItem, 'compiler_min');
+        LPath.CompilerMax := ReadInteger(LItem, 'compiler_max');
       end;
-      APathes[i].Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
+      LPath.Platforms := GetPlatforms(ReadString(LItem, 'platforms'));
+      APathes[i] := LPath;
     end;
   end;
 end;
@@ -196,23 +222,25 @@ var
   i: Integer;
   LItem: TJSONObject;
   LCompiler: Integer;
+  LProject: TProject;
 begin
-  SetLength(FProjects, AProjects.Count);
   for i := 0 to Pred(AProjects.Count) do
   begin
     LItem := AProjects.Items[i] as TJSONObject;
-    FProjects[i].Project := ReadString(LItem, 'project');
+    LProject := FProjects[i];
+    LProject.Project := ReadString(LItem, 'project');
     LCompiler := ReadInteger(LItem, 'compiler');
     if LCompiler > 0 then
     begin
-      FProjects[i].CompilerMin := LCompiler;
-      FProjects[i].CompilerMax := LCompiler;
+      LProject.CompilerMin := LCompiler;
+      LProject.CompilerMax := LCompiler;
     end
     else
     begin
-      FProjects[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-      FProjects[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+      LProject.CompilerMin := ReadInteger(LItem, 'compiler_min');
+      LProject.CompilerMax := ReadInteger(LItem, 'compiler_max');
     end;
+    FProjects[i] := LProject;
   end;
 end;
 
@@ -221,23 +249,25 @@ var
   i: Integer;
   LItem: TJSONObject;
   LCompiler: Integer;
+  LRawFolder: TRawFolder;
 begin
-  SetLength(FRawFolders, ARawFolders.Count);
   for i := 0 to Pred(ARawFolders.Count) do
   begin
     LItem := ARawFolders.Items[i] as TJSONObject;
-    FRawFolders[i].Folder := ReadString(LItem, 'folder');
+    LRawFolder := FRawFolders[i];
+    LRawFolder.Folder := ReadString(LItem, 'folder');
     LCompiler := ReadInteger(LItem, 'compiler');
     if LCompiler > 0 then
     begin
-      FRawFolders[i].CompilerMin := LCompiler;
-      FRawFolders[i].CompilerMax := LCompiler;
+      LRawFolder.CompilerMin := LCompiler;
+      LRawFolder.CompilerMax := LCompiler;
     end
     else
     begin
-      FRawFolders[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-      FRawFolders[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+      LRawFolder.CompilerMin := ReadInteger(LItem, 'compiler_min');
+      LRawFolder.CompilerMax := ReadInteger(LItem, 'compiler_max');
     end;
+    FRawFolders[i] := LRawFolder;
   end;
 end;
 
@@ -246,71 +276,73 @@ var
   i: Integer;
   LItem: TJSONObject;
   LCompiler: Integer;
+  LFolder: TFolder;
 begin
-  SetLength(FSourceFolders, AFolders.Count);
   for i := 0 to Pred(AFolders.Count) do
   begin
     LItem := AFolders.Items[i] as TJSONObject;
-    FSourceFolders[i].Folder := ReadString(LItem, 'folder');
-    FSourceFolders[i].Base := ReadString(LItem, 'base');
-    FSourceFolders[i].Recursive := ReadBoolean(LItem, 'recursive');
-    FSourceFolders[i].Filter := ReadString(LItem, 'filter');
+    LFolder := FSourceFolders[i];
+    LFolder.Folder := ReadString(LItem, 'folder');
+    LFolder.Base := ReadString(LItem, 'base');
+    LFolder.Recursive := ReadBoolean(LItem, 'recursive');
+    LFolder.Filter := ReadString(LItem, 'filter');
     LCompiler := ReadInteger(LItem, 'compiler');
     if LCompiler > 0 then
     begin
-      FSourceFolders[i].CompilerMin := LCompiler;
-      FSourceFolders[i].CompilerMax := LCompiler;
+      LFolder.CompilerMin := LCompiler;
+      LFolder.CompilerMax := LCompiler;
     end
     else
     begin
-      FSourceFolders[i].CompilerMin := ReadInteger(LItem, 'compiler_min');
-      FSourceFolders[i].CompilerMax := ReadInteger(LItem, 'compiler_max');
+      LFolder.CompilerMin := ReadInteger(LItem, 'compiler_min');
+      LFolder.CompilerMax := ReadInteger(LItem, 'compiler_max');
     end;
+    FSourceFolders[i] := LFolder;
   end;
 end;
 
 procedure TInstallationFile.Save(const ARoot: TJSONObject);
 var
-  LArray: TJSonArray;
+  LArray: TJSONArray;
 begin
   inherited;
-  if Length(FSearchPath) > 0 then
+  if FSearchPath.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'search_pathes');
-    SavePathes(LArray, FSearchPath);;
+    SavePathes(LArray, FSearchPath.ToArray);
   end;
-  if Length(FBrowsingPathes) > 0 then
+  if FBrowsingPathes.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'browsing_pathes');
-    SavePathes(LArray, FBrowsingPathes);
+    SavePathes(LArray, FBrowsingPathes.ToArray);
   end;
 
-  if Length(FSourceFolders) > 0 then
+  if FSourceFolders.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'source_folders');
     SaveSourceFolders(LArray);
   end;
 
-  if Length(FRawFolders) > 0 then
+  if FRawFolders.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'raw_folders');
     SaveRawFolders(LArray);
   end;
 
-  if Length(FProjects) > 0 then
+  if FProjects.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'projects');
     SaveProjects(LArray);
   end;
 
-  if Length(FExperts) > 0 then
+  if FExperts.Count > 0 then
   begin
     LArray := WriteArray(ARoot, 'experts');
     SaveExperts(LArray);
   end;
 end;
 
-procedure TInstallationFile.SaveExperts(const AExperts: TJSonArray);
+procedure TInstallationFile.SaveExperts(const AExperts: TJSONArray);
 var
   LItem: TJSONObject;
   LExpert: TExpert;
@@ -337,8 +369,7 @@ begin
   end;
 end;
 
-procedure TInstallationFile.SavePathes(const ARoot: TJSONArray;
-  const APathes: TArray<TSearchPath>);
+procedure TInstallationFile.SavePathes(const ARoot: TJSONArray; const APathes: TArray<TSearchPath>);
 var
   LItem: TJSONObject;
   LPath: TSearchPath;
@@ -447,3 +478,4 @@ begin
 end;
 
 end.
+
