@@ -709,26 +709,26 @@ function TDNInstaller.ProcessInstallation(AInstallation: TInstallationFile;
   const ASourceDirectory, ATargetDirectory, ALicenceFile: string): Boolean;
 begin
   FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Experts', 'Adding Pathes']);
-  ProcessRawFolders(AInstallation.RawFolders, ASourceDirectory);
+  ProcessRawFolders(AInstallation.RawFolders.ToArray, ASourceDirectory);
   FProgress.NextTask();
 
-  ProcessSourceFolders(AInstallation.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
+  ProcessSourceFolders(AInstallation.SourceFolders.ToArray, ASourceDirectory, GetSourceFolder(ATargetDirectory));
   CopyMetaData(ASourceDirectory, ATargetDirectory);
   CopyLicense(ASourceDirectory, ATargetDirectory, ALicenceFile);
   FProgress.NextTask();
 
-  Result := ProcessProjects(AInstallation.Projects, ATargetDirectory);
+  Result := ProcessProjects(AInstallation.Projects.ToArray, ATargetDirectory);
   FProgress.NextTask();
 
-  Result := Result and ProcessExperts(AInstallation.Experts);
+  Result := Result and ProcessExperts(AInstallation.Experts.ToArray);
   FProgress.NextTask();
 
   FProgress.SetTaskProgress('Libpath', 0, 2);
   ProcessLibPathes();
   FProgress.SetTaskProgress('SearchPath', 1, 2);
-  ProcessPathes(AInstallation.SearchPathes, ATargetDirectory, tpSearchPath);
+  ProcessPathes(AInstallation.SearchPathes.ToArray, ATargetDirectory, tpSearchPath);
   FProgress.SetTaskProgress('BrowsingPath', 2, 2);
-  ProcessPathes(AInstallation.BrowsingPathes, ATargetDirectory, tpBrowsingPath);
+  ProcessPathes(AInstallation.BrowsingPathes.ToArray, ATargetDirectory, tpBrowsingPath);
   FProgress.Completed();
 end;
 
