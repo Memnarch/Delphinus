@@ -21,7 +21,6 @@ type
     FVersion: TDNVersion;
     FAuthor: string;
     FProjectUrl: string;
-    FReportUrl: string;
     FHomepageUrl: string;
   protected
     procedure Load(const ARoot: TJSONObject); override;
@@ -32,7 +31,6 @@ type
     property Version: TDNVersion read FVersion write FVersion;
     property ProjectUrl: string read FProjectUrl write FProjectUrl;
     property HomepageUrl: string read FHomepageUrl write FHomepageUrl;
-    property ReportUrl: string read FReportUrl write FReportUrl;
   end;
 
 implementation
@@ -48,7 +46,6 @@ begin
     FVersion := TDNVersion.Create();
   FProjectUrl := ReadString(ARoot, 'project_url');
   FHomepageUrl := ReadString(ARoot, 'homepage_url');
-  FReportUrl := ReadString(ARoot, 'report_url');
 end;
 
 procedure TInstalledInfoFile.Save(const ARoot: TJSONObject);
@@ -59,7 +56,6 @@ begin
   WriteString(ARoot, 'version', FVersion.ToString);
   WriteString(ARoot, 'project_url', FProjectUrl);
   WriteString(ARoot, 'homepage_url', FHomepageUrl);
-  WriteString(ARoot, 'report_url', FReportUrl);
 end;
 
 end.

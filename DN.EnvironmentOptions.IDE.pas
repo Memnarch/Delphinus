@@ -59,7 +59,9 @@ uses
 
 const
   CLibraryKey = 'Library';
-  CPlatformKeys: array[cpWin32..cpOSX32] of string = ('Win32', 'Win64', 'OSX32');
+  //these maybe different than the names used by the Compiler.
+  //for example it is Android for the compiler, but Android32 for the registry
+  CPlatformKeys: array[cpWin32..cpLinux64] of string = ('Win32', 'Win64', 'OSX32', 'Android32', 'iOSDevice32', 'iOSDevice64', 'Linux64');
 
 { TDNIDEEnvironmentOptionsService }
 

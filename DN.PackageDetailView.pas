@@ -161,8 +161,8 @@ begin
   btnLicense.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Agreement_Disabled);
   btnHome.ImageIndex := AddIconToImageList(ilButtons, Ico_Home);
   btnHome.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Home_Disabled);
-  btnProject.ImageIndex := AddIconToImageList(ilButtons, Ico_Github);
-  btnProject.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Github_Disabled);
+  btnProject.ImageIndex := AddIconToImageList(ilButtons, Ico_Repo);
+  btnProject.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Repo_Disabled);
   btnReport.ImageIndex := AddIconToImageList(ilButtons, Ico_Bug);
   btnReport.DisabledImageIndex := AddIconToImageList(ilButtons, Ico_Bug_Disabled);
 end;
@@ -178,10 +178,10 @@ begin
   if Assigned(FPackage) then
   begin
     lbAuthor.Caption := FPackage.Author;
-    case string.IsNullOrWhiteSpace(FPackage.Description) of
-      False: lbDescription.Caption := FPackage.Description;
-      True: lbDescription.Caption := FPackage.Name;
-    end;
+    if Trim(FPackage.Description) = '' then
+      lbDescription.Caption := FPackage.Name
+    else
+      lbDescription.Caption := FPackage.Description;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     if Assigned(FPackage.Picture.Graphic) then
       imgRepo.Picture := FPackage.Picture

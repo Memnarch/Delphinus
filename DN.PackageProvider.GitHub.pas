@@ -42,7 +42,8 @@ type
     function CreatePackageWithMetaInfo(AItem: TJSONObject; out APackage: IDNPackage): Boolean;
     procedure LoadPicture(APicture: TPicture; AAuthor, ARepository, AVersion, APictureFile: string);
     function GetInfoFile(const AAuthor, ARepository, AVersion: string; AInfo: TInfoFile): Boolean;
-    function GetFileText(const AAuthor, ARepository, AVersion, AFilePath: string; out AText: string): Boolean;
+    function GetGithubFileText(const AAuthor, ARepository, AVersion, AFilePath: string; out AText: string): Boolean;
+    function GetBitbucketFileText(const AAuthor, ARepository, AVersion, AFilePath: string; out AText: string): Boolean;
     function GetFileStream(const AAuthor, ARepository, AVersion, AFilePath: string; AFile: TStream): Boolean;
     function GetReleaseText(const AAuthor, ARepository: string; out AReleases: string): Boolean;
     procedure HandleDownloadProgress(AProgress, AMax: Int64);
@@ -52,6 +53,9 @@ type
     function GetLicense(const APackage: TDNGitHubPackage): string;
     function GetPushDateFile: string;
     function GetRepoList(out ARepos: TJSONArray): Boolean; virtual;
+    function GetRepositoryDownloadUrl(const AName, AUser, ARepo, AVersion: string): string;
+    function GetRepositoryIssueUrl(const AName, AUser, ARepo: string): string;
+    function GetProjectUrl(const AName, AUser, ARepo: string): string;
     procedure SavePushDates;
     procedure LoadPushDates;
     //properties for interfaceredirection
@@ -89,14 +93,30 @@ uses
   DN.PackageProvider.GitHub.State;
 
 const
+  CGithup = 'Github';
+  CGithubProjectUrl = 'https://github.com/%s/%s';
+  CGithubIssueUrl = 'https://github.com/%s/%s/issues';
+  CGithubDownloadUrl = 'https://api.github.com/repos/%s/%s/zipball/%s';
   CGithubFileContent = 'https://api.github.com/repos/%s/%s/contents/%s?ref=%s';//user/repo filepath/branch
   CGitRepoSearch = 'https://api.github.com/search/repositories?q="Delphinus-Support"+in:readme&per_page=100';
   CGithubRepoReleases = 'https://api.github.com/repos/%s/%s/releases';// user/repo/releases
   CMediaTypeRaw = 'application/vnd.github.v3.raw';
   CPushDates = 'PushDates.ini';
 
+  CBitbucket = 'Bitbucket';
+  CBitbucketDownloadUrl = 'https://bitbucket.org/%s/%s/get/%s.zip';
+  CBitbucketIssueUrl = 'https://bitbucket.org/%s/%s/issues';
+  CBitbucketFileContent = 'https://bitbucket.org/%s/%s/raw/%s/%s';
+  CBitbucketProjectUrl = 'https://bitbucket.org/%s/%s';
+
+
+
+
+
 type
-  ERateLimitException = EAbort;
+  EGithubProviderException = EAbort;
+  ERateLimitException = EGithubProviderException;
+  EInvalidProviderSetup = EGithubProviderException;
 
 { TDCPMPackageProvider }
 
@@ -192,12 +212,18 @@ begin
       LPackage.RepositoryName := LName;
       LPackage.DefaultBranch := LDefaultBranch;
 
-      LPackage.ProjectUrl := AItem.GetValue('html_url').Value;
+      LPackage.ProjectUrl := GetProjectUrl(LHeadInfo.RepositoryType, LHeadInfo.RepositoryUser, LHeadInfo.Repository);
+      if LPackage.ProjectUrl = '' then
+        LPackage.ProjectUrl := AItem.GetValue('html_url').Value;
       LHomePage := AItem.GetValue('homepage');
       if LHomePage is TJSONString then
         LPackage.HomepageUrl := LHomePage.Value;
 
-      if AItem.GetValue('has_issues') is TJSONTrue then
+      if LHeadInfo.RepositoryRedirectIssues then
+        LPackage.ReportUrl := GetRepositoryIssueUrl(LHeadInfo.RepositoryType, LHeadInfo.RepositoryUser, LHeadInfo.Repository);
+      if LHeadInfo.ReportUrl <> '' then
+        LPackage.ReportUrl := LHeadInfo.ReportUrl;
+      if (LPackage.ReportUrl = '') and (AItem.GetValue('has_issues') is TJSONTrue) then
         LPackage.ReportUrl := LPackage.ProjectUrl + '/issues';
       
       if LHeadInfo.Name <> '' then
@@ -210,6 +236,9 @@ begin
       LPackage.LicenseType := LHeadInfo.LicenseType;
       LPackage.LicenseFile := LHeadInfo.LicenseFile;
       LPackage.Platforms := LHeadInfo.Platforms;
+      LPackage.RepositoryType := LHeadInfo.RepositoryType;
+      LPackage.RepositoryUser := LHeadInfo.RepositoryUser;
+      LPackage.Repository := LHeadInfo.Repository;
       APackage := LPackage;
       if FLoadPictures then
         LoadPicture(APackage.Picture, LAuthor, LPackage.RepositoryName, LPackage.DefaultBranch, LHeadInfo.Picture);
@@ -240,35 +269,55 @@ begin
   inherited;
 end;
 
+function ExtractAndDeleteArchive(const AArchive: string; ARootDir: string): string;
+var
+  LFolder: string;
+  LDirs: TStringDynArray;
+begin
+  Result := '';
+  LFolder := TPath.Combine(ARootDir, TGuid.NewGuid.ToString);
+  if ForceDirectories(LFolder) and ShellUnzip(AArchive, LFolder) then
+  begin
+    LDirs := TDirectory.GetDirectories(LFolder);
+    if Length(LDirs) = 1 then
+      Result := LDirs[0];
+  end;
+  TFile.Delete(AArchive);
+end;
+
 function TDNGitHubPackageProvider.Download(const APackage: IDNPackage;
   const AVersion: string; const AFolder: string; out AContentFolder: string): Boolean;
 var
-  LArchiveFile, LFolder: string;
-  LDirs: TStringDynArray;
+  LArchiveFile, LProviderFolder, LVersion, LProviderUrl: string;
+  LGithubPackage: TDNGitHubPackage;
 const
   CNamePrefix = 'filename=';
 begin
   FProgress.SetTasks(['Downloading']);
   LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
   FClient.OnProgress := HandleDownloadProgress;
-  Result := FClient.Download(APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch), LArchiveFile) = HTTPErrorOk;
+  LVersion := IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch);
+  Result := FClient.Download(APackage.DownloadLoaction + LVersion, LArchiveFile) = HTTPErrorOk;
+  if Result then
+  begin
+    AContentFolder := ExtractAndDeleteArchive(LArchiveFile, AFolder);
+    if APackage is TDNGitHubPackage then
+    begin
+      LGithubPackage := APackage as TDNGitHubPackage;
+      if LGithubPackage.RepositoryType <> '' then
+      begin
+        LProviderUrl := GetRepositoryDownloadUrl(LGithubPackage.RepositoryType, LGithubPackage.RepositoryUser, LGithubPackage.Repository, LVersion);
+        Result := FClient.Download(LProviderUrl, LArchiveFile) = HTTPErrorOk;
+        if Result then
+        begin
+          LProviderFolder := ExtractAndDeleteArchive(LArchiveFile, AFolder);
+          TDirectory.Copy(AContentFolder, LProviderFolder);
+          AContentFolder := LProviderFolder;
+        end;
+      end;
+    end;
+  end;
   FClient.OnProgress := nil;
-  if Result then
-  begin
-    LFolder := TPath.Combine(AFolder, TGuid.NewGuid.ToString);
-    Result := ForceDirectories(LFolder);
-    if Result then
-      Result := ShellUnzip(LArchiveFile, LFolder);
-  end;
-
-  if Result then
-  begin
-    LDirs := TDirectory.GetDirectories(LFolder);
-    Result := Length(LDirs) = 1;
-    if Result then
-      AContentFolder := LDirs[0];
-  end;
-  TFile.Delete(LArchiveFile);
 end;
 
 function TDNGitHubPackageProvider.LoadVersionInfo(
@@ -311,6 +360,19 @@ begin
   end;
 end;
 
+function TDNGitHubPackageProvider.GetBitbucketFileText(const AAuthor,
+  ARepository, AVersion, AFilePath: string; out AText: string): Boolean;
+begin
+  FClient.Accept := CMediaTypeRaw;
+  try
+    Result := FClient.GetText(Format(CBitbucketFileContent, [AAuthor, ARepository, AVersion, AFilePath]), AText) = HTTPErrorOk;
+    if not Result then
+      CheckRateLimit();
+  finally
+    FClient.Accept := '';
+  end;
+end;
+
 function TDNGitHubPackageProvider.GetFileStream(const AAuthor, ARepository,
   AVersion, AFilePath: string; AFile: TStream): Boolean;
 begin
@@ -324,7 +386,7 @@ begin
   end;
 end;
 
-function TDNGitHubPackageProvider.GetFileText(const AAuthor, ARepository,
+function TDNGitHubPackageProvider.GetGithubFileText(const AAuthor, ARepository,
   AVersion, AFilePath: string; out AText: string): Boolean;
 begin
   FClient.Accept := CMediaTypeRaw;
@@ -344,7 +406,7 @@ var
 begin
   FClient.Accept := CMediaTypeRaw;
   try
-    Result := GetFileText(AAuthor, ARepository, AVersion, CInfoFile, LResponse)
+    Result := GetGithubFileText(AAuthor, ARepository, AVersion, CInfoFile, LResponse)
       and AInfo.LoadFromString(LResponse);
     if not Result then
       CheckRateLimit();
@@ -355,11 +417,15 @@ end;
 
 function TDNGitHubPackageProvider.GetLicense(
   const APackage: TDNGitHubPackage): string;
+var
+  LHasExternalLicense: Boolean;
 begin
   Result := 'No Licensefile has been provided.' + sLineBreak + 'Contact the Packageauthor to fix this issue by using the report-button.';
   if (APackage.LicenseFile <> '') then
   begin
-    if GetFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile, Result) then
+    LHasExternalLicense := (SameText(APackage.RepositoryType, CBitbucket) and GetBitbucketFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, APackage.LicenseFile, Result))
+      or (SameText(APackage.RepositoryType, CGithup) and GetGithubFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, APackage.LicenseFile, Result));
+    if LHasExternalLicense or GetGithubFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile, Result) then
     begin
       //if we do not detect a single Windows-Linebreak, we assume Posix-LineBreaks and convert
       if not ContainsStr(Result, sLineBreak) then
@@ -370,6 +436,37 @@ begin
       Result := 'An error occured while downloading the license information.' + sLineBreak + 'The file might be missing.';
     end;
   end;
+end;
+
+function TDNGitHubPackageProvider.GetRepositoryDownloadUrl(const AName, AUser,
+  ARepo, AVersion: string): string;
+begin
+  if SameText(CBitbucket, AName) then
+    Exit(Format(CBitbucketDownloadUrl, [AUser, ARepo, AVersion]))
+  else if SameText(CGithup, AName) then
+    Exit(Format(CGithubDownloadUrl, [AUser, ARepo, AVersion]));
+  raise EInvalidProviderSetup.Create('Unknown Provider ' + AName);
+end;
+
+function TDNGitHubPackageProvider.GetRepositoryIssueUrl(const AName, AUser,
+  ARepo: string): string;
+begin
+  Result := '';
+  if SameText(AName, CBitbucket) then
+    Result := Format(CBitbucketIssueUrl, [AUser, ARepo])
+  else if SameText(AName, CGithup) then
+    Result := Format(CGithubIssueUrl, [AUser, ARepo]);
+end;
+
+function TDNGitHubPackageProvider.GetProjectUrl(const AName, AUser,
+  ARepo: string): string;
+begin
+  if SameText(AName, CBitbucket) then
+    Result := Format(CBitbucketProjectUrl, [AUser, ARepo])
+  else if SameText(AName, CGithup) then
+    Result := Format(CGithup, [AUser, ARepo])
+  else
+    Result := '';
 end;
 
 function TDNGitHubPackageProvider.GetPushDateFile: string;

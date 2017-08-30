@@ -234,6 +234,7 @@ begin
   AddIconToImageList(FOSIcons, Ico_Mac);
   AddIconToImageList(FOSIcons, Ico_Android);
   AddIconToImageList(FOSIcons, Ico_IOS);
+  AddIconToImageList(FOSIcons, Ico_Linux);
   AddIconToImageList(FButtonIcons, Ico_Install);
   AddIconToImageList(FButtonIcons, Ico_Delete);
   AddIconToImageList(FButtonIcons, Ico_Update);

@@ -242,6 +242,14 @@ begin
                       FSupportedPlatforms := FSupportedPlatforms + [cpWin64]
                     else if SameText(LPlatform.Attributes['value'], 'OSX32') then
                       FSupportedPlatforms := FSupportedPlatforms + [cpOSX32]
+                    else if SameText(LPlatform.Attributes['value'], 'Android') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpAndroid]
+                    else if SameText(LPlatform.Attributes['value'], 'iOSDevice32') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpIOSDevice32]
+                    else if SameText(LPlatform.Attributes['value'], 'iOSDevice64') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpIOSDevice64]
+                    else if SameText(LPlatform.Attributes['value'], 'Linux64') then
+                      FSupportedPlatforms := FSupportedPlatforms + [cpLinux64]
                   end;
                 end;
                 LPlatform := LPlatform.NextSibling;

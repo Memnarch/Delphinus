@@ -25,13 +25,14 @@ const
   Ico_Android = 'Ico_Android';
   Ico_Mac = 'Ico_Mac';
   Ico_IOS = 'Ico_IOS';
+  Ico_Linux = 'Ico_Linux';
   Ico_Folder = 'Ico_Folder';
   Ico_Refresh = 'Ico_Refresh';
   Ico_Options = 'Ico_Options';
   Ico_Home = 'Ico_Home';
   Ico_Home_Disabled = 'Ico_Home_Disabled';
-  Ico_Github = 'Ico_Github';
-  Ico_Github_Disabled = 'Ico_Github_Disabled';
+  Ico_Repo = 'Ico_Repo';
+  Ico_Repo_Disabled = 'Ico_Repo_Disabled';
   Ico_Bug = 'Ico_Bug';
   Ico_Bug_Disabled = 'Ico_Bug_Disabled';
   Ico_Warning = 'Ico_Warning';

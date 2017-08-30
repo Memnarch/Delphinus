@@ -16,7 +16,7 @@ type
   TCompilerVersion = Single;
   TDNCompilerTarget = (ctBuild, ctCompile);
   TDNCompilerConfig = (ccRelease, ccDebug);
-  TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32);
+  TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32, cpAndroid, cpIOSDevice32, cpIOSDevice64, cpLinux64);
   TDNCompilerPlatforms = set of TDNCompilerPlatform;
 
 const
