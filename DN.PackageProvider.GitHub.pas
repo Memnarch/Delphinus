@@ -207,7 +207,12 @@ begin
       LPackage.Description := AItem.GetValue('description').Value;
       LPackage.DownloadLoaction := AItem.GetValue('archive_url').Value;
       LPackage.DownloadLoaction := StringReplace(LPackage.DownloadLoaction, CArchivePlaceholder, 'zipball/', []);
-      LPackage.Author := LAuthor;
+
+      if LHeadInfo.RepositoryUser = '' then
+        LPackage.Author := LAuthor
+      else
+        LPackage.Author := LHeadInfo.RepositoryUser;
+
       LPackage.RepositoryName := LName;
       LPackage.DefaultBranch := LDefaultBranch;
 
