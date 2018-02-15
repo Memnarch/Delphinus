@@ -53,7 +53,7 @@ end;
 class function TDNCommandDelphiBlock.SwitchClass(
   AIndex: Integer): TDNCommandSwitchClass;
 begin
-  if AIndex = (SwitchClassCount - 1) then
+  if AIndex = inherited SwitchClassCount then
     Result := TDNCommandSwitchDelphi
   else
     Result := inherited;

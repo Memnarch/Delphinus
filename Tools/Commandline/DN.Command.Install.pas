@@ -128,7 +128,7 @@ end;
 class function TDNCommandInstall.SwitchClass(
   AIndex: Integer): TDNCommandSwitchClass;
 begin
-  if AIndex = 0 then
+  if AIndex = inherited SwitchClassCount then
     Result := TDNCommandSwitchIgnoreDependencies
   else
     Result := inherited;
@@ -136,7 +136,7 @@ end;
 
 class function TDNCommandInstall.SwitchClassCount: Integer;
 begin
-  Result := 1;
+  Result := inherited + 1;
 end;
 
 end.
