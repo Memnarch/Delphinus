@@ -28,7 +28,6 @@ object LicenseDialog: TLicenseDialog
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
-    WordWrap = False
   end
   object btnOk: TButton
     Left = 476
