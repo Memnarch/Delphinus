@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, ComCtrls,
   DN.Setup.Dependency.Intf,
-  Delphinus.Forms, ImgList, StdCtrls;
+  Delphinus.Forms, ImgList, StdCtrls, System.ImageList;
 
 type
   TDependencyDialog = class(TForm)
@@ -54,7 +54,7 @@ begin
     if Assigned(LDependency.Package) then
     begin
       LItem.Caption := LDependency.Package.Name;
-      LItem.SubItems.Add(LDependency.Package.LicenseType);
+      LItem.SubItems.Add(LDependency.Package.LicenseTypes);
       if Assigned(LDependency.Version) then
         LItem.SubItems.Add(LDependency.Version.Value.ToString)
       else

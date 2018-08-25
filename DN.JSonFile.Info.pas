@@ -36,8 +36,9 @@ type
     FCompilerMin: TCompilerVersion;
     FCompilerMax: TCompilerVersion;
     FName: string;
-    FLicenseFile: string;
-    FLicenseType: string;
+
+    FLicenses: TArray<TDNLicense>;
+
     FPlatforms: TDNCompilerPlatforms;
     FDependencies: TList<TInfoDependency>;
     FRepositoryType: string;
@@ -46,6 +47,8 @@ type
     FRepositoryRedirectIssues: Boolean;
     FReportUrl: string;
   protected
+    procedure ReadLicenses(const ARoot: TJSONObject);
+    procedure WriteLicenses(const ARoot: TJSONObject);
     procedure Load(const ARoot: TJSONObject); override;
     procedure Save(const ARoot: TJSONObject); override;
     procedure LoadPlatforms(const APlatforms: string);
@@ -59,8 +62,7 @@ type
     property Picture: string read FPicture write FPicture;
     property ID: TGUID read FID write FID;
     property Name: string read FName write FName;
-    property LicenseType: string read FLicenseType write FLicenseType;
-    property LicenseFile: string read FLicenseFile write FLicenseFile;
+    property Licenses: TArray<TDNLicense> read FLicenses;
     property FirstVersion: string read FFirstVersion write FFirstVersion;
     property PackageCompilerMin: TCompilerVersion read FPackageCompilerMin write FPackageCompilerMin;
     property PackageCompilerMax: TCompilerVersion read FPackageCompilerMax write FPackageCompilerMax;
@@ -121,8 +123,7 @@ begin
   FPicture := ReadString(ARoot, 'picture');
   FID := ReadID(ARoot);
   FName := ReadString(ARoot, 'name');
-  FLicenseType := ReadString(ARoot, 'license_type');
-  FLicenseFile := ReadString(ARoot, 'license_file');
+  ReadLicenses(ARoot);
   FFirstVersion := ReadString(ARoot, 'first_version');
   FCompilerMin := ReadFloat(ARoot, 'compiler_min');
   FCompilerMax := ReadFloat(ARoot, 'compiler_max');
@@ -199,6 +200,42 @@ begin
   end;
 end;
 
+procedure TInfoFile.ReadLicenses(const ARoot: TJSONObject);
+var
+  LValue: TJSONValue;
+  LArray: TJSONArray;
+  LLicense: TDNLicense;
+  LObject: TJSONObject;
+  i: Integer;
+begin
+  if ReadArray(ARoot, 'licenses', LArray) then
+  begin
+    SetLength(FLicenses, LArray.Count);
+    for i := 0 to Pred(LArray.Count) do
+    begin
+      LValue := LArray.Items[i];
+      if LValue is TJSONObject then
+      begin
+        LObject := TJSONObject(LValue);
+        LLicense.LicenseType := ReadString(LObject, 'type');
+        LLicense.LicenseFile := ReadString(LObject, 'file');
+        FLicenses[i] := LLicense;
+      end;
+    end;
+  end
+  else
+  begin
+    LLicense.LicenseType := ReadString(ARoot, 'license_type');
+    LLicense.LicenseFile := ReadString(ARoot, 'license_file');
+    if (LLicense.LicenseType <> '') or (LLicense.LicenseFile <> '') then
+    begin
+      SetLength(FLicenses, 1);
+      FLicenses[0] := LLicense;
+    end;
+  end;
+
+end;
+
 procedure TInfoFile.Save(const ARoot: TJSONObject);
 var
   LDependencies: TJSONArray;
@@ -208,8 +245,7 @@ begin
   WritePath(ARoot, 'picture', FPicture);
   WriteString(ARoot, 'id', FID.ToString);
   WriteString(ARoot, 'name', FName);
-  WriteString(ARoot, 'license_type', FLicenseType);
-  WritePath(ARoot, 'license_file', FLicenseFile);
+  WriteLicenses(ARoot);
   WriteString(ARoot, 'first_version', FFirstVersion);
   WriteFloat(ARoot, 'package_compiler_max', FPackageCompilerMax);
   WriteFloat(ARoot, 'package_compiler_min', FPackageCompilerMin);
@@ -239,6 +275,21 @@ begin
     LObject := WriteArrayObject(ADependencies);
     WriteString(LObject, 'id', LDependency.ID.ToString);
     WriteString(LObject, 'version_min', LDependency.Version.ToString);
+  end;
+end;
+
+procedure TInfoFile.WriteLicenses(const ARoot: TJSONObject);
+var
+  LLicenses: TJSONArray;
+  LObject: TJSONObject;
+  LLicense: TDNLicense;
+begin
+  LLicenses := WriteArray(ARoot, 'licenses');
+  for LLicense in FLicenses do
+  begin
+    LObject := WriteArrayObject(LLicenses);
+    WriteString(LObject, 'type', LLicense.LicenseType);
+    WriteString(LObject, 'file', LLicense.LicenseFile);
   end;
 end;
 

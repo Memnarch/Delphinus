@@ -29,9 +29,9 @@ object DependencyDialog: TDependencyDialog
   object lvDependencies: TListView
     AlignWithMargins = True
     Left = 3
-    Top = 22
+    Top = 19
     Width = 447
-    Height = 169
+    Height = 172
     Align = alClient
     Columns = <
       item
@@ -61,6 +61,8 @@ object DependencyDialog: TDependencyDialog
     TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = lvDependenciesDblClick
+    ExplicitTop = 22
+    ExplicitHeight = 169
   end
   object ilIcons: TImageList
     ColorDepth = cd32Bit

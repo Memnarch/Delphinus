@@ -12,29 +12,27 @@ interface
 uses
   Classes,
   Types,
+  DN.Types,
   DN.Package;
 
 type
   TDNGitHubPackage = class;
 
-  TGetLicenseCallback = function(const APackage: TDNGithubPackage): string of object;
+  TGetLicenseCallback = function(const APackage: TDNGithubPackage; const ALicense: TDNLicense): string of object;
 
   TDNGitHubPackage = class(TDNPackage)
   private
     FDefaultBranch: string;
     FRepositoryName: string;
-    FLicenseFile: string;
     FOnGetLicense: TGetLicenseCallback;
-    FLicenseLoaded: Boolean;
     FRepositoryType: string;
     FRepository: string;
     FRepositoryUser: string;
   protected
-    function GetLicenseText: string; override;
+    function GetLicenseText(const AValue: TDNLicense): string; override;
   public
     property DefaultBranch: string read FDefaultBranch write FDefaultBranch;
     property RepositoryName: string read FRepositoryName write FRepositoryName;
-    property LicenseFile: string read FLicenseFile write FLicenseFile;
     property RepositoryType: string read FRepositoryType write FRepositoryType;
     property RepositoryUser: string read FRepositoryUser write FRepositoryUser;
     property Repository: string read FRepository write FRepository;
@@ -47,14 +45,14 @@ implementation
 
 { TDNGitHubPackage }
 
-function TDNGitHubPackage.GetLicenseText: string;
+function TDNGitHubPackage.GetLicenseText(const AValue: TDNLicense): string;
 begin
-  if (not FLicenseLoaded) and Assigned(FOnGetLicense) then
-  begin
-    LicenseText := FOnGetLicense(Self);
-    FLicenseLoaded := True;
-  end;
   Result := inherited;
+  if (Result = '') and not FLicenseTexts.ContainsKey(AValue.LicenseFile) and Assigned(FOnGetLicense) then
+  begin
+    Result := FOnGetLicense(Self, AValue);
+    LicenseText[AValue] := Result;
+  end;
 end;
 
 end.

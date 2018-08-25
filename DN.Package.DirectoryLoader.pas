@@ -39,6 +39,7 @@ var
   LVersion: IDNPackageVersion;
   LDependency: IDNPackageDependency;
   LInfoDependency: TInfoDependency;
+  LLicense: TDNLicense;
 begin
   Result := False;
   LInfoFile := TPath.Combine(ADirectory, CInfoFile);
@@ -59,8 +60,9 @@ begin
         APackage.CompilerMin := LInfo.CompilerMin;
         APackage.CompilerMax := LInfo.CompilerMax;
         APackage.Platforms := LInfo.Platforms;
-        APackage.LicenseType := LInfo.LicenseType;
-        APackage.LicenseText := LoadLicenceText(TPath.Combine(ADirectory, LInfo.LicenseFile));
+        APackage.Licenses.AddRange(LInfo.Licenses);
+        for LLicense in APackage.Licenses do
+          APackage.LicenseText[LLicense] := LoadLicenceText(TPath.Combine(ADirectory, LLicense.LicenseFile));
         APackage.ProjectUrl := LInfo.ProjectUrl;
         APackage.HomepageUrl := LInfo.HomepageUrl;
         APackage.ReportUrl := LInfo.ReportUrl;

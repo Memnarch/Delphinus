@@ -16,6 +16,7 @@ uses
   SysUtils,
   SyncObjs,
   Generics.Collections,
+  DN.Types,
   DN.Package.Github,
   DN.Package.Intf,
   DN.PackageProvider,
@@ -50,7 +51,7 @@ type
     procedure CheckRateLimit;
   protected
     FClient: IDNHttpClient;
-    function GetLicense(const APackage: TDNGitHubPackage): string;
+    function GetLicense(const APackage: TDNGitHubPackage; const ALicense: TDNLicense): string;
     function GetPushDateFile: string;
     function GetRepoList(out ARepos: TJSONArray): Boolean; virtual;
     function GetRepositoryDownloadUrl(const AName, AUser, ARepo, AVersion: string): string;
@@ -81,7 +82,6 @@ uses
   jpeg,
   pngimage,
   DN.Version,
-  DN.Types,
   DN.Package,
   DN.Zip,
   DN.Package.Version,
@@ -232,8 +232,7 @@ begin
       LPackage.ID := LHeadInfo.ID;
       LPackage.CompilerMin := LHeadInfo.PackageCompilerMin;
       LPackage.CompilerMax := LHeadInfo.PackageCompilerMax;
-      LPackage.LicenseType := LHeadInfo.LicenseType;
-      LPackage.LicenseFile := LHeadInfo.LicenseFile;
+      LPackage.Licenses.AddRange(LHeadInfo.Licenses);
       LPackage.Platforms := LHeadInfo.Platforms;
       LPackage.RepositoryType := LHeadInfo.RepositoryType;
       LPackage.RepositoryUser := LHeadInfo.RepositoryUser;
@@ -415,16 +414,16 @@ begin
 end;
 
 function TDNGitHubPackageProvider.GetLicense(
-  const APackage: TDNGitHubPackage): string;
+  const APackage: TDNGitHubPackage; const ALicense: TDNLicense): string;
 var
   LHasExternalLicense: Boolean;
 begin
   Result := 'No Licensefile has been provided.' + sLineBreak + 'Contact the Packageauthor to fix this issue by using the report-button.';
-  if (APackage.LicenseFile <> '') then
+  if (ALicense.LicenseFile <> '') then
   begin
-    LHasExternalLicense := (SameText(APackage.RepositoryType, CBitbucket) and GetBitbucketFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, APackage.LicenseFile, Result))
-      or (SameText(APackage.RepositoryType, CGithup) and GetGithubFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, APackage.LicenseFile, Result));
-    if LHasExternalLicense or GetGithubFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, APackage.LicenseFile, Result) then
+    LHasExternalLicense := (SameText(APackage.RepositoryType, CBitbucket) and GetBitbucketFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, ALicense.LicenseFile, Result))
+      or (SameText(APackage.RepositoryType, CGithup) and GetGithubFileText(APackage.RepositoryUser, APackage.Repository, APackage.DefaultBranch, ALicense.LicenseFile, Result));
+    if LHasExternalLicense or GetGithubFileText(APackage.Author, APackage.RepositoryName, APackage.DefaultBranch, ALicense.LicenseFile, Result) then
     begin
       //if we do not detect a single Windows-Linebreak, we assume Posix-LineBreaks and convert
       if not ContainsStr(Result, sLineBreak) then

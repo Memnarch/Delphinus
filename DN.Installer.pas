@@ -79,10 +79,10 @@ type
     function GetHasPendingChanges: Boolean; virtual;
     function PrepareInstallationDirectory(const ATargetDirectory: string): Boolean; virtual;
     function LoadInfo(const ADirectory: string; AInfo: TInfoFile): Boolean; virtual;
-    function ValidateInfoAndGetLicenceFile(const ADirectory: string; out ALicenceFile: string): Boolean; virtual;
+    function ValidateInfoAndGetLicenceFiles(const ADirectory: string; out ALicenceFiles: TArray<string>): Boolean; virtual;
     function LoadInstallation(const ADirectory: string; AInstallation: TInstallationFile): Boolean; virtual;
     function ProcessInstallation(AInstallation: TInstallationFile;
-      const ASourceDirectory, ATargetDirectory, ALicenceFile: string): Boolean; virtual;
+      const ASourceDirectory, ATargetDirectory: string; const ALicenceFiles: TArray<string>): Boolean; virtual;
     procedure SaveUninstall(const ATargetDirectory: string); virtual;
     function LoadProject(const AProjectFile: string; out AProject: IDNProjectInfo): Boolean; virtual;
     function LoadProjectGroup(const AGroupFile: string; out AGroup: IDNProjectGroupInfo): Boolean; virtual;
@@ -445,7 +445,7 @@ function TDNInstaller.Install(const ASourceDirectory,
   ATargetDirectory: string): Boolean;
 var
   LInstallInfo: TInstallationFile;
-  LLicenseFile: string;
+  LLicenseFiles: TArray<string>;
 begin
   Reset();
   Result := False;
@@ -453,13 +453,13 @@ begin
     Exit;
   try
     FTargetDirectory := ATargetDirectory;
-    if not ValidateInfoAndGetLicenceFile(ASourceDirectory, LLicenseFile) then
+    if not ValidateInfoAndGetLicenceFiles(ASourceDirectory, LLicenseFiles) then
       Exit;
 
     LInstallInfo := TInstallationFile.Create();
     try
       if LoadInstallation(ASourceDirectory, LInstallInfo) then
-        Result := ProcessInstallation(LInstallInfo, ASourceDirectory, ATargetDirectory, LLicenseFile);
+        Result := ProcessInstallation(LInstallInfo, ASourceDirectory, ATargetDirectory, LLicenseFiles);
     finally
       LInstallInfo.Free;
     end;
@@ -706,7 +706,9 @@ begin
 end;
 
 function TDNInstaller.ProcessInstallation(AInstallation: TInstallationFile;
-  const ASourceDirectory, ATargetDirectory, ALicenceFile: string): Boolean;
+  const ASourceDirectory, ATargetDirectory: string; const ALicenceFiles: TArray<string>): Boolean;
+var
+  LLicense: string;
 begin
   FProgress.SetTasks(['Copy Raw', 'Copy Source', 'Compile Projects', 'Adding Experts', 'Adding Pathes']);
   ProcessRawFolders(AInstallation.RawFolders, ASourceDirectory);
@@ -714,7 +716,8 @@ begin
 
   ProcessSourceFolders(AInstallation.SourceFolders, ASourceDirectory, GetSourceFolder(ATargetDirectory));
   CopyMetaData(ASourceDirectory, ATargetDirectory);
-  CopyLicense(ASourceDirectory, ATargetDirectory, ALicenceFile);
+  for LLicense in ALicenceFiles do
+    CopyLicense(ASourceDirectory, ATargetDirectory, LLicense);
   FProgress.NextTask();
 
   Result := ProcessProjects(AInstallation.Projects, ATargetDirectory);
@@ -896,10 +899,11 @@ begin
     Result := Copy(Result, 2, Length(Result));
 end;
 
-function TDNInstaller.ValidateInfoAndGetLicenceFile(const ADirectory: string;
-  out ALicenceFile: string): Boolean;
+function TDNInstaller.ValidateInfoAndGetLicenceFiles(const ADirectory: string;
+  out ALicenceFiles: TArray<string>): Boolean;
 var
   LInfo: TInfoFile;
+  i: Integer;
 begin
   LInfo := TInfoFile.Create();
   try
@@ -911,10 +915,9 @@ begin
         DoMessage(mtError, 'no ID provided');
         Exit(False);
       end;
-      if LInfo.LicenseType <> '' then
-        ALicenceFile := LInfo.LicenseFile
-      else
-        ALicenceFile := '';
+      SetLength(ALicenceFiles, Length(LInfo.Licenses));
+      for i := Low(ALicenceFiles) to High(ALicenceFiles) do
+        ALicenceFiles[i] := LInfo.Licenses[i].LicenseFile;
     end;
   finally
     LInfo.Free;

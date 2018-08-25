@@ -31,13 +31,14 @@ type
     FDownloadLocation: string;
     FLastUpdated: string;
     FVersions: TList<IDNPackageVersion>;
-    FLicenseType: string;
-    FLicenseText: string;
+    FLicenses: TList<TDNLicense>;
     FProjectUrl: string;
     FHomepageUrl: string;
     FReportUrl: string;
     FPlatforms: TDNCompilerPlatforms;
+    function GetLicenseTypes: string;
   protected
+    FLicenseTexts: TDictionary<string, string>;
     function GetID: TGUID; virtual;
     procedure SetID(const Value: TGUID); virtual;
     function GetCompilerMax: TCompilerVersion; virtual;
@@ -58,16 +59,15 @@ type
     function GetLastUpdated: string; virtual;
     procedure SetLastUpdated(const Value: string); virtual;
     function GetVersions: TList<IDNPackageVersion>; virtual;
-    function GetLicenseText: string; virtual;
-    function GetLicenseType: string; virtual;
-    procedure SetLicenseText(const Value: string); virtual;
-    procedure SetLicenseType(const Value: string); virtual;
+    function GetLicense: TList<TDNLicense>; virtual;
     function GetHomepageUrl: string; virtual;
     function GetProjectUrl: string; virtual;
     function GetReportUrl: string; virtual;
     procedure SetProjectUrl(const Value: string); virtual;
     procedure SetReportUrl(const Value: string); virtual;
     procedure SetHomepageUrl(const Value: string); virtual;
+    function GetLicenseText(const ALicense: TDNLicense): string; virtual;
+    procedure SetLicenseText(const ALicense: TDNLicense; const Value: string); virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -82,8 +82,9 @@ type
     property DownloadLoaction: string read GetDownloadLocation write SetDownloadLocation;
     property LastUpdated: string read GetLastUpdated write SetLastUpdated;
     property Versions: TList<IDNPackageVersion> read GetVersions;
-    property LicenseType: string read GetLicenseType write SetLicenseType;
-    property LicenseText: string read GetLicenseText write SetLicenseText;
+    property Licenses: TList<TDNLicense> read GetLicense;
+    property LicenseText[const ALicense: TDNLicense]: string read GetLicenseText write SetLicenseText;
+    property LicenseTypes: string read GetLicenseTypes;
     property ProjectUrl: string read GetProjectUrl write SetProjectUrl;
     property HomepageUrl: string read GetHomepageUrl write SetHomepageUrl;
     property ReportUrl: string read GetReportUrl write SetReportUrl;
@@ -98,11 +99,15 @@ begin
   inherited;
   FPicture := TPicture.Create();
   FVersions := TList<IDNPackageVersion>.Create();
+  FLicenses := TList<TDNLicense>.Create();
+  FLicenseTexts := TDictionary<string, string>.Create;
 end;
 
 destructor TDNPackage.Destroy;
 begin
   FVersions.Free;
+  FLicenses.Free;
+  FLicenseTexts.Free;
   FPicture.Free;
   inherited;
 end;
@@ -147,14 +152,28 @@ begin
   Result := FLastUpdated;
 end;
 
-function TDNPackage.GetLicenseText: string;
+function TDNPackage.GetLicense: TList<TDNLicense>;
 begin
-  Result := FLicenseText;
+  Result := FLicenses;
 end;
 
-function TDNPackage.GetLicenseType: string;
+function TDNPackage.GetLicenseText(const ALicense: TDNLicense): string;
 begin
-  Result := FLicenseType;
+  if not FLicenseTexts.TryGetValue(ALicense.LicenseFile, Result) then
+    Result := '';
+end;
+
+function TDNPackage.GetLicenseTypes: string;
+var
+  LLicense: TDNLicense;
+begin
+  Result := '';
+  for LLicense in FLicenses do
+  begin
+    if Result <> '' then
+      Result := Result + ', ';
+    Result := Result + LLicense.LicenseType;
+  end;
 end;
 
 function TDNPackage.GetName: string;
@@ -227,14 +246,10 @@ begin
   FLastUpdated := Value;
 end;
 
-procedure TDNPackage.SetLicenseText(const Value: string);
+procedure TDNPackage.SetLicenseText(const ALicense: TDNLicense;
+  const Value: string);
 begin
-  FLicenseText := Value;
-end;
-
-procedure TDNPackage.SetLicenseType(const Value: string);
-begin
-  FLicenseType := Value;
+  FLicenseTexts.AddOrSetValue(ALicense.LicenseFile, Value);
 end;
 
 procedure TDNPackage.SetName(const Value: string);

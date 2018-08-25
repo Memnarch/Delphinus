@@ -17,27 +17,22 @@ object LicenseDialog: TLicenseDialog
     290)
   PixelsPerInch = 96
   TextHeight = 13
-  object mLicense: TMemo
-    AlignWithMargins = True
-    Left = 3
-    Top = 3
-    Width = 548
-    Height = 247
-    Margins.Bottom = 35
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    ReadOnly = True
-    ScrollBars = ssVertical
-    TabOrder = 0
-    WordWrap = False
-  end
   object btnOk: TButton
-    Left = 476
-    Top = 257
+    Left = 471
+    Top = 263
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Ok'
     ModalResult = 1
+    TabOrder = 0
+  end
+  object pcLicenses: TPageControl
+    Left = 8
+    Top = 8
+    Width = 538
+    Height = 249
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 1
   end
 end

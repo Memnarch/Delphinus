@@ -19,6 +19,11 @@ type
   TDNCompilerPlatform = (cpWin32, cpWin64, cpOSX32, cpAndroid, cpIOSDevice32, cpIOSDevice64, cpLinux64);
   TDNCompilerPlatforms = set of TDNCompilerPlatform;
 
+  TDNLicense = record
+    LicenseType: string;
+    LicenseFile: string;
+  end;
+
 const
   CSourceSubDir = 'Source';
   CMacPackageExtension = '.dylib';

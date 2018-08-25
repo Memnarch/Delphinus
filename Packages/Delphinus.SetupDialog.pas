@@ -28,7 +28,7 @@ uses
   ComCtrls,
   ExtCtrls,
   DN.ComCtrls.Helper,
-  ImgList;
+  ImgList, System.ImageList;
 
 const
   CStart = WM_USER + 1;
@@ -350,7 +350,7 @@ begin
     begin
       btnOK.Caption := 'Install';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbLicenseType.Caption := FPackage.LicenseType;
+      lbLicenseType.Caption := FPackage.LicenseTypes;
       btnLicense.Enabled := lbLicenseType.Caption <> '';
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
@@ -361,7 +361,7 @@ begin
     begin
       btnOK.Caption := 'Uninstall';
       lbNameInstallUpdate.Caption := FPackage.Name;
-      lbLicenseType.Caption := FPackage.LicenseType;
+      lbLicenseType.Caption := FPackage.LicenseTypes;
       if Assigned(FPackage.Picture) then
         Image1.Picture.Assign(FPackage.Picture);
       cbVersion.Enabled := False;

@@ -202,9 +202,8 @@ begin
     Canvas.Font.Color := clGrayText;
     Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height)), FPackage.Author);
 
-    if FPackage.LicenseType <> '' then
-      LLicenseType := FPackage.LicenseType
-    else
+    LLicenseType := FPackage.LicenseTypes;
+    if LLicenseType = '' then
       LLicenseType := 'No license';
 
     Canvas.TextOut(CLeftMargin, (CMargin + Abs(Canvas.Font.Height))*2, LLicenseType);

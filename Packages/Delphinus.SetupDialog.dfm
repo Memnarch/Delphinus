@@ -31,6 +31,10 @@ object SetupDialog: TSetupDialog
     object tsMainPage: TTabSheet
       Caption = 'tsMainPage'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         359
         203)
@@ -154,6 +158,10 @@ object SetupDialog: TSetupDialog
       Caption = 'tsProgress'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         359
         203)
@@ -199,6 +207,10 @@ object SetupDialog: TSetupDialog
       Caption = 'tsLog'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object mLog: TMemo
         AlignWithMargins = True
         Left = 3

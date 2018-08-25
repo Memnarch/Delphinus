@@ -6,12 +6,12 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls,
   DN.Package.Intf,
-  Delphinus.Forms;
+  Delphinus.Forms, Vcl.ComCtrls;
 
 type
   TLicenseDialog = class(TForm)
-    mLicense: TMemo;
     btnOk: TButton;
+    pcLicenses: TPageControl;
   private
     FPackage: IDNPackage;
     procedure SetPackage(const Value: IDNPackage);
@@ -26,17 +26,33 @@ var
 
 implementation
 
+uses
+  DN.Types;
+
 {$R *.dfm}
 
 { TLicenseDialog }
 
 procedure TLicenseDialog.SetPackage(const Value: IDNPackage);
+var
+  LLicense: TDNLicense;
+  LMemo: TMemo;
+  LTab: TTabSheet;
 begin
   FPackage := Value;
   if Assigned(FPackage) then
   begin
-    mLicense.Text := FPackage.LicenseText;
-    Caption := FPackage.Name + ' ' + FPackage.LicenseType;
+    for LLicense in FPackage.Licenses do
+    begin
+      LTab := TTabSheet.Create(pcLicenses);
+      LTab.Caption := LLicense.LicenseType;
+      LMemo := TMemo.Create(LTab);
+      LMemo.Align := alClient;
+      LMemo.Parent := LTab;
+      LMemo.Text := FPackage.LicenseText[LLicense];
+      LTab.PageControl := pcLicenses;
+    end;
+    Caption := FPackage.Name + ' ' + FPackage.LicenseTypes;
   end;
 end;
 

@@ -17,7 +17,7 @@ uses
   DN.Controls,
   DN.Version,
   Delphinus.Forms,
-  ImgList;
+  ImgList, System.ImageList;
 
 type
   TGetPackageVersion = function(const APackage: IDNPackage): TDNVersion of object;
@@ -184,7 +184,8 @@ begin
       imgRepo.Picture := FPackage.Picture
     else
       imgRepo.Picture.Graphic := FDummyPic;
-    lbLicense.Caption := FPackage.LicenseType;
+
+    lbLicense.Caption := FPackage.LicenseTypes;
     lbVersion.Caption := GetOnlineVersion(FPackage).ToString;
     lbInstalled.Caption := GetInstalledVersion(FPackage).ToString;
     lbPlatforms.Caption := GeneratePlatformString(FPackage.Platforms);

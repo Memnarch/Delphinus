@@ -13,7 +13,7 @@ type
   private
     procedure PrintDescription(const APackage: IDNPackage);
     procedure PrintVersions(const APackage: IDNPackage);
-    procedure PrintLicense(const APackage: IDNPackage);
+    procedure PrintLicense(const APackage: IDNPackage; const AType: string);
     procedure PrintDependencies(const APackage: IDNPackage);
   public
     class function Name: string; override;
@@ -31,6 +31,7 @@ implementation
 
 uses
   SysUtils,
+  DN.Types,
   DN.Utils,
   DN.Command.Environment.Intf,
   DN.Command.Switch.Versions,
@@ -78,7 +79,7 @@ begin
     PrintVersions(LPackage);
 
   if HasSwitch<TDNCommandSwitchLicense>() then
-    PrintLicense(LPackage);
+    PrintLicense(LPackage, GetSwitch<TDNCommandSwitchLicense>.LicenseType);
 
   if HasSwitch<TDNCommandSwitchDependencies>() then
     PrintDependencies(LPackage);
@@ -129,7 +130,7 @@ begin
   for LDependency in LResolver.Resolve(APackage, APackage.Versions.First) do
   begin
     if Assigned(LDependency.Package) then
-      LTable.AddRecord([LDependency.Package.Name, LDependency.Package.LicenseType, LDependency.Version.Value.ToString])
+      LTable.AddRecord([LDependency.Package.Name, LDependency.Package.LicenseTypes, LDependency.Version.Value.ToString])
     else
       LTable.AddRecord([LDependency.ID.ToString, '', '']);
   end;
@@ -142,7 +143,7 @@ begin
   Writeln(CAuthor, APackage.Author);
   Writeln(CSupports, GenerateSupportsString(APackage.CompilerMin, APackage.CompilerMax));
   Writeln(CPlatforms, GeneratePlatformString(APackage.Platforms));
-  Writeln(CLicense, APackage.LicenseType);
+  Writeln(CLicense, APackage.LicenseTypes);
   if APackage.Versions.Count > 0 then
     Writeln(CVersion, APackage.Versions[0].Value.ToString)
   else
@@ -154,11 +155,24 @@ begin
   Writeln(CDescription, APackage.Description);
 end;
 
-procedure TDNCommandInfo.PrintLicense(const APackage: IDNPackage);
+procedure TDNCommandInfo.PrintLicense(const APackage: IDNPackage; const AType: string);
+var
+  LLicense: TDNLicense;
 begin
-  Writeln('');
-  Writeln(APackage.LicenseText);
-  Writeln('');
+  for LLicense in APackage.Licenses do
+  begin
+    if (AType = '') or SameText(LLicense.LicenseType, AType) then
+    begin
+      Writeln('');
+      Writeln(LLicense.LicenseType);
+      Writeln(APackage.LicenseText[LLicense]);
+      Writeln('');
+      if AType <> '' then
+        Exit;
+    end;
+  end;
+  if AType <> '' then
+    raise ECommandFailed.Create('No license found for type ' + AType);
 end;
 
 procedure TDNCommandInfo.PrintVersions(const APackage: IDNPackage);
