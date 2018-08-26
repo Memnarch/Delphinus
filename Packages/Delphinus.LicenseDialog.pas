@@ -47,6 +47,8 @@ begin
       LTab := TTabSheet.Create(pcLicenses);
       LTab.Caption := LLicense.LicenseType;
       LMemo := TMemo.Create(LTab);
+      LMemo.WordWrap := False;
+      LMemo.ScrollBars := ssBoth;
       LMemo.Align := alClient;
       LMemo.Parent := LTab;
       LMemo.Text := FPackage.LicenseText[LLicense];

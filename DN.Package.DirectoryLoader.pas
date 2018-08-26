@@ -19,6 +19,7 @@ implementation
 uses
   Classes,
   SysUtils,
+  StrUtils,
   IOUtils,
   DN.Types,
   DN.JsonFile.Info,
@@ -102,6 +103,8 @@ begin
     try
       LFile.LoadFromFile(AFile);
       Result := LFile.DataString;
+      if not ContainsStr(Result, sLineBreak) then
+        Result := StringReplace(Result, #10, sLineBreak, [rfReplaceAll]);
     finally
       LFile.Free;
     end;
