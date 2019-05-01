@@ -77,7 +77,10 @@ begin
       for LKey in LKeyNames do
       begin
         LInstallation := TDNDelphInstallation.Create(TPath.Combine(CRootKey, LKey));
-        FInstallations.Add(LInstallation);
+        if LInstallation.Application <> '' then
+        begin
+          FInstallations.Add(LInstallation);
+        end;
       end;
       RemoveIgnoredInstallations();
     end;
