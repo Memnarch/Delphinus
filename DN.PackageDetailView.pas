@@ -178,7 +178,10 @@ begin
   if Assigned(FPackage) then
   begin
     lbAuthor.Caption := FPackage.Author;
-    lbDescription.Caption := FPackage.Description;
+    if Trim(FPackage.Description) = '' then
+      lbDescription.Caption := FPackage.Name
+    else
+      lbDescription.Caption := FPackage.Description;
     lbSupports.Caption := GenerateSupportsString(FPackage.CompilerMin, FPackage.CompilerMax);
     if Assigned(FPackage.Picture.Graphic) then
       imgRepo.Picture := FPackage.Picture
