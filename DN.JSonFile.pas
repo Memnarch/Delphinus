@@ -237,7 +237,12 @@ end;
 procedure TJSonFile.WritePath(AParent: TJSonObject; const AProperty,
   AContent: string);
 begin
-  WriteString(AParent, AProperty, StringReplace(AContent, '\', '\\', [rfReplaceAll]));
+  //Before 10.3 Tokyo, escaping strings doesn't seem to work properly
+  {$if CompilerVersion < 33}
+    WriteString(AParent, AProperty, StringReplace(AContent, '\', '\\', [rfReplaceAll]));
+  {$Else}
+    WriteString(AParent, AProperty, AContent);
+  {$IfEnd}
 end;
 
 procedure TJSonFile.WriteString(AParent: TJSONObject; const AProperty,
