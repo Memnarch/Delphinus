@@ -28,7 +28,12 @@ uses
   ComCtrls,
   ExtCtrls,
   DN.ComCtrls.Helper,
-  ImgList, System.ImageList;
+  ImgList
+{$IFDEF CONDITIONALEXPRESSIONS}
+{$IF CompilerVersion >= 29.0}
+   , System.ImageList
+{$IFEND}
+{$ENDIF};
 
 const
   CStart = WM_USER + 1;

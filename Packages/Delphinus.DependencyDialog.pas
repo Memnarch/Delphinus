@@ -6,7 +6,12 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, ComCtrls,
   DN.Setup.Dependency.Intf,
-  Delphinus.Forms, ImgList, StdCtrls, System.ImageList;
+  Delphinus.Forms, ImgList, StdCtrls
+{$IFDEF CONDITIONALEXPRESSIONS}
+{$IF CompilerVersion >= 29.0}
+   , System.ImageList
+{$IFEND}
+{$ENDIF};
 
 type
   TDependencyDialog = class(TForm)
