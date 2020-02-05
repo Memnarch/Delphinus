@@ -17,7 +17,12 @@ uses
   DN.Controls,
   DN.Version,
   Delphinus.Forms,
-  ImgList, System.ImageList;
+  ImgList
+{$IFDEF CONDITIONALEXPRESSIONS}
+{$IF CompilerVersion >= 29.0}
+  ,System.ImageList
+{$IFEND}
+{$ENDIF};
 
 type
   TGetPackageVersion = function(const APackage: IDNPackage): TDNVersion of object;
