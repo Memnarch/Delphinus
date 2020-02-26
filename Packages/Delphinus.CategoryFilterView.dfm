@@ -9,8 +9,8 @@ object CategoryFilterView: TCategoryFilterView
     Left = 0
     Top = 0
     Width = 320
-    Height = 105
-    Align = alTop
+    Height = 240
+    Align = alClient
     BorderStyle = bsNone
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -30,5 +30,6 @@ object CategoryFilterView: TCategoryFilterView
     OnAdvancedCustomDrawItem = tvCategoriesAdvancedCustomDrawItem
     OnChange = tvCategoriesChange
     OnCollapsing = tvCategoriesCollapsing
+    ExplicitHeight = 105
   end
 end
