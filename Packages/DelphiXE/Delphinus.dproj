@@ -194,6 +194,10 @@
 			<DCCReference Include="..\Delphinus.DependencyDialog.pas">
 				<Form>DependencyDialog</Form>
 			</DCCReference>
+			<DCCReference Include="..\Delphinus.ToolsApi.IDE.pas"/>
+			<DCCReference Include="..\Delphinus.ToolsApi.VSTManager.pas"/>
+			<DCCReference Include="..\..\DN.ToolsApi.Containers.pas"/>
+			<DCCReference Include="..\..\DN.ToolsApi.ProjectTree.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

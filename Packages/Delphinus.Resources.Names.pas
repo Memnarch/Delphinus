@@ -39,6 +39,7 @@ const
   Ico_Dependencies = 'Ico_Dependencies';
   Ico_Dependencies_Disabled = 'Ico_Dependencies_Disabled';
   Ico_Dependency = 'Ico_Dependency';
+  Ico_Package = 'Ico_Package';
 
   Png_Package = 'Png_Package';
 

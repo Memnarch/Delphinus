@@ -144,7 +144,11 @@ contains
   DN.Setup.Dependency.Processor.Intf in '..\..\DN.Setup.Dependency.Processor.Intf.pas',
   DN.Setup.Dependency.Processor in '..\..\DN.Setup.Dependency.Processor.pas',
   DN.Setup.Dependency.Resolver.Install in '..\..\DN.Setup.Dependency.Resolver.Install.pas',
-  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas';
+  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas',
+  Delphinus.ToolsApi.VSTManager in '..\Delphinus.ToolsApi.VSTManager.pas',
+  DN.ToolsApi.ProjectTree in '..\..\DN.ToolsApi.ProjectTree.pas',
+  DN.ToolsApi.Containers in '..\..\DN.ToolsApi.Containers.pas',
+  Delphinus.ToolsApi.IDE in '..\Delphinus.ToolsApi.IDE.pas';
 
 end.
 

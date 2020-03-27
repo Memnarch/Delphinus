@@ -141,7 +141,11 @@ contains
   DN.Package.Finder in '..\..\DN.Package.Finder.pas',
   DN.Package.DirectoryLoader.Intf in '..\..\DN.Package.DirectoryLoader.Intf.pas',
   DN.Package.DirectoryLoader in '..\..\DN.Package.DirectoryLoader.pas',
-  Delphinus.DependencyDialog in '..\Delphinus.DependencyDialog.pas' {DependencyDialog};
+  Delphinus.DependencyDialog in '..\Delphinus.DependencyDialog.pas' {DependencyDialog},
+  Delphinus.ToolsApi.IDE in '..\Delphinus.ToolsApi.IDE.pas',
+  Delphinus.ToolsApi.VSTManager in '..\Delphinus.ToolsApi.VSTManager.pas',
+  DN.ToolsApi.Containers in '..\..\DN.ToolsApi.Containers.pas',
+  DN.ToolsApi.ProjectTree in '..\..\DN.ToolsApi.ProjectTree.pas';
 
 end.
 

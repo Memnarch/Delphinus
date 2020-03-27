@@ -20,6 +20,19 @@ interface
 uses
   IniFiles;
 
+type
+//StubInterfaces
+  ICustomProjectGroupProject = interface
+    ['{F567E16A-DA4E-459F-9718-9A51559FFA0B}']
+  end;
+
+  IModelContainer = interface
+    ['{DAA1E441-B99A-11D1-931D-00C04FB17A5E}']
+  end;
+
+  IGraphLocation = interface
+    ['{2EEFC3B0-01CF-11D1-9ADA-0000C0091B45}']
+  end;
 //function ReloadEnvironmentOptions(): Boolean;
 //function SaveEnvironmentOptions(): Boolean;
 function GetEnvironmentOptionObject(): TObject;
