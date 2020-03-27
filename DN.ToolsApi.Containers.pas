@@ -3,10 +3,11 @@ unit DN.ToolsApi.Containers;
 interface
 
 uses
+  Classes,
   DN.ToolsApi;
 
 type
-  TContainer = class
+  TContainer = class(TInterfacedObject)
   private
     function GetModelContainer: IModelContainer;
     function GetParent: IGraphLocation;
@@ -16,6 +17,7 @@ type
     function GetNodeDataInterfaceA: IInterface;
     function GetNodeDataInterfaceB: IInterface;
     function GetDisplayName: string;
+    function GetChildren: IInterfaceList;
   public
     class function CreateCategory(const AParent: TContainer; const ACaption: string): TContainer;
     property ModelContainer: IModelContainer read GetModelContainer;
@@ -23,6 +25,7 @@ type
     property Project: ICustomProjectGroupProject read GetProject;
     property ImageIndex: Integer read GetImageIndex write SetImageIndex;
     property DisplayName: string read GetDisplayName;
+    property Children: IInterfaceList read GetChildren;
     property NodeDataInterfaceA: IInterface read GetNodeDataInterfaceA;
     property NodeDataInterfaceB: IInterface read GetNodeDataInterfaceB;
   end;
@@ -55,6 +58,7 @@ var
   LModel, LProject, LParent: TValue;
   LTempIntf: IInterface;
 begin
+  Result := nil;
   LCategoryType := LRTTI.FindType(CCategoryContainerClass).AsInstance;
   for LMethod in LCategoryType.GetMethods() do
   begin
@@ -71,6 +75,13 @@ begin
       Break;
     end;
   end;
+end;
+
+function TContainer.GetChildren: IInterfaceList;
+var
+  LContext: TRttiContext;
+begin
+  Result := LContext.GetType(ClassType).GetField('FChildren').GetValue(Self).AsType<IInterfaceList>();
 end;
 
 function TContainer.GetDisplayName: string;

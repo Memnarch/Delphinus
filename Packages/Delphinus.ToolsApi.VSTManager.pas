@@ -90,8 +90,7 @@ end;
 function TVSTManager.GetFirst: Pointer;
 var
   LMethod: TRttiMethod;
-  LResult, LParam: TValue;
-  LParams: TArray<TRttiParameter>;
+  LResult: TValue;
 begin
   LMethod := FType.GetMethod('GetFirst');
   if Assigned(LMethod) then
@@ -124,8 +123,7 @@ end;
 function TVSTManager.GetFirstVisible: Pointer;
 var
   LMethod: TRttiMethod;
-  LResult, LParam: TValue;
-  LParams: TArray<TRttiParameter>;
+  LResult: TValue;
 begin
   LMethod := FType.GetMethod('GetFirstVisible');
   if Assigned(LMethod) then
@@ -159,9 +157,7 @@ end;
 
 function TVSTManager.GetNodeData(ANode: Pointer): PNodeData;
 var
-  LMethod: TRttiMethod;
-  LResult, LParam: TValue;
-  LParams: TArray<TRttiParameter>;
+  LResult: TValue;
 begin
   LResult := InvokePointer('GetNodeData', ANode);
   Result := PPointer(LResult.GetReferenceToRawData())^;

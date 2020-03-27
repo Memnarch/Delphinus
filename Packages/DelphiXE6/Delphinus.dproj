@@ -230,6 +230,10 @@
         <DCCReference Include="..\..\DN.ToolsApi.ProjectTree.pas"/>
         <DCCReference Include="..\..\DN.ToolsApi.Containers.pas"/>
         <DCCReference Include="..\Delphinus.ToolsApi.IDE.pas"/>
+        <DCCReference Include="..\Delphinus.EventWindow.pas">
+            <Form>EventWindow</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

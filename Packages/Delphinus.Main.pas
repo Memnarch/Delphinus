@@ -21,7 +21,7 @@ procedure Register;
 implementation
 
 var
-  GController: IInterface = nil;
+  GController: IDelphinusController = nil;
 
 
 
@@ -35,6 +35,7 @@ initialization
 
 
 finalization
+  GController.Dispose;
   GController := nil;
 
 end.

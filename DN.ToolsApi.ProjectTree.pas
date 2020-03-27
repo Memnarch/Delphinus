@@ -34,6 +34,8 @@ type
 implementation
 
 uses
+  RTTI,
+  Classes,
   SysUtils,
   Graphics,
   Generics.Collections,
@@ -96,23 +98,18 @@ end;
 function TProjectTree.GetBuildConfiguration(
   AProject: TProjectContainer): TBuildConfigurationContainer;
 var
-  LProject, LChild: PNode;
-  LData: PNodeData;
-  LName: string;
+  LChild: TContainer;
+  i: Integer;
+  LChildren: IInterfaceList;
 begin
-  if TryGetNodeOfContainer(AProject, LProject) then
+  LChildren := AProject.Children;
+  for i := 0 to Pred(LChildren.Count) do
   begin
-    LChild := FManager.GetFirstChild(LProject);
-    while Assigned(LChild) do
+    LChild := TContainer(LChildren[i] as TObject);
+    if AnsiSameText(LChild.ClassName, 'TBaseConfigurationContainer') then
     begin
-      LData := FManager.GetNodeData(LChild);
-      LName := (LData.ProjectManager as TObject).ClassName;
-      if AnsiSameText(LName, 'TBaseConfigurationContainer') then
-      begin
-        Result := TBuildConfigurationContainer(LData.ProjectManager as TObject);
-        Exit;
-      end;
-      LChild := FManager.GetNextSibling(LChild);
+      Result := TBuildConfigurationContainer(LChild);
+      Exit;
     end;
   end;
   Result := nil;
@@ -121,23 +118,18 @@ end;
 function TProjectTree.GetDelphinusPackages(
   AProject: TProjectContainer): TDelphinusPackagesContainer;
 var
-  LProject, LChild: PNode;
-  LData: PNodeData;
-  LName: string;
+  LChild: TContainer;
+  i: Integer;
+  LChildren: IInterfaceList;
 begin
-  if TryGetNodeOfContainer(AProject, LProject) then
+  LChildren := AProject.Children;
+  for i := 0 to Pred(LChildren.Count) do
   begin
-    LChild := FManager.GetFirstChild(LProject);
-    while Assigned(LChild) do
+    LChild := TContainer(LChildren[i] as TObject);
+    if AnsiSameText(LChild.DisplayName, CNodeDelphinusPackages) then
     begin
-      LData := FManager.GetNodeData(LChild);
-      LName := TContainer(LData.ProjectManager as TObject).DisplayName;
-      if AnsiSameText(LName, CNodeDelphinusPackages) then
-      begin
-        Result := TDelphinusPackagesContainer(LData.ProjectManager as TObject);
-        Exit;
-      end;
-      LChild := FManager.GetNextSibling(LChild);
+      Result := TDelphinusPackagesContainer(LChild);
+      Exit;
     end;
   end;
   Result := nil;
@@ -170,23 +162,18 @@ end;
 function TProjectTree.GetTargetPlatform(
   AProject: TProjectContainer): TTargetPlatformContainer;
 var
-  LProject, LChild: PNode;
-  LData: PNodeData;
-  LName: string;
+  LChild: TContainer;
+  i: Integer;
+  LChildren: IInterfaceList;
 begin
-  if TryGetNodeOfContainer(AProject, LProject) then
+  LChildren := AProject.Children;
+  for i := 0 to Pred(LChildren.Count) do
   begin
-    LChild := FManager.GetFirstChild(LProject);
-    while Assigned(LChild) do
+    LChild := TContainer(LChildren[i] as TObject);
+    if AnsiSameText(LChild.ClassName, 'TBasePlatformContainer') then
     begin
-      LData := FManager.GetNodeData(LChild);
-      LName := (LData.ProjectManager as TObject).ClassName;
-      if AnsiSameText(LName, 'TBasePlatformContainer') then
-      begin
-        Result := TTargetPlatformContainer(LData.ProjectManager as TObject);
-        Exit;
-      end;
-      LChild := FManager.GetNextSibling(LChild);
+      Result := TTargetPlatformContainer(LChild);
+      Exit;
     end;
   end;
   Result := nil;
@@ -195,17 +182,26 @@ end;
 procedure TProjectTree.SetupProject(AProject: TProjectContainer);
 var
   LPackages, LFirstSibling: TContainer;
+  LIndex: Integer;
 begin
   LPackages := DelphinusPackages[AProject];
   if not Assigned(LPackages) then
   begin
+
     LPackages := TContainer.CreateCategory(AProject, CNodeDelphinusPackages);
     LPackages.ImageIndex := FDelphinusIcon;
+    //manually add to tree to get instant update
+    LIndex := 2;
     LFirstSibling := TargetPlatform[AProject];
     //Delphi XE for example has no TargetPlatForm node, so we fallback to BuildConfiguration
     if not Assigned(LFirstSibling) then
+    begin
       LFirstSibling := BuildConfiguration[AProject];
+      LIndex := 1;
+    end;
     AddSibling(LFirstSibling, LPackages);
+    //now add to model so it rebuilds whenever the tree changes
+    AProject.Children.Insert(LIndex, LPackages);
   end;
 end;
 

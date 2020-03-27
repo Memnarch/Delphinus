@@ -10,6 +10,8 @@ unit Delphinus.Controller;
 interface
 
 uses
+  XMLIntf,
+  ToolsApi,
   Classes,
   Types,
   Menus,
@@ -17,27 +19,55 @@ uses
   Graphics,
   ImgList,
   Dialogs,
-  Delphinus.Dialog;
+  Delphinus.Dialog,
+  Delphinus.EventWindow,
+  DN.ToolsApi.ProjectTree;
 
 type
-  TDelphinusController = class(TInterfacedObject)
+  IDelphinusController = interface
+    ['{559073E9-136F-42DE-A615-13023C078680}']
+    procedure Dispose;
+  end;
+
+  TProjectsNotifier = class(TModuleNotifierObject, IOTAProjectFileStorageNotifier)
+  private
+    FEventWindow: TEventWindow;
+  public
+    constructor Create(AEventWindow: TEventWindow);
+    function GetName: string;
+    procedure ProjectLoaded(const ProjectOrGroup: IOTAModule; const Node: IXMLNode);
+    procedure CreatingProject(const ProjectOrGroup: IOTAModule);
+    procedure ProjectSaving(const ProjectOrGroup: IOTAModule; const Node: IXMLNode);
+    procedure ProjectClosing(const ProjectOrGroup: IOTAModule);
+  end;
+
+  TDelphinusController = class(TInterfacedObject, IDelphinusController)
   private
     FMenuItem: TMenuItem;
     FDialog: TDelphinusDialog;
+    FProjectTree: TProjectTree;
     FIcon: TIcon;
+    FStorageNotifierIndex: Integer;
+    FEventWindow: TEventWindow;
+    procedure NeedProjectTree;
     procedure HandleClickDelphinus(Sender: TObject);
     procedure InstallMenu();
     procedure UninstallMenu();
     function GetIndexOfConfigureTools(AToolsMenu: TMenuItem): Integer;
+    procedure HandleEvent(AEvent: TEventType);
   public
     constructor Create();
     destructor Destroy(); override;
+    //IDelphinusController
+    procedure Dispose;
   end;
 
 implementation
 
 uses
-  ToolsApi,
+  SysUtils,
+  StrUtils,
+  DN.ToolsApi.Containers,
   Delphinus.Version,
   Delphinus.Resources.Names;
 
@@ -64,15 +94,25 @@ begin
     LBitmap.Free;
   end;
   InstallMenu();
+  FEventWindow := TEventWindow.Create(nil);
+  FEventWindow.OnEvent := HandleEvent;
   FDialog := TDelphinusDialog.Create(nil);
+  FStorageNotifierIndex := (BorlandIDEServices as IOTAProjectFileStorage).AddNotifier(TProjectsNotifier.Create(FEventWindow));
 end;
 
 destructor TDelphinusController.Destroy;
 begin
+  FEventWindow.Free;
   UninstallMenu();
   FDialog.Free;
   FIcon.Free;
+  FProjectTree.Free;
   inherited;
+end;
+
+procedure TDelphinusController.Dispose;
+begin
+  (BorlandIDEServices as IOTAProjectFileStorage).RemoveNotifier(FStorageNotifierIndex);
 end;
 
 function TDelphinusController.GetIndexOfConfigureTools(
@@ -91,6 +131,18 @@ end;
 procedure TDelphinusController.HandleClickDelphinus(Sender: TObject);
 begin
   FDialog.Show();
+end;
+
+procedure TDelphinusController.HandleEvent(AEvent: TEventType);
+var
+  LProjectContainer: TProjectContainer;
+begin
+  if AEvent = etSetupDelphinusPackages then
+  begin
+    NeedProjectTree;
+    for LProjectContainer in FProjectTree.Projects do
+      FProjectTree.SetupProject(LProjectContainer);
+  end;
 end;
 
 procedure TDelphinusController.InstallMenu;
@@ -122,12 +174,53 @@ begin
   end;
 end;
 
+procedure TDelphinusController.NeedProjectTree;
+begin
+  if not Assigned(FProjectTree) then
+    FProjectTree := TProjectTree.Create();
+end;
+
 procedure TDelphinusController.UninstallMenu;
 begin
   if Assigned(FMenuItem) then
   begin
     FMenuItem.Free;
   end;
+end;
+
+{ TProjectsNotifier }
+
+constructor TProjectsNotifier.Create(AEventWindow: TEventWindow);
+begin
+  inherited Create();
+  FEventWindow := AEventWindow;
+end;
+
+procedure TProjectsNotifier.CreatingProject(const ProjectOrGroup: IOTAModule);
+begin
+  FEventWindow.PostEvent(etSetupDelphinusPackages);
+end;
+
+function TProjectsNotifier.GetName: string;
+begin
+  Result := 'Platforms';
+end;
+
+procedure TProjectsNotifier.ProjectClosing(const ProjectOrGroup: IOTAModule);
+begin
+
+end;
+
+procedure TProjectsNotifier.ProjectLoaded(const ProjectOrGroup: IOTAModule;
+  const Node: IXMLNode);
+begin
+  FEventWindow.PostEvent(etSetupDelphinusPackages);
+end;
+
+procedure TProjectsNotifier.ProjectSaving(const ProjectOrGroup: IOTAModule;
+  const Node: IXMLNode);
+begin
+
 end;
 
 end.
