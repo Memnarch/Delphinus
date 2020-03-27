@@ -10,6 +10,7 @@ unit Delphinus.Dialog;
 interface
 
 uses
+  ToolsApi,
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs,
   DN.PackageOverview, ActnList, ImgList, ToolWin,
@@ -88,9 +89,6 @@ type
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
     procedure UpdatePackage(const APackage: IDNPackage);
-    function GetComponentDirectory: string;
-    function GetBPLDirectory: string;
-    function GetDCPDirectory: string;
     procedure RefreshInstalledPackages;
     function IsPackageInstalled(const APackage: IDNPackage): Boolean;
     function GetInstalledPackage(const APackage: IDNPackage): IDNPackage;
@@ -100,7 +98,6 @@ type
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
     procedure RecreatePackageProvider();
-    function CreateSetup: IDNSetup;
     function CreateDependencyProcessor: IDNSetupDependencyProcessor;
     function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
     function CreateUninstallDependencyResolver: IDNSetupDependencyResolver;
@@ -114,10 +111,31 @@ type
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
     procedure LoadIcons;
     procedure ShowWarning(const AMessage: string);
+  protected
+    function CreateInstalledPackagesProvider: IDNPackageProvider; virtual;
+    function GetComponentDirectory: string; virtual;
+    function GetBPLDirectory: string; virtual;
+    function GetDCPDirectory: string; virtual;
+    function CreateSetup: IDNSetup; virtual;
+    function CreateEnvironmentOptionsService: IDNEnvironmentOptionsService; virtual;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
+  end;
+
+  TDelphinusProjectDialog = class(TDelphinusDialog)
+  private
+    FProject: IOTAProject;
+    function GetBaseDir: string;
+  protected
+    function GetComponentDirectory: string; override;
+    function GetBPLDirectory: string; override;
+    function GetDCPDirectory: string; override;
+//    function CreateSetup: IDNSetup; override;
+    function CreateEnvironmentOptionsService: IDNEnvironmentOptionsService; override;
+  public
+    constructor Create(const AProject: IOTAProject); reintroduce;
   end;
 
 var
@@ -126,7 +144,6 @@ var
 implementation
 
 uses
-  ToolsApi,
   IOUtils,
   RTTI,
   Types,
@@ -158,6 +175,7 @@ uses
   DN.ExpertService.Intf,
   DN.FileService,
   DN.EnvironmentOptions.IDE,
+  DN.EnvironmentOptions.Project,
   DN.BPLService.Intf,
   DN.BPLService.ToolsApi,
   DN.VariableResolver.Intf,
@@ -235,7 +253,7 @@ begin
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
-  FEnvironmentOptionsService := TDNIDEEnvironmentOptionsService.Create();
+  FEnvironmentOptionsService := CreateEnvironmentOptionsService();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -262,7 +280,7 @@ begin
   FCategoryFilteView.Parent := Self;
 
   RecreatePackageProvider();
-  FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
+  FInstalledPackageProvider := CreateInstalledPackagesProvider;
   RefreshInstalledPackages();
   dlgSelectInstallFile.Filter := CInstallFileFilter;
   dlgSelectUninstallFile.Filter := CUninstallFileFilter;
@@ -283,6 +301,11 @@ begin
   Result := TDNSetupDependencyProcessor.Create(CreateSetup());
 end;
 
+function TDelphinusDialog.CreateEnvironmentOptionsService: IDNEnvironmentOptionsService;
+begin
+  Result := TDNIDEEnvironmentOptionsService.Create();
+end;
+
 function TDelphinusDialog.CreateInstallDependencyResolver: IDNSetupDependencyResolver;
 begin
   Result := TDNSetupInstallDependencyResolver.Create(
@@ -297,6 +320,11 @@ begin
       Result := TDNPackageFinder.Create(FPackages.ToArray);
     end
   );
+end;
+
+function TDelphinusDialog.CreateInstalledPackagesProvider: IDNPackageProvider;
+begin
+  Result := TDNInstalledPackageProvider.Create(GetComponentDirectory());
 end;
 
 function TDelphinusDialog.CreateSetup: IDNSetup;
@@ -727,6 +755,40 @@ begin
       LDialog.Free;
     end;
   end;
+end;
+
+{ TDelphinusProjectDialog }
+
+constructor TDelphinusProjectDialog.Create(const AProject: IOTAProject);
+begin
+  FProject := AProject;
+  inherited Create(nil);
+  Caption := Caption + ' (' + ExtractFileName(AProject.FileName) + ')'
+end;
+
+function TDelphinusProjectDialog.CreateEnvironmentOptionsService: IDNEnvironmentOptionsService;
+begin
+  Result := TDNProjectEnvironmentOptionsService.Create(FProject);
+end;
+
+function TDelphinusProjectDialog.GetBaseDir: string;
+begin
+  Result := ExtractFilePath(FProject.FileName);
+end;
+
+function TDelphinusProjectDialog.GetBPLDirectory: string;
+begin
+  Result := TPath.Combine(GetBaseDir(), 'Delphinus\Bpl');
+end;
+
+function TDelphinusProjectDialog.GetComponentDirectory: string;
+begin
+  Result := TPath.Combine(GetBaseDir(), 'Delphinus\Components');
+end;
+
+function TDelphinusProjectDialog.GetDCPDirectory: string;
+begin
+  Result := TPath.Combine(GetBaseDir(), 'Delphinus\Dcp');
 end;
 
 end.

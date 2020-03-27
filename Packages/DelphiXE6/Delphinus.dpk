@@ -149,7 +149,8 @@ contains
   DN.ToolsApi.ProjectTree in '..\..\DN.ToolsApi.ProjectTree.pas',
   DN.ToolsApi.Containers in '..\..\DN.ToolsApi.Containers.pas',
   Delphinus.ToolsApi.IDE in '..\Delphinus.ToolsApi.IDE.pas',
-  Delphinus.EventWindow in '..\Delphinus.EventWindow.pas' {EventWindow};
+  Delphinus.EventWindow in '..\Delphinus.EventWindow.pas' {EventWindow},
+  DN.EnvironmentOptions.Project in '..\..\DN.EnvironmentOptions.Project.pas';
 
 end.
 

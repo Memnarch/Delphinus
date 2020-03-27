@@ -198,6 +198,7 @@
 			<DCCReference Include="..\Delphinus.ToolsApi.VSTManager.pas"/>
 			<DCCReference Include="..\..\DN.ToolsApi.Containers.pas"/>
 			<DCCReference Include="..\..\DN.ToolsApi.ProjectTree.pas"/>
+			<DCCReference Include="..\..\DN.EnvironmentOptions.Project.pas"/>
 			<RcCompile Include="..\DelphinusImages.rc">
 				<Form>DelphinusImages.res</Form>
 			</RcCompile>

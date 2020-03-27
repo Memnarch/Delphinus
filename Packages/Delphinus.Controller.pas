@@ -171,8 +171,15 @@ end;
 
 procedure TDelphinusController.HandleManageProjectPackages(
   const AProject: IOTAProject);
+var
+  LDialog: TDelphinusProjectDialog;
 begin
-
+  LDialog := TDelphinusProjectDialog.Create(AProject);
+  try
+    LDialog.ShowModal();
+  finally
+    LDialog.Free;
+  end;
 end;
 
 procedure TDelphinusController.InstallMenu;

@@ -234,6 +234,7 @@
             <Form>EventWindow</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\DN.EnvironmentOptions.Project.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
