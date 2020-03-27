@@ -33,6 +33,10 @@ type
   IGraphLocation = interface
     ['{2EEFC3B0-01CF-11D1-9ADA-0000C0091B45}']
   end;
+
+const
+  CDelphinusPackagesIdent = 'DelphinusPackages';
+  CDelphinusPackageIdent = 'DelphinusPackage';
 //function ReloadEnvironmentOptions(): Boolean;
 //function SaveEnvironmentOptions(): Boolean;
 function GetEnvironmentOptionObject(): TObject;

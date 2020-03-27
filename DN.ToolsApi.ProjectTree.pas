@@ -40,6 +40,7 @@ uses
   Graphics,
   Generics.Collections,
   Controls,
+  DN.ToolsApi,
   Delphinus.ToolsApi.IDE,
   Delphinus.Resources.Names;
 
@@ -188,7 +189,7 @@ begin
   if not Assigned(LPackages) then
   begin
 
-    LPackages := TContainer.CreateCategory(AProject, CNodeDelphinusPackages);
+    LPackages := TContainer.CreateCategory(AProject, CNodeDelphinusPackages, CDelphinusPackagesIdent);
     LPackages.ImageIndex := FDelphinusIcon;
     //manually add to tree to get instant update
     LIndex := 2;

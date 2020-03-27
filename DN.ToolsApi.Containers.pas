@@ -19,7 +19,7 @@ type
     function GetDisplayName: string;
     function GetChildren: IInterfaceList;
   public
-    class function CreateCategory(const AParent: TContainer; const ACaption: string): TContainer;
+    class function CreateCategory(const AParent: TContainer; const ACaption, AIdent: string): TContainer;
     property ModelContainer: IModelContainer read GetModelContainer;
     property Parent: IGraphLocation read GetParent;
     property Project: ICustomProjectGroupProject read GetProject;
@@ -49,7 +49,7 @@ const
 
 { TContainer }
 
-class function TContainer.CreateCategory(const AParent: TContainer; const ACaption: string): TContainer;
+class function TContainer.CreateCategory(const AParent: TContainer; const ACaption, AIdent: string): TContainer;
 var
   LRTTI: TRttiContext;
   LCategoryType: TRttiInstanceType;
@@ -71,7 +71,7 @@ begin
       TValue.Make(@LTempIntf, LParams[1].ParamType.Handle, LProject);
       LTempIntf := TInterfacedObject(AParent) as IGraphLocation;
       TValue.Make(@LTempIntf, LParams[2].ParamType.Handle, LParent);
-      Result := TContainer(LMethod.Invoke(LCategoryType.MetaclassType, [LModel, LProject, LParent, ACaption, '', '']).AsObject);
+      Result := TContainer(LMethod.Invoke(LCategoryType.MetaclassType, [LModel, LProject, LParent, ACaption, AIdent, '']).AsObject);
       Break;
     end;
   end;
