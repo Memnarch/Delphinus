@@ -111,6 +111,7 @@ type
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
     procedure LoadIcons;
     procedure ShowWarning(const AMessage: string);
+    function GetInstalledPackages: TList<IDNPackage>;
   protected
     function CreateInstalledPackagesProvider: IDNPackageProvider; virtual;
     function GetComponentDirectory: string; virtual;
@@ -122,6 +123,7 @@ type
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy(); override;
+    property InstalledPackages: TList<IDNPackage> read GetInstalledPackages;
   end;
 
   TDelphinusProjectDialog = class(TDelphinusDialog)
@@ -478,6 +480,11 @@ begin
         Exit(LPackage);
     end;
   end
+end;
+
+function TDelphinusDialog.GetInstalledPackages: TList<IDNPackage>;
+begin
+  Result := FInstalledPackageProvider.Packages;
 end;
 
 function TDelphinusDialog.GetInstalledVersion(

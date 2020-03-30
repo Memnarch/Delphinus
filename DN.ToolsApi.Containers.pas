@@ -18,6 +18,7 @@ type
     function GetNodeDataInterfaceB: IInterface;
     function GetDisplayName: string;
     function GetChildren: IInterfaceList;
+    procedure SetChildren(const Value: IInterfaceList);
   public
     class function CreateCategory(const AParent: TContainer; const ACaption, AIdent: string): TContainer;
     property ModelContainer: IModelContainer read GetModelContainer;
@@ -25,7 +26,7 @@ type
     property Project: ICustomProjectGroupProject read GetProject;
     property ImageIndex: Integer read GetImageIndex write SetImageIndex;
     property DisplayName: string read GetDisplayName;
-    property Children: IInterfaceList read GetChildren;
+    property Children: IInterfaceList read GetChildren write SetChildren;
     property NodeDataInterfaceA: IInterface read GetNodeDataInterfaceA;
     property NodeDataInterfaceB: IInterface read GetNodeDataInterfaceB;
   end;
@@ -129,6 +130,13 @@ var
   LRTTI: TRttiContext;
 begin
   Result := ICustomProjectGroupProject(LRTTI.GetType(ClassType).GetField('FProject').GetValue(Self).AsInterface());
+end;
+
+procedure TContainer.SetChildren(const Value: IInterfaceList);
+var
+  LContext: TRttiContext;
+begin
+  LContext.GetType(ClassType).GetField('FChildren').SetValue(Self, TValue.From(Value));
 end;
 
 procedure TContainer.SetImageIndex(const Value: Integer);

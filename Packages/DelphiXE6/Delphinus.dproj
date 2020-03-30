@@ -235,6 +235,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\DN.EnvironmentOptions.Project.pas"/>
+        <DCCReference Include="..\..\DN.Project.Dependency.pas"/>
+        <DCCReference Include="..\..\DN.Project.Dependency.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Project.Dependency.Access.pas"/>
+        <DCCReference Include="..\..\DN.Project.Dependency.Access.Intf.pas"/>
+        <DCCReference Include="..\..\DN.Project.Dependency.Access.IDE.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

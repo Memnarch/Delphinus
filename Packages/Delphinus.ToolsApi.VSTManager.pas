@@ -52,6 +52,7 @@ type
     function GetFirstChild(ANode: Pointer): Pointer;
     function AddChild(AParent: Pointer): Pointer;
     function InsertNode(Node: PNode; Mode: TNodeAttachMode): PNode;
+    procedure DeleteChildren(Node: PNode);
     property RootNode: Pointer read GetRootNode;
     property NodeDataSize: Integer read GetNodeDataSize;
     property Images: TCustomImageList read GetImages;
@@ -85,6 +86,21 @@ constructor TVSTManager.Create(AInstance: TControl);
 begin
   FInstance := AInstance;
   FType := FContext.GetType(FInstance.ClassType).AsInstance;
+end;
+
+procedure TVSTManager.DeleteChildren(Node: PNode);
+var
+  LMethod: TRttiMethod;
+  LParam: TValue;
+  LParams: TArray<TRttiParameter>;
+begin
+  LMethod := FType.GetMethod('DeleteChildren');
+  if Assigned(LMethod) then
+  begin
+    LParams := LMethod.GetParameters;
+    TValue.Make(@Node, LParams[0].ParamType.Handle, LParam);
+    LMethod.Invoke(FInstance, [LParam, True]);
+  end;
 end;
 
 function TVSTManager.GetFirst: Pointer;

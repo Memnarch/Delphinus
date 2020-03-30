@@ -10,7 +10,7 @@ const
   WM_Event = WM_USER + 800;
 
 type
-  TEventType = (etSetupDelphinusPackages);
+  TEventType = (etSetupDelphinusPackages, etUpdateDependencies);
 
   TOnEvent = procedure(AEvent: TEventType) of object;
 

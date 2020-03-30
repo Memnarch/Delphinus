@@ -3,7 +3,9 @@ unit DN.ToolsApi.ProjectTree;
 interface
 
 uses
+  ToolsApi,
   Delphinus.ToolsApi.VSTManager,
+  DN.Project.Dependency.Intf,
   DN.ToolsApi.Containers;
 
 type
@@ -25,6 +27,8 @@ type
     procedure AddChild(AParent, AChild: TContainer);
     procedure AddSibling(ASibling, ANewSibling: TContainer);
     procedure SetupProject(AProject: TProjectContainer);
+    procedure UpdateDependencyList(const AProject: TProjectContainer; const ADependencies: TArray<IDNProjectPackageDependency>);
+    function TryGetContainerOfProject(const AProject: IOTAProject; out AProjectContainer: TProjectContainer): Boolean;
     property Projects: TArray<TProjectContainer> read GetProjects;
     property BuildConfiguration[AProject: TProjectContainer]: TBuildConfigurationContainer read GetBuildConfiguration;
     property TargetPlatform[AProject: TProjectContainer]: TTargetPlatformContainer read GetTargetPlatform;
@@ -206,6 +210,21 @@ begin
   end;
 end;
 
+function TProjectTree.TryGetContainerOfProject(const AProject: IOTAProject; out AProjectContainer: TProjectContainer): Boolean;
+var
+  LRef: TObject;
+  LContainer: TProjectContainer;
+begin
+  Result := False;
+  LRef := AProject as TObject;
+  for LContainer in Projects do
+    if LRef = (LContainer.Project as TObject) then
+    begin
+      AProjectContainer := LContainer;
+      Exit(True);
+    end;
+end;
+
 function TProjectTree.TryGetNodeOfContainer(AContainer: TContainer;
   out ANode: PNode): Boolean;
 var
@@ -224,6 +243,36 @@ begin
     LNode := FManager.GetNext(LNode);
   end;
   Result := False;
+end;
+
+procedure TProjectTree.UpdateDependencyList(const AProject: TProjectContainer;
+  const ADependencies: TArray<IDNProjectPackageDependency>);
+var
+  LChildren: IInterfaceList;
+  LPackages: TDelphinusPackagesContainer;
+  LPackagesNode: PNode;
+  LPackage: TContainer;
+  LDependency: IDNProjectPackageDependency;
+begin
+  LPackages := DelphinusPackages[AProject];
+  if TryGetNodeOfContainer(LPackages, LPackagesNode) then
+    FManager.DeleteChildren(LPackagesNode);
+  LChildren := LPackages.Children;
+  if Assigned(LChildren) then
+    LChildren.Clear
+  else
+  begin
+    LChildren := TInterfaceList.Create();
+    LPackages.Children := LChildren;
+  end;
+
+  for LDependency in ADependencies do
+  begin
+    LPackage := TContainer.CreateCategory(AProject, LDependency.Name, CDelphinusPackageIdent + LDependency.ID.ToString);
+    LPackage.ImageIndex := FPackageIcon;
+    AddChild(LPackages, LPackage);
+    LChildren.Add(LPackage);
+  end;
 end;
 
 end.

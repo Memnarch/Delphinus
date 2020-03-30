@@ -15,6 +15,7 @@ const
   TDNCompilerPlatformName: array[Low(TDNCompilerPlatform)..High(TDNCompilerPlatform)] of string = ('Win32', 'Win64', 'OSX32', 'Android', 'IOSDevice32', 'IOSDevice64', 'Linux64');
 
 function TryPlatformNameToCompilerPlatform(const AName: string; out APlatform: TDNCompilerPlatform): Boolean;
+function TryStrToGuid(const AGUIDStr: string; out AGuid: TGUID): Boolean;
 
 
 implementation
@@ -88,6 +89,16 @@ begin
     end;
 
   Result := False;
+end;
+
+function TryStrToGuid(const AGUIDStr: string; out AGuid: TGUID): Boolean;
+begin
+  try
+    AGuid := StringToGUID(AGUIDStr);
+    Result := True;
+  except
+    Result := False;
+  end;
 end;
 
 end.

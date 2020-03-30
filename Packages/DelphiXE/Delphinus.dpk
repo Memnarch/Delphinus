@@ -146,7 +146,13 @@ contains
   Delphinus.ToolsApi.VSTManager in '..\Delphinus.ToolsApi.VSTManager.pas',
   DN.ToolsApi.Containers in '..\..\DN.ToolsApi.Containers.pas',
   DN.ToolsApi.ProjectTree in '..\..\DN.ToolsApi.ProjectTree.pas',
-  DN.EnvironmentOptions.Project in '..\..\DN.EnvironmentOptions.Project.pas';
+  DN.EnvironmentOptions.Project in '..\..\DN.EnvironmentOptions.Project.pas',
+  DN.Project.Dependency.Access.IDE in '..\..\DN.Project.Dependency.Access.IDE.pas',
+  DN.Project.Dependency.Access.Intf in '..\..\DN.Project.Dependency.Access.Intf.pas',
+  DN.Project.Dependency.Access in '..\..\DN.Project.Dependency.Access.pas',
+  DN.Project.Dependency.Intf in '..\..\DN.Project.Dependency.Intf.pas',
+  DN.Project.Dependency in '..\..\DN.Project.Dependency.pas',
+  Delphinus.EventWindow in '..\Delphinus.EventWindow.pas' {EventWindow};
 
 end.
 

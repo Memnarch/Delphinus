@@ -19,8 +19,10 @@ uses
   Graphics,
   ImgList,
   Dialogs,
+  Generics.Collections,
   Delphinus.Dialog,
   Delphinus.EventWindow,
+  DN.Package.Intf,
   DN.ToolsApi.ProjectTree;
 
 type
@@ -73,6 +75,7 @@ type
     function GetIndexOfConfigureTools(AToolsMenu: TMenuItem): Integer;
     procedure HandleEvent(AEvent: TEventType);
     procedure HandleManageProjectPackages(const AProject: IOTAProject);
+    procedure UpdateProjectsPackages(const AProject: IOTAProject; const APackages: TArray<IDNPackage>);
   public
     constructor Create();
     destructor Destroy(); override;
@@ -87,6 +90,10 @@ uses
   StrUtils,
   DN.ToolsApi,
   DN.ToolsApi.Containers,
+  DN.Project.Dependency,
+  DN.Project.Dependency.Intf,
+  DN.Project.Dependency.Access.IDE,
+  DN.Project.Dependency.Access.Intf,
   Delphinus.Version,
   Delphinus.Resources.Names;
 
@@ -160,12 +167,17 @@ end;
 procedure TDelphinusController.HandleEvent(AEvent: TEventType);
 var
   LProjectContainer: TProjectContainer;
+  LProject: IOTAProject;
 begin
   if AEvent = etSetupDelphinusPackages then
   begin
     NeedProjectTree;
     for LProjectContainer in FProjectTree.Projects do
+    begin
       FProjectTree.SetupProject(LProjectContainer);
+      if Supports(LProjectContainer.Project, IOTAProject, LProject) then
+        FProjectTree.UpdateDependencyList(LProjectContainer, TDNIDEProjectDependencyAccess.Create(LProject).Dependencies);
+    end;
   end;
 end;
 
@@ -177,6 +189,7 @@ begin
   LDialog := TDelphinusProjectDialog.Create(AProject);
   try
     LDialog.ShowModal();
+    UpdateProjectsPackages(AProject, LDialog.InstalledPackages.ToArray);
   finally
     LDialog.Free;
   end;
@@ -222,6 +235,27 @@ begin
   if Assigned(FMenuItem) then
   begin
     FMenuItem.Free;
+  end;
+end;
+
+procedure TDelphinusController.UpdateProjectsPackages(
+  const AProject: IOTAProject; const APackages: TArray<IDNPackage>);
+var
+  LAccess: IDNProjectDependencyAccess;
+  LDependencies: TList<IDNProjectPackageDependency>;
+  LPackage: IDNPackage;
+  LProject: TProjectContainer;
+begin
+  LDependencies := TList<IDNProjectPackageDependency>.Create();
+  try
+    for LPackage in APackages do
+      LDependencies.Add(TDNProjectPackageDependency.Create(LPackage.Name, LPackage.ID, LPackage.Versions.First.Value));
+    LAccess := TDNIDEProjectDependencyAccess.Create(AProject);
+    LAccess.Dependencies := LDependencies.ToArray;
+    if FProjectTree.TryGetContainerOfProject(AProject, LProject) then
+      FProjectTree.UpdateDependencyList(LProject, LDependencies.ToArray);
+  finally
+    LDependencies.Free;
   end;
 end;
 

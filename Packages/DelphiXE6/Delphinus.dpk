@@ -150,7 +150,12 @@ contains
   DN.ToolsApi.Containers in '..\..\DN.ToolsApi.Containers.pas',
   Delphinus.ToolsApi.IDE in '..\Delphinus.ToolsApi.IDE.pas',
   Delphinus.EventWindow in '..\Delphinus.EventWindow.pas' {EventWindow},
-  DN.EnvironmentOptions.Project in '..\..\DN.EnvironmentOptions.Project.pas';
+  DN.EnvironmentOptions.Project in '..\..\DN.EnvironmentOptions.Project.pas',
+  DN.Project.Dependency in '..\..\DN.Project.Dependency.pas',
+  DN.Project.Dependency.Intf in '..\..\DN.Project.Dependency.Intf.pas',
+  DN.Project.Dependency.Access in '..\..\DN.Project.Dependency.Access.pas',
+  DN.Project.Dependency.Access.Intf in '..\..\DN.Project.Dependency.Access.Intf.pas',
+  DN.Project.Dependency.Access.IDE in '..\..\DN.Project.Dependency.Access.IDE.pas';
 
 end.
 
