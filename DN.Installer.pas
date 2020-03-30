@@ -35,14 +35,21 @@ type
     FProgress: IDNProgress;
     FTargetDirectory: string;
     FHasPendingChanges: Boolean;
-    procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType);
-    procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string);
-    function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean;
-    function ProcessProject(const AProject: IDNProjectInfo): Boolean;
-    function ProcessExperts(const AExperts: TArray<TExpert>): Boolean;
-    function ProcessRawFolders(const ARawFolders: TArray<TRawFolder>; const ASourceDirectory: string): Boolean;
-    function ProcessRawFolder(const ARawFolder, ASourceDirectory: string): Boolean;
-    function RegisterRawDesignBPLs(const ADesignBPLs: TArray<string>): Boolean;
+  protected
+    FSearchPathes: string;
+    FBrowsingPathes: string;
+    FPackages: TList<TPackage>;
+    FExperts: TList<TInstalledExpert>;
+    FRawFiles: TStringList;
+    FVariableResolverFactory: TDNCompilerVariableResolverFacory;
+    procedure ProcessPathes(const APathes: TArray<TSearchPath>; const ARootDirectory: string; APathType: TPathType); virtual;
+    procedure ProcessSourceFolders(const ASourceFolders: TArray<TFolder>; const ASourceDirectory, ATargetDirectory: string); virtual;
+    function ProcessProjects(const AProjects: TArray<TProject>; const ATargetDirectory: string): Boolean; virtual;
+    function ProcessProject(const AProject: IDNProjectInfo): Boolean; virtual;
+    function ProcessExperts(const AExperts: TArray<TExpert>): Boolean; virtual;
+    function ProcessRawFolders(const ARawFolders: TArray<TRawFolder>; const ASourceDirectory: string): Boolean; virtual;
+    function ProcessRawFolder(const ARawFolder, ASourceDirectory: string): Boolean; virtual;
+    function RegisterRawDesignBPLs(const ADesignBPLs: TArray<string>): Boolean; virtual;
     function IsSupported(ACompiler_Min, ACompiler_Max: Integer): Boolean;
     function FileMatchesFilter(const AFile: string; const AFilter: TStringDynArray): Boolean;
     procedure ProcessLibPathes;
@@ -52,13 +59,6 @@ type
     function GetSourceFolder(const ADirectory: string): string;
     function UndecoratePath(const APath: string): string;
     function LoadSupportedProjects(const ABaseDirectory: string; const AProjects: TArray<TProject>; ASupportedProjects: TList<IDNProjectInfo>): Boolean;
-  protected
-    FSearchPathes: string;
-    FBrowsingPathes: string;
-    FPackages: TList<TPackage>;
-    FExperts: TList<TInstalledExpert>;
-    FRawFiles: TStringList;
-    FVariableResolverFactory: TDNCompilerVariableResolverFacory;
     procedure DoMessage(AType: TMessageType; const AMessage: string); virtual;
     procedure CopyDirectory(const ASource, ATarget: string; AFileFilters: TStringDynArray; ARecursive: Boolean = False; ACopiedFiles: TStringList = nil); virtual;
     procedure AddSearchPath(const ASearchPath: string; const APlatforms: TDNCompilerPlatforms); virtual;

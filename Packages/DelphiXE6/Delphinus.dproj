@@ -240,6 +240,8 @@
         <DCCReference Include="..\..\DN.Project.Dependency.Access.pas"/>
         <DCCReference Include="..\..\DN.Project.Dependency.Access.Intf.pas"/>
         <DCCReference Include="..\..\DN.Project.Dependency.Access.IDE.pas"/>
+        <DCCReference Include="..\..\DN.Installer.Project.pas"/>
+        <DCCReference Include="..\..\DN.Uninstaller.Project.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

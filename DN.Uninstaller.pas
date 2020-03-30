@@ -28,13 +28,13 @@ type
     FOnMessage: TMessageEvent;
     FProgress: IDNProgress;
     FHasPendingChanges: Boolean;
-    function ProcessPackages(const APackages: TArray<TPackage>): Boolean;
-    function ProcessExperts(const AExperts: TArray<TInstalledExpert>): Boolean;
+  protected
+    function ProcessPackages(const APackages: TArray<TPackage>): Boolean; virtual;
+    function ProcessExperts(const AExperts: TArray<TInstalledExpert>): Boolean; virtual;
     function RemovePathes(const ASearchPathes: string; APathType: TPathType): Boolean;
     function GetOnMessage: TMessageEvent;
     procedure SetOnMessage(const Value: TMessageEvent);
     function GenerateNewName(const ADirName: string): string;
-  protected
     function LoadUninstall(const ADirectory: string; AUninstall: TUninstallationFile): Boolean; virtual;
     function DeleteFiles(const ADirectory: string): Boolean; virtual;
     function DeleteRawFiles(const ARawFiles: TArray<string>): Boolean; virtual;

@@ -155,7 +155,9 @@ contains
   DN.Project.Dependency.Intf in '..\..\DN.Project.Dependency.Intf.pas',
   DN.Project.Dependency.Access in '..\..\DN.Project.Dependency.Access.pas',
   DN.Project.Dependency.Access.Intf in '..\..\DN.Project.Dependency.Access.Intf.pas',
-  DN.Project.Dependency.Access.IDE in '..\..\DN.Project.Dependency.Access.IDE.pas';
+  DN.Project.Dependency.Access.IDE in '..\..\DN.Project.Dependency.Access.IDE.pas',
+  DN.Installer.Project in '..\..\DN.Installer.Project.pas',
+  DN.Uninstaller.Project in '..\..\DN.Uninstaller.Project.pas';
 
 end.
 

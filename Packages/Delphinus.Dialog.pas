@@ -134,7 +134,7 @@ type
     function GetComponentDirectory: string; override;
     function GetBPLDirectory: string; override;
     function GetDCPDirectory: string; override;
-//    function CreateSetup: IDNSetup; override;
+    function CreateSetup: IDNSetup; override;
     function CreateEnvironmentOptionsService: IDNEnvironmentOptionsService; override;
   public
     constructor Create(const AProject: IOTAProject); reintroduce;
@@ -162,8 +162,10 @@ uses
   DN.Compiler.IDE,
   DN.Installer.Intf,
   DN.Installer.IDE,
+  DN.Installer.Project,
   DN.Uninstaller.Intf,
   DN.Uninstaller.IDE,
+  DN.Uninstaller.Project,
   DN.Setup,
   DN.Setup.Dependency.Resolver.Install,
   DN.Setup.Dependency.Resolver.Uninstall,
@@ -776,6 +778,23 @@ end;
 function TDelphinusProjectDialog.CreateEnvironmentOptionsService: IDNEnvironmentOptionsService;
 begin
   Result := TDNProjectEnvironmentOptionsService.Create(FProject);
+end;
+
+function TDelphinusProjectDialog.CreateSetup: IDNSetup;
+var
+  LResolver: TDNCompilerVariableResolverFacory;
+  LInstaller: IDNInstaller;
+  LUninstaller: IDNUninstaller;
+begin
+  LResolver :=
+    function(APlatform: TDNCompilerPlatform; AConfig: TDNCompilerConfig): IVariableResolver
+    begin
+      Result := TCompilerVariableResolver.Create(APlatform, AConfig, GetEnvironmentVariable('BDSCommonDir'));
+    end;
+  LInstaller := TDNIDEProjectInstaller.Create(FEnvironmentOptionsService, LResolver);
+  LUninstaller := TDNIDEProjectUninstaller.Create(FEnvironmentOptionsService);
+  Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
+  Result.ComponentDirectory := GetComponentDirectory();
 end;
 
 function TDelphinusProjectDialog.GetBaseDir: string;
