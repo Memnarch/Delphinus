@@ -253,6 +253,7 @@ var
   LPackagesNode: PNode;
   LPackage: TContainer;
   LDependency: IDNProjectPackageDependency;
+  LName: string;
 begin
   LPackages := DelphinusPackages[AProject];
   if TryGetNodeOfContainer(LPackages, LPackagesNode) then
@@ -268,7 +269,11 @@ begin
 
   for LDependency in ADependencies do
   begin
-    LPackage := TContainer.CreateCategory(AProject, LDependency.Name, CDelphinusPackageIdent + LDependency.ID.ToString);
+    if LDependency.Version.IsEmpty then
+      LName := LDependency.Name
+    else
+      LName := LDependency.Name + ' (' + LDependency.Version.ToString + ')';
+    LPackage := TContainer.CreateCategory(AProject, LName, CDelphinusPackageIdent + LDependency.ID.ToString);
     LPackage.ImageIndex := FPackageIcon;
     AddChild(LPackages, LPackage);
     LChildren.Add(LPackage);
