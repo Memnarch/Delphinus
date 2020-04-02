@@ -12,27 +12,34 @@ interface
 uses
   Generics.Collections,
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
-  Controls, Forms, Dialogs,
-  Delphinus.Forms, StdCtrls,
-  DN.Settings.Intf, DN.PackageSource.Settings.Intf,
-  Vcl.ComCtrls, Vcl.Grids, Vcl.ValEdit;
+  Controls, Forms,
+  Dialogs,
+  Delphinus.Forms,
+  DN.PackageSource.Registry.Intf,
+  DN.Settings.Intf,
+  DN.PackageSource.Settings.Intf,
+  DN.PackageSource.ConfigPage.Intf,
+  StdCtrls,
+  ComCtrls,
+  ExtCtrls;
 
 type
   TDelphinusOptionsDialog = class(TForm)
     btnOK: TButton;
     btnCancel: TButton;
     lvSources: TListView;
-    vleSettings: TValueListEditor;
-    procedure btnTestClick(Sender: TObject);
+    pnlSettings: TPanel;
     procedure lvSourcesSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
   private
     { Private declarations }
+    FRegistry: IDNPackageSourceRegistry;
     FSettings: TList<IDNPackageSourceSettings>;
+    FPages: TDictionary<IDNPackageSourceSettings, IDNPackageSourceConfigPage>;
     procedure RebuildSettingsList;
   public
     { Public declarations }
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(const ARegistry: IDNPackageSourceRegistry); reintroduce;
     destructor Destroy; override;
     procedure LoadSettings(const ASettings: IDNSettings);
     procedure StoreSettings(const ASettings: IDNSettings);
@@ -44,49 +51,23 @@ var
 implementation
 
 uses
-  DN.PackageProvider.GitHub,
-  DN.JSon,
-  DN.HttpClient.Intf,
-  DN.HttpClient.WinHttp,
-  DN.PackageSource.Settings.Field.Intf;
+  DN.PackageSource.Intf;
 
 {$R *.dfm}
 
 { TDelphinusOptionsDialog }
 
-procedure TDelphinusOptionsDialog.btnTestClick(Sender: TObject);
-var
-  LClient: IDNHttpClient;
-  LResult: Integer;
-  LResponse: string;
-  LJSon: TJSONObject;
+constructor TDelphinusOptionsDialog.Create(const ARegistry: IDNPackageSourceRegistry);
 begin
-  LClient := TDNWinHttpClient.Create();
-//  LClient.Authentication := Format(CGithubOAuthAuthentication, [Trim(edToken.Text)]);
-  LResult := LClient.GetText('https://api.github.com/user', LResponse);
-  if LResult = HTTPErrorOk then
-  begin
-    LJSon := TJSonObject.ParseJSONValue(LResponse) as TJSonObject;
-    try
-//      lbResponse.Caption := 'Authenticated as ' + LJSon.GetValue('login').Value;
-    finally
-      LJSon.Free;
-    end;
-  end
-  else
-  begin
-//    lbResponse.Caption := 'Failed with ResponseCode ' + IntToStr(LResult);
-  end;
-end;
-
-constructor TDelphinusOptionsDialog.Create(AOwner: TComponent);
-begin
-  inherited;
+  inherited Create(nil);
   FSettings := TList<IDNPackageSourceSettings>.Create();
+  FPages := TDictionary<IDNPackageSourceSettings, IDNPackageSourceConfigPage>.Create();
+  FRegistry := ARegistry;
 end;
 
 destructor TDelphinusOptionsDialog.Destroy;
 begin
+  FPages.Free;
   FSettings.Free;
   inherited;
 end;
@@ -96,21 +77,27 @@ begin
   FSettings.Clear();
   FSettings.AddRange(ASettings.SourceSettings);
   RebuildSettingsList();
-//  edToken.Text := ASettings.OAuthToken;
 end;
 
 procedure TDelphinusOptionsDialog.lvSourcesSelectItem(Sender: TObject;
   Item: TListItem; Selected: Boolean);
 var
-  LField: IDNPackageSourceSettingsField;
+  LSource: IDNPackageSource;
+  LSettings: IDNPackageSourceSettings;
+  LPage: IDNPackageSourceConfigPage;
 begin
-  vleSettings.Strings.Clear;
   if Selected then
   begin
-    for LField in FSettings[Item.Index].Fields do
+    LSettings := FSettings[Item.Index];
+    if not FPages.TryGetValue(LSettings, LPage) then
     begin
-      vleSettings.InsertRow(LField.Name, LField.Value.AsString, True);
+      if not FRegistry.TryGetSource(LSettings.SourceName, LSource) then
+        Exit;
+      LPage := LSource.NewConfigPage;
+      FPages.Add(LSettings, LPage);
     end;
+    LPage.Parent := pnlSettings;
+    LPage.Load(LSettings);
   end;
 end;
 
@@ -124,9 +111,12 @@ begin
 end;
 
 procedure TDelphinusOptionsDialog.StoreSettings(const ASettings: IDNSettings);
+var
+  LPair: TPair<IDNPackageSourceSettings, IDNPackageSourceConfigPage>;
 begin
+  for LPair in FPages do
+    LPair.Value.Save(LPair.Key);
   ASettings.SourceSettings := FSettings.ToArray;
-//  ASettings.OAuthToken := Trim(edToken.Text);
 end;
 
 end.

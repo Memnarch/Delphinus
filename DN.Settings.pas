@@ -154,7 +154,7 @@ procedure TDNSettings.LoadSources;
 var
   LRegistry: TRegistry;
   LKeys: TStringList;
-  LKey, LSourceType, LPath: string;
+  LKey, LSourceType: string;
   LSettings: IDNPackageSourceSettings;
   LField: IDNPackageSourceSettingsField;
 begin

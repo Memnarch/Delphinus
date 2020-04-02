@@ -34,7 +34,7 @@ uses
   DN.PackageSource.Settings.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry, System.Actions;
+  Registry;
 
 type
   TDelphinusDialog = class(TForm)
@@ -197,7 +197,7 @@ procedure TDelphinusDialog.actOptionsExecute(Sender: TObject);
 var
   LDialog: TDelphinusOptionsDialog;
 begin
-  LDialog := TDelphinusOptionsDialog.Create(nil);
+  LDialog := TDelphinusOptionsDialog.Create(FSourceRegistry);
   try
     LDialog.LoadSettings(FSettings);
     if LDialog.ShowModal = mrOk then

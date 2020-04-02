@@ -237,6 +237,13 @@
         <DCCReference Include="..\..\DN.PackageSource.Github.pas"/>
         <DCCReference Include="..\..\DN.PackageSource.Settings.Github.pas"/>
         <DCCReference Include="..\..\DN.Character.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.ConfigPage.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.ConfigPage.Intf.pas"/>
+        <DCCReference Include="..\..\DN.PackageSource.ConfigPage.Github.pas">
+            <Form>DNGithubSourceConfigPage</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

@@ -48,15 +48,13 @@ object DelphinusOptionsDialog: TDelphinusOptionsDialog
     TabOrder = 2
     OnSelectItem = lvSourcesSelectItem
   end
-  object vleSettings: TValueListEditor
+  object pnlSettings: TPanel
     Left = 135
     Top = 3
     Width = 242
     Height = 124
     Anchors = [akLeft, akTop, akRight, akBottom]
+    BevelOuter = bvNone
     TabOrder = 3
-    ColWidths = (
-      103
-      133)
   end
 end

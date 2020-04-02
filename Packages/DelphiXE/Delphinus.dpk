@@ -141,7 +141,21 @@ contains
   DN.Package.Finder in '..\..\DN.Package.Finder.pas',
   DN.Package.DirectoryLoader.Intf in '..\..\DN.Package.DirectoryLoader.Intf.pas',
   DN.Package.DirectoryLoader in '..\..\DN.Package.DirectoryLoader.pas',
-  Delphinus.DependencyDialog in '..\Delphinus.DependencyDialog.pas' {DependencyDialog};
+  Delphinus.DependencyDialog in '..\Delphinus.DependencyDialog.pas' {DependencyDialog},
+  DN.PackageSource.ConfigPage.Github in '..\..\DN.PackageSource.ConfigPage.Github.pas' {DNGithubSourceConfigPage: TFrame},
+  DN.PackageSource.ConfigPage.Intf in '..\..\DN.PackageSource.ConfigPage.Intf.pas',
+  DN.PackageSource.ConfigPage in '..\..\DN.PackageSource.ConfigPage.pas',
+  DN.PackageSource.Github in '..\..\DN.PackageSource.Github.pas',
+  DN.PackageSource.Intf in '..\..\DN.PackageSource.Intf.pas',
+  DN.PackageSource in '..\..\DN.PackageSource.pas',
+  DN.PackageSource.Registry.Intf in '..\..\DN.PackageSource.Registry.Intf.pas',
+  DN.PackageSource.Registry in '..\..\DN.PackageSource.Registry.pas',
+  DN.PackageSource.Settings.Field.Intf in '..\..\DN.PackageSource.Settings.Field.Intf.pas',
+  DN.PackageSource.Settings.Field in '..\..\DN.PackageSource.Settings.Field.pas',
+  DN.PackageSource.Settings.Github in '..\..\DN.PackageSource.Settings.Github.pas',
+  DN.PackageSource.Settings.Intf in '..\..\DN.PackageSource.Settings.Intf.pas',
+  DN.PackageSource.Settings in '..\..\DN.PackageSource.Settings.pas',
+  DN.Character in '..\..\DN.Character.pas';
 
 end.
 

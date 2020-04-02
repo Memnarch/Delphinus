@@ -4,7 +4,8 @@ interface
 
 uses
   DN.PackageProvider.Intf,
-  DN.PackageSource.Settings.Intf;
+  DN.PackageSource.Settings.Intf,
+  DN.PackageSource.ConfigPage.Intf;
 
 type
   IDNPackageSource = interface
@@ -12,6 +13,7 @@ type
     function GetName: string;
     function NewSettings: IDNPackageSourceSettings;
     function NewProvider(const ASettings: IDNPackageSourceSettings): IDNPackageProvider;
+    function NewConfigPage: IDNPackageSourceConfigPage;
     property Name: string read GetName;
   end;
 

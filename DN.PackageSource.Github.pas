@@ -5,7 +5,8 @@ interface
 uses
   DN.PackageSource,
   DN.PackageProvider.Intf,
-  DN.PackageSource.Settings.Intf;
+  DN.PackageSource.Settings.Intf,
+  DN.PackageSource.ConfigPage.Intf;
 
 type
   TDNGithubPackageSource = class(TDNPackageSource)
@@ -13,6 +14,7 @@ type
     function GetName: string; override;
     function NewProvider(const ASettings: IDNPackageSourceSettings): IDNPackageProvider; override;
     function NewSettings: IDNPackageSourceSettings; override;
+    function NewConfigPage: IDNPackageSourceConfigPage; override;
   end;
 
 implementation
@@ -20,6 +22,7 @@ implementation
 uses
   SysUtils,
   DN.PackageSource.Settings.GitHub,
+  DN.PackageSource.ConfigPage.Github,
   DN.PackageProvider.Github,
   DN.HttpClient.Intf,
   DN.HttpClient.WinHttp;
@@ -29,6 +32,11 @@ uses
 function TDNGithubPackageSource.GetName: string;
 begin
   Result := 'GitHub';
+end;
+
+function TDNGithubPackageSource.NewConfigPage: IDNPackageSourceConfigPage;
+begin
+  Result := TDNGithubSourceConfigPage.Create(nil);
 end;
 
 function TDNGithubPackageSource.NewProvider(
