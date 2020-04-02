@@ -158,7 +158,8 @@ contains
   DN.Character in '..\..\DN.Character.pas',
   DN.PackageSource.ConfigPage in '..\..\DN.PackageSource.ConfigPage.pas',
   DN.PackageSource.ConfigPage.Intf in '..\..\DN.PackageSource.ConfigPage.Intf.pas',
-  DN.PackageSource.ConfigPage.Github in '..\..\DN.PackageSource.ConfigPage.Github.pas' {DNGithubSourceConfigPage: TFrame};
+  DN.PackageSource.ConfigPage.Github in '..\..\DN.PackageSource.ConfigPage.Github.pas' {DNGithubSourceConfigPage: TFrame},
+  DN.PackageProvider.MultiSource in '..\..\DN.PackageProvider.MultiSource.pas';
 
 end.
 

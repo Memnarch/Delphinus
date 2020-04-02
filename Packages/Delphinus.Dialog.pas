@@ -34,7 +34,7 @@ uses
   DN.PackageSource.Settings.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions, System.ImageList;
 
 type
   TDelphinusDialog = class(TForm)
@@ -87,6 +87,7 @@ type
     FDummyPic: TGraphic;
     FEnvironmentOptionsService: IDNEnvironmentOptionsService;
     FSourceRegistry: IDNPackageSourceRegistry;
+    FProviders: TList<IDNPackageProvider>;
     procedure ReloadPackages;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
@@ -167,6 +168,7 @@ uses
   DN.PackageSource.Registry,
   DN.PackageSource.Intf,
   DN.PackageSource.GitHub,
+  DN.PackageProvider.MultiSource,
   Delphinus.Resources.Names,
   Delphinus.Resources,
   Delphinus.About,
@@ -242,6 +244,7 @@ begin
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
   FEnvironmentOptionsService := TDNIDEEnvironmentOptionsService.Create();
+  FProviders := TList<IDNPackageProvider>.Create();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -353,6 +356,7 @@ begin
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
   FSettings := nil;
+  FProviders.Free;
   FDummyPic.Free;
   inherited;
 end;
@@ -605,28 +609,35 @@ var
   LSetting: IDNPackageSourceSettings;
 begin
   FPackageProvider := nil;
+  FProviders.Clear;
   for LSetting in FSettings.SourceSettings do
   begin
     if FSourceRegistry.TryGetSource(LSetting.SourceName, LSource) then
-    begin
-      FPackageProvider := LSource.NewProvider(LSetting);
-      Break;
-    end;
+      FProviders.Add(LSource.NewProvider(LSetting));
   end;
+  FPackageProvider := TDNMultiSourceProvider.Create(FProviders.ToArray);
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
   LInstalledPackage: IDNPackage;
   LState: IDNPackageProviderState;
+  LProvider: IDNPackageProvider;
 begin
-  if Supports(FPackageProvider, IDNPackageProviderState, LState) then
+  for LProvider in FProviders do
   begin
-    if LState.State <> psOk then
-      ShowWarning(LState.LastError)
-    else
-      pnlWarning.Visible := False;
+    if Supports(LProvider, IDNPackageProviderState, LState) then
+    begin
+      if LState.State <> psOk then
+      begin
+        ShowWarning(LState.LastError);
+        Break;
+      end
+      else
+        pnlWarning.Visible := False;
+    end;
   end;
+
   if FInstalledPackageProvider.Reload() then
   begin
     FInstalledPackages.Clear;
