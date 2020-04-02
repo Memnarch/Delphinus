@@ -81,6 +81,7 @@ type
     FSettings: IDNSettings;
     FCategoryFilteView: TCategoryFilterView;
     FCategory: TPackageCategory;
+    FCategorySubNode: Integer;
     FProgressDialog: TProgressDialog;
     FFilter: string;
     FFileService: IDNFileService;
@@ -109,7 +110,7 @@ type
     function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
     function CreateUninstallDependencyResolver: IDNSetupDependencyResolver;
     function IsStarter: Boolean;
-    procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
+    procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory; ASubNode: Integer);
     procedure HandleSelectedPackageChanged(Sender: TObject);
     procedure HandleAsyncProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     function GetActivePackageSource: TList<IDNPackage>;
@@ -423,7 +424,13 @@ end;
 function TDelphinusDialog.GetActivePackageSource: TList<IDNPackage>;
 begin
   case FCategory of
-    pcOnline: Result := FPackages;
+    pcOnline:
+    begin
+      if FCategorySubNode = -1 then
+        Result := FPackages
+      else
+        Result := FProviders[FCategorySubNode].Packages;
+    end;
     pcInstalled: Result := FInstalledPackages;
     pcUpdates: Result := FUpdatePackages;
   else
@@ -520,10 +527,10 @@ begin
   );
 end;
 
-procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject;
-  ANewCategory: TPackageCategory);
+procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory; ASubNode: Integer);
 begin
   FCategory := ANewCategory;
+  FCategorySubNode := ASubNode;
   RefreshOverview();
 end;
 
@@ -607,14 +614,24 @@ procedure TDelphinusDialog.RecreatePackageProvider;
 var
   LSource: IDNPackageSource;
   LSetting: IDNPackageSourceSettings;
+  LNames: TArray<string>;
+  i: Integer;
 begin
   FPackageProvider := nil;
   FProviders.Clear;
+  SetLength(LNames, Length(FSettings.SourceSettings));
+  i := 0;
   for LSetting in FSettings.SourceSettings do
   begin
     if FSourceRegistry.TryGetSource(LSetting.SourceName, LSource) then
+    begin
       FProviders.Add(LSource.NewProvider(LSetting));
+      LNames[i] := LSetting.Name;
+      Inc(i);
+    end;
   end;
+  SetLength(LNames, i);
+  FCategoryFilteView.SetOnlineSubnodes(LNames);
   FPackageProvider := TDNMultiSourceProvider.Create(FProviders.ToArray);
 end;
 
@@ -682,9 +699,13 @@ begin
             LProgress.OnProgress := nil;
           TThread.Queue(nil,
             procedure
+            var
+              i: Integer;
             begin
               begin
                 FCategoryFilteView.OnlineCount := FPackages.Count;
+                for i := 0 to Pred(FProviders.Count) do
+                  FCategoryFilteView.SubOnlineCount[i] := FProviders[i].Packages.Count;
                 RefreshInstalledPackages();
                 FProgressDialog.ModalResult := mrOk;
               end;

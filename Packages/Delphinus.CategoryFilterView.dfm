@@ -30,6 +30,5 @@ object CategoryFilterView: TCategoryFilterView
     OnAdvancedCustomDrawItem = tvCategoriesAdvancedCustomDrawItem
     OnChange = tvCategoriesChange
     OnCollapsing = tvCategoriesCollapsing
-    ExplicitHeight = 105
   end
 end
