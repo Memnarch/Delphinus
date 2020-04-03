@@ -159,7 +159,11 @@ contains
   DN.PackageSource.ConfigPage in '..\..\DN.PackageSource.ConfigPage.pas',
   DN.PackageSource.ConfigPage.Intf in '..\..\DN.PackageSource.ConfigPage.Intf.pas',
   DN.PackageSource.ConfigPage.Github in '..\..\DN.PackageSource.ConfigPage.Github.pas' {DNGithubSourceConfigPage: TFrame},
-  DN.PackageProvider.MultiSource in '..\..\DN.PackageProvider.MultiSource.pas';
+  DN.PackageProvider.MultiSource in '..\..\DN.PackageProvider.MultiSource.pas',
+  DN.PackageProvider.Folder in '..\..\DN.PackageProvider.Folder.pas',
+  DN.PackageSource.Folder in '..\..\DN.PackageSource.Folder.pas',
+  DN.PackageSource.Settings.Folder in '..\..\DN.PackageSource.Settings.Folder.pas',
+  DN.PackageSource.ConfigPage.Folder in '..\..\DN.PackageSource.ConfigPage.Folder.pas' {DNFolderConfigPage: TFrame};
 
 end.
 

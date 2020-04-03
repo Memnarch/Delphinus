@@ -169,6 +169,7 @@ uses
   DN.PackageSource.Registry,
   DN.PackageSource.Intf,
   DN.PackageSource.GitHub,
+  DN.PackageSource.Folder,
   DN.PackageProvider.MultiSource,
   Delphinus.Resources.Names,
   Delphinus.Resources,
@@ -239,6 +240,7 @@ begin
   inherited;
   FSourceRegistry := TDNPackageSourceRegistry.Create();
   FSourceRegistry.RegisterSource(TDNGithubPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNFolderPackageSource.Create() as IDNPackageSource);
   FSettings := TDNSettings.Create(SourceSettingsFactory);
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();

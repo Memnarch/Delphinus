@@ -15,7 +15,7 @@ type
     procedure SetName(const Value: string);
     property Name: string read GetName write SetName;
     property SourceName: string read GetSourceName;
-    property Field[const AName: string]: IDNPackageSourceSettingsField read GetField;
+    property Field[const AName: string]: IDNPackageSourceSettingsField read GetField; default;
     property Fields: TArray<IDNPackageSourceSettingsField> read GetFields;
   end;
 
