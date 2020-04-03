@@ -167,9 +167,10 @@ begin
       LKeys := TStringList.Create();
       try
         LRegistry.GetKeyNames(LKeys);
+        LRegistry.CloseKey;
         for LKey in LKeys do
         begin
-          if LRegistry.OpenKeyReadOnly(LKey) and LRegistry.ValueExists(CSourceType) then
+          if LRegistry.OpenKeyReadOnly(CDelphinusSourcesKey + '\' + LKey) and LRegistry.ValueExists(CSourceType) then
           begin
             LSourceType := LRegistry.ReadString(CSourceType);
             if FSettingsFactory(LSourceType, LSettings) then
@@ -187,6 +188,7 @@ begin
               end;
               FSourceSettings.Add(LSettings);
             end;
+            LRegistry.CloseKey;
           end;
         end;
       finally
