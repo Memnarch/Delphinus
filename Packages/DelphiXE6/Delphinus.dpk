@@ -163,7 +163,8 @@ contains
   DN.PackageProvider.Folder in '..\..\DN.PackageProvider.Folder.pas',
   DN.PackageSource.Folder in '..\..\DN.PackageSource.Folder.pas',
   DN.PackageSource.Settings.Folder in '..\..\DN.PackageSource.Settings.Folder.pas',
-  DN.PackageSource.ConfigPage.Folder in '..\..\DN.PackageSource.ConfigPage.Folder.pas' {DNFolderConfigPage: TFrame};
+  DN.PackageSource.ConfigPage.Folder in '..\..\DN.PackageSource.ConfigPage.Folder.pas' {DNFolderConfigPage: TFrame},
+  Delphinus.OptionsDialog.TypeSelection in '..\Delphinus.OptionsDialog.TypeSelection.pas' {TypeSelectionDialog};
 
 end.
 

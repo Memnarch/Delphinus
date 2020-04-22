@@ -245,6 +245,10 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="..\Delphinus.OptionsDialog.TypeSelection.pas">
+            <Form>TypeSelectionDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>

@@ -34,7 +34,7 @@ uses
   DN.PackageSource.Settings.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry, System.Actions, System.ImageList;
+  Registry;
 
 type
   TDelphinusDialog = class(TForm)

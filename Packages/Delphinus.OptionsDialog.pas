@@ -21,7 +21,7 @@ uses
   DN.PackageSource.ConfigPage.Intf,
   StdCtrls,
   ComCtrls,
-  ExtCtrls;
+  ExtCtrls, ToolWin, ImgList;
 
 type
   TDelphinusOptionsDialog = class(TForm)
@@ -29,8 +29,15 @@ type
     btnCancel: TButton;
     lvSources: TListView;
     pnlSettings: TPanel;
+    ToolBar1: TToolBar;
+    tbAdd: TToolButton;
+    tbDelete: TToolButton;
+    ilToolbar: TImageList;
+    Label1: TLabel;
     procedure lvSourcesSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
+    procedure tbDeleteClick(Sender: TObject);
+    procedure tbAddClick(Sender: TObject);
   private
     { Private declarations }
     FRegistry: IDNPackageSourceRegistry;
@@ -51,7 +58,10 @@ var
 implementation
 
 uses
-  DN.PackageSource.Intf;
+  DN.PackageSource.Intf,
+  Delphinus.Resources,
+  Delphinus.Resources.Names,
+  Delphinus.OptionsDialog.TypeSelection;
 
 {$R *.dfm}
 
@@ -63,6 +73,8 @@ begin
   FSettings := TList<IDNPackageSourceSettings>.Create();
   FPages := TDictionary<IDNPackageSourceSettings, IDNPackageSourceConfigPage>.Create();
   FRegistry := ARegistry;
+  tbAdd.ImageIndex := AddIconToImageList(ilToolbar, Ico_Add);
+  tbDelete.ImageIndex := AddIconToImageList(ilToolbar, Ico_Delete);
 end;
 
 destructor TDelphinusOptionsDialog.Destroy;
@@ -84,8 +96,9 @@ procedure TDelphinusOptionsDialog.lvSourcesSelectItem(Sender: TObject;
 var
   LSource: IDNPackageSource;
   LSettings: IDNPackageSourceSettings;
-  LPage: IDNPackageSourceConfigPage;
+  LPage, LOldPage: IDNPackageSourceConfigPage;
 begin
+  LPage := nil;
   if Selected then
   begin
     LSettings := FSettings[Item.Index];
@@ -99,6 +112,10 @@ begin
     LPage.Parent := pnlSettings;
     LPage.Load(LSettings);
   end;
+
+  for LOldPage in FPages.Values do
+    if LOldPage <> LPage then
+      LOldPage.Parent := nil;
 end;
 
 procedure TDelphinusOptionsDialog.RebuildSettingsList;
@@ -117,6 +134,54 @@ begin
   for LPair in FPages do
     LPair.Value.Save(LPair.Key);
   ASettings.SourceSettings := FSettings.ToArray;
+end;
+
+procedure TDelphinusOptionsDialog.tbDeleteClick(Sender: TObject);
+var
+  LSettings: IDNPackageSourceSettings;
+  LPage: IDNPackageSourceConfigPage;
+begin
+  if lvSources.ItemIndex > -1 then
+  begin
+    LSettings := FSettings[lvSources.ItemIndex];
+    if FPages.TryGetValue(LSettings, LPage) then
+    begin
+      LPage.Parent := nil;
+      FPages.Remove(LSettings);
+    end;
+
+    FSettings.Delete(lvSources.ItemIndex);
+    RebuildSettingsList;
+  end;
+end;
+
+procedure TDelphinusOptionsDialog.tbAddClick(Sender: TObject);
+var
+  LDialog: TTypeSelectionDialog;
+  LSettings: IDNPackageSourceSettings;
+begin
+  LDialog := TTypeSelectionDialog.Create(FRegistry.Sources);
+  try
+    LDialog.OnValidateName :=
+      function(const AName: string): Boolean
+      var
+        LSettings: IDNPackageSourceSettings;
+      begin
+        Result := True;
+        for LSettings in FSettings do
+          if AnsiSameText(LSettings.Name, AName) then
+            Exit(False);
+      end;
+    if LDialog.ShowModal() = mrOk then
+    begin
+      LSettings := LDialog.SelectedSource.NewSettings;
+      LSettings.Name := LDialog.SourceName;
+      FSettings.Add(LSettings);
+      RebuildSettingsList;
+    end;
+  finally
+    LDialog.Free;
+  end;
 end;
 
 end.
