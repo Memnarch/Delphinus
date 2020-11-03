@@ -174,7 +174,7 @@ begin
     for i := 0 to Pred(LArray.Count) do
     begin
       LItem := LArray.Items[i] as TJSONObject;
-      APathes[i].Path := ReadString(LItem, 'pathes');
+      APathes[i].Path := NormaliseDirectoryPath(ReadString(LItem, 'pathes'));
       LCompiler := ReadInteger(LItem, 'compiler');
       if LCompiler > 0 then
       begin
@@ -226,7 +226,7 @@ begin
   for i := 0 to Pred(ARawFolders.Count) do
   begin
     LItem := ARawFolders.Items[i] as TJSONObject;
-    FRawFolders[i].Folder := ReadString(LItem, 'folder');
+    FRawFolders[i].Folder := NormaliseDirectoryPath(ReadString(LItem, 'folder'));
     LCompiler := ReadInteger(LItem, 'compiler');
     if LCompiler > 0 then
     begin
@@ -251,8 +251,8 @@ begin
   for i := 0 to Pred(AFolders.Count) do
   begin
     LItem := AFolders.Items[i] as TJSONObject;
-    FSourceFolders[i].Folder := ReadString(LItem, 'folder');
-    FSourceFolders[i].Base := ReadString(LItem, 'base');
+    FSourceFolders[i].Folder := NormaliseDirectoryPath(ReadString(LItem, 'folder'));
+    FSourceFolders[i].Base := NormaliseDirectoryPath(ReadString(LItem, 'base'));
     FSourceFolders[i].Recursive := ReadBoolean(LItem, 'recursive');
     FSourceFolders[i].Filter := ReadString(LItem, 'filter');
     LCompiler := ReadInteger(LItem, 'compiler');

@@ -120,7 +120,7 @@ var
   LValue: TJSONValue;
 begin
   inherited;
-  FPicture := ReadString(ARoot, 'picture');
+  FPicture := NormaliseDirectoryPath(ReadString(ARoot, 'picture'));
   FID := ReadID(ARoot);
   FName := ReadString(ARoot, 'name');
   ReadLicenses(ARoot);
@@ -219,6 +219,8 @@ begin
         LObject := TJSONObject(LValue);
         LLicense.LicenseType := ReadString(LObject, 'type');
         LLicense.LicenseFile := ReadString(LObject, 'file');
+        if not LLicense.LicenseFile.StartsWith('http') then
+          LLicense.LicenseFile := NormaliseDirectoryPath(LLicense.LicenseFile);
         FLicenses[i] := LLicense;
       end;
     end;

@@ -8,6 +8,7 @@ uses
 function GetDelphiName(const ACompilerVersion: TCompilerVersion): string;
 function GenerateSupportsString(const AMin, AMax: TCompilerVersion): string;
 function GeneratePlatformString(APlatforms: TDNCompilerPlatforms; const ASeperator: string = ', '): string;
+function NormaliseDirectoryPath(const APath : string) : string;
 
 const
   TDNCompilerTargetName: array[Low(TDNCompilerTarget)..High(TDNCompilerTarget)] of string = ('Build', 'Compile');
@@ -88,6 +89,11 @@ begin
     end;
 
   Result := False;
+end;
+
+function NormaliseDirectoryPath(const APath : string) : string;
+begin
+  exit(APath.Replace('/', '\', [rfReplaceAll]));
 end;
 
 end.
