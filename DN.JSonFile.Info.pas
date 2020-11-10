@@ -218,9 +218,7 @@ begin
       begin
         LObject := TJSONObject(LValue);
         LLicense.LicenseType := ReadString(LObject, 'type');
-        LLicense.LicenseFile := ReadString(LObject, 'file');
-        if not LLicense.LicenseFile.StartsWith('http') then
-          LLicense.LicenseFile := NormaliseDirectoryPath(LLicense.LicenseFile);
+        LLicense.LicenseFile := NormaliseDirectoryPath(ReadString(LObject, 'file'));
         FLicenses[i] := LLicense;
       end;
     end;
