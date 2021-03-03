@@ -4,8 +4,8 @@ object DelphinusOptionsDialog: TDelphinusOptionsDialog
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Options'
-  ClientHeight = 166
-  ClientWidth = 395
+  ClientHeight = 408
+  ClientWidth = 525
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,55 +14,99 @@ object DelphinusOptionsDialog: TDelphinusOptionsDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  DesignSize = (
+    525
+    408)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 8
-    Top = 8
-    Width = 64
+    Left = 3
+    Top = 36
+    Width = 42
     Height = 13
-    Caption = 'OAuth-Token'
-  end
-  object lbResponse: TLabel
-    Left = 8
-    Top = 54
-    Width = 298
-    Height = 13
-    AutoSize = False
-  end
-  object edToken: TEdit
-    Left = 8
-    Top = 27
-    Width = 298
-    Height = 21
-    PasswordChar = '*'
-    TabOrder = 0
-  end
-  object btnTest: TButton
-    Left = 312
-    Top = 25
-    Width = 75
-    Height = 25
-    Caption = 'Test'
-    TabOrder = 1
-    OnClick = btnTestClick
+    Caption = 'Sources:'
   end
   object btnOK: TButton
-    Left = 231
-    Top = 133
+    Left = 364
+    Top = 381
     Width = 75
     Height = 25
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 2
+    TabOrder = 0
+    ExplicitLeft = 221
+    ExplicitTop = 152
   end
   object btnCancel: TButton
-    Left = 312
-    Top = 133
+    Left = 445
+    Top = 381
     Width = 75
     Height = 25
+    Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
+    TabOrder = 1
+    ExplicitLeft = 302
+    ExplicitTop = 152
+  end
+  object lvSources: TListView
+    AlignWithMargins = True
+    Left = 3
+    Top = 55
+    Width = 126
+    Height = 350
+    Margins.Top = 25
+    Align = alLeft
+    Columns = <>
+    TabOrder = 2
+    ViewStyle = vsList
+    OnSelectItem = lvSourcesSelectItem
+    ExplicitHeight = 121
+  end
+  object pnlSettings: TPanel
+    Left = 135
+    Top = 33
+    Width = 385
+    Height = 342
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    BevelOuter = bvNone
     TabOrder = 3
+    ExplicitWidth = 242
+    ExplicitHeight = 113
+  end
+  object ToolBar1: TToolBar
+    Left = 0
+    Top = 0
+    Width = 525
+    Height = 30
+    AutoSize = True
+    ButtonHeight = 30
+    ButtonWidth = 31
+    Caption = 'ToolBar1'
+    Images = ilToolbar
+    TabOrder = 4
+    ExplicitWidth = 382
+    object tbAdd: TToolButton
+      Left = 0
+      Top = 0
+      Caption = 'tbAdd'
+      ImageIndex = 0
+      OnClick = tbAddClick
+    end
+    object tbDelete: TToolButton
+      Left = 31
+      Top = 0
+      Caption = 'tbDelete'
+      ImageIndex = 1
+      OnClick = tbDeleteClick
+    end
+  end
+  object ilToolbar: TImageList
+    ColorDepth = cd32Bit
+    Height = 24
+    Width = 24
+    Left = 184
+    Top = 88
   end
 end

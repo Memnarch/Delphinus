@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls,
   DN.Package.Intf,
-  Delphinus.Forms, Vcl.ComCtrls;
+  Delphinus.Forms,
+  ComCtrls;
 
 type
   TLicenseDialog = class(TForm)

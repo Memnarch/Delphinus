@@ -9,7 +9,9 @@ uses
   DN.Command.Environment.Intf,
   DN.PackageProvider.Intf,
   DN.Settings.Intf,
-  DN.DelphiInstallation.Provider.Intf;
+  DN.DelphiInstallation.Provider.Intf,
+  DN.PackageSource.Settings.Intf,
+  DN.PackageSource.Registry.Intf;
 
 type
   TDPM = class
@@ -19,6 +21,9 @@ type
     FOnlinePackageProvider: IDNPackageProvider;
     FDelphiProvider: IDNDelphiInstallationProvider;
     FDispatcher: IDNCommandDispatcher;
+    FSourceRegistry: IDNPackageSourceRegistry;
+    function SourceSettingsFactory(const ASourceName: string;
+                  out ASettings: IDNPackageSourceSettings): Boolean;
     function GetCommandLine: string;
     function GetKnownCommands: TArray<TDNCommandClass>;
   public
@@ -52,9 +57,24 @@ uses
   DN.HttpClient.WinHttp,
   DN.Settings,
   DN.DelphiInstallation.Editions,
-  DN.DelphiInstallation.Provider;
+  DN.DelphiInstallation.Provider,
+  DN.PackageSource.Intf,
+  DN.PackageSource.Registry,
+  DN.PackageSource.Github,
+  DN.PackageSource.Gitlab,
+  DN.PackageSource.Folder;
 
 { TDPM }
+
+function TDPM.SourceSettingsFactory(const ASourceName: string;
+  out ASettings: IDNPackageSourceSettings): Boolean;
+var
+  LSource: IDNPackageSource;
+begin
+  Result := FSourceRegistry.TryGetSource(ASourceName, LSource);
+  if Result then
+    ASettings := LSource.NewSettings;
+end;
 
 constructor TDPM.Create;
 var
@@ -62,7 +82,11 @@ var
   LFactory: TInstalledPackageProviderFactory;
 begin
   inherited;
-  FSettings := TDNSettings.Create();
+  FSourceRegistry := TDNPackageSourceRegistry.Create();
+  FSourceRegistry.RegisterSource(TDNGithubPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNGitlabPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNFolderPackageSource.Create() as IDNPackageSource);
+  FSettings := TDNSettings.Create(SourceSettingsFactory);
   LHTTP := TDNWinHttpClient.Create();
   if FSettings.OAuthToken <> '' then
     LHTTP.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);

@@ -30,9 +30,11 @@ uses
   DN.PackageFilter,
   DN.Version,
   DN.EnvironmentOptions.Intf,
+  DN.PackageSource.Registry.Intf,
+  DN.PackageSource.Settings.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions, System.ImageList;
 
 type
   TDelphinusDialog = class(TForm)
@@ -79,11 +81,14 @@ type
     FSettings: IDNSettings;
     FCategoryFilteView: TCategoryFilterView;
     FCategory: TPackageCategory;
+    FCategorySubNode: Integer;
     FProgressDialog: TProgressDialog;
     FFilter: string;
     FFileService: IDNFileService;
     FDummyPic: TGraphic;
     FEnvironmentOptionsService: IDNEnvironmentOptionsService;
+    FSourceRegistry: IDNPackageSourceRegistry;
+    FProviders: TList<IDNPackageProvider>;
     procedure ReloadPackages;
     procedure InstallPackage(const APackage: IDNPackage);
     procedure UnInstallPackage(const APackage: IDNPackage);
@@ -105,7 +110,7 @@ type
     function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
     function CreateUninstallDependencyResolver: IDNSetupDependencyResolver;
     function IsStarter: Boolean;
-    procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory);
+    procedure HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory; ASubNode: Integer);
     procedure HandleSelectedPackageChanged(Sender: TObject);
     procedure HandleAsyncProgress(const ATask, AItem: string; AProgress, AMax: Int64);
     function GetActivePackageSource: TList<IDNPackage>;
@@ -114,6 +119,7 @@ type
     procedure FilterPackage(const APackage: IDNPackage; var AAccepted: Boolean);
     procedure LoadIcons;
     procedure ShowWarning(const AMessage: string);
+    function SourceSettingsFactory(const ASourceName: string; out ASettings: IDNPackageSourceSettings): Boolean;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -134,7 +140,6 @@ uses
   DN.Types,
   DN.Package.Finder.Intf,
   DN.Package.Finder,
-  DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   DN.PackageProvider.State.Intf,
   Delphinus.SetupDialog,
@@ -150,8 +155,6 @@ uses
   DN.Setup.Dependency.Resolver.Uninstall,
   DN.Setup.Dependency.Processor,
   Delphinus.OptionsDialog,
-  DN.HttpClient.Intf,
-  DN.HttpClient.WinHttp,
   DN.Progress.Intf,
   DN.Settings,
   DN.ExpertService,
@@ -163,6 +166,12 @@ uses
   DN.VariableResolver.Intf,
   DN.VariableResolver.Compiler,
   DN.VariableResolver.Compiler.Factory,
+  DN.PackageSource.Registry,
+  DN.PackageSource.Intf,
+  DN.PackageSource.GitHub,
+  DN.PackageSource.GitLab,
+  DN.PackageSource.Folder,
+  DN.PackageProvider.MultiSource,
   Delphinus.Resources.Names,
   Delphinus.Resources,
   Delphinus.About,
@@ -193,7 +202,7 @@ procedure TDelphinusDialog.actOptionsExecute(Sender: TObject);
 var
   LDialog: TDelphinusOptionsDialog;
 begin
-  LDialog := TDelphinusOptionsDialog.Create(nil);
+  LDialog := TDelphinusOptionsDialog.Create(FSourceRegistry);
   try
     LDialog.LoadSettings(FSettings);
     if LDialog.ShowModal = mrOk then
@@ -230,12 +239,17 @@ end;
 constructor TDelphinusDialog.Create(AOwner: TComponent);
 begin
   inherited;
-  FSettings := TDNSettings.Create();
+  FSourceRegistry := TDNPackageSourceRegistry.Create();
+  FSourceRegistry.RegisterSource(TDNGithubPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNGitlabPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNFolderPackageSource.Create() as IDNPackageSource);
+  FSettings := TDNSettings.Create(SourceSettingsFactory);
   FPackages := TList<IDNPackage>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
   FEnvironmentOptionsService := TDNIDEEnvironmentOptionsService.Create();
+  FProviders := TList<IDNPackageProvider>.Create();
 
   FProgressDialog := TProgressDialog.Create(Self);
   FDetailView := TPackageDetailView.Create(Self);
@@ -347,6 +361,7 @@ begin
   FPackageProvider := nil;
   FInstalledPackageProvider := nil;
   FSettings := nil;
+  FProviders.Free;
   FDummyPic.Free;
   inherited;
 end;
@@ -413,7 +428,13 @@ end;
 function TDelphinusDialog.GetActivePackageSource: TList<IDNPackage>;
 begin
   case FCategory of
-    pcOnline: Result := FPackages;
+    pcOnline:
+    begin
+      if FCategorySubNode = -1 then
+        Result := FPackages
+      else
+        Result := FProviders[FCategorySubNode].Packages;
+    end;
     pcInstalled: Result := FInstalledPackages;
     pcUpdates: Result := FUpdatePackages;
   else
@@ -510,10 +531,10 @@ begin
   );
 end;
 
-procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject;
-  ANewCategory: TPackageCategory);
+procedure TDelphinusDialog.HandleCategoryChanged(Sender: TObject; ANewCategory: TPackageCategory; ASubNode: Integer);
 begin
   FCategory := ANewCategory;
+  FCategorySubNode := ASubNode;
   RefreshOverview();
 end;
 
@@ -595,26 +616,49 @@ end;
 
 procedure TDelphinusDialog.RecreatePackageProvider;
 var
-  LClient: IDNHttpClient;
+  LSource: IDNPackageSource;
+  LSetting: IDNPackageSourceSettings;
+  LNames: TArray<string>;
+  i: Integer;
 begin
-  LClient := TDNWinHttpClient.Create();
-  if FSettings.OAuthToken <> '' then
-    LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
-  FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
+  FPackageProvider := nil;
+  FProviders.Clear;
+  SetLength(LNames, Length(FSettings.SourceSettings));
+  i := 0;
+  for LSetting in FSettings.SourceSettings do
+  begin
+    if FSourceRegistry.TryGetSource(LSetting.SourceName, LSource) then
+    begin
+      FProviders.Add(LSource.NewProvider(LSetting));
+      LNames[i] := LSetting.Name;
+      Inc(i);
+    end;
+  end;
+  SetLength(LNames, i);
+  FCategoryFilteView.SetOnlineSubnodes(LNames);
+  FPackageProvider := TDNMultiSourceProvider.Create(FProviders.ToArray);
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
   LInstalledPackage: IDNPackage;
   LState: IDNPackageProviderState;
+  LProvider: IDNPackageProvider;
 begin
-  if Supports(FPackageProvider, IDNPackageProviderState, LState) then
+  for LProvider in FProviders do
   begin
-    if LState.State <> psOk then
-      ShowWarning(LState.LastError)
-    else
-      pnlWarning.Visible := False;
+    if Supports(LProvider, IDNPackageProviderState, LState) then
+    begin
+      if LState.State <> psOk then
+      begin
+        ShowWarning(LState.LastError);
+        Break;
+      end
+      else
+        pnlWarning.Visible := False;
+    end;
   end;
+
   if FInstalledPackageProvider.Reload() then
   begin
     FInstalledPackages.Clear;
@@ -659,9 +703,13 @@ begin
             LProgress.OnProgress := nil;
           TThread.Queue(nil,
             procedure
+            var
+              i: Integer;
             begin
               begin
                 FCategoryFilteView.OnlineCount := FPackages.Count;
+                for i := 0 to Pred(FProviders.Count) do
+                  FCategoryFilteView.SubOnlineCount[i] := FProviders[i].Packages.Count;
                 RefreshInstalledPackages();
                 FProgressDialog.ModalResult := mrOk;
               end;
@@ -695,6 +743,16 @@ procedure TDelphinusDialog.ShowWarning(const AMessage: string);
 begin
   lbMessage.Caption := AMessage;
   pnlWarning.Visible := True;
+end;
+
+function TDelphinusDialog.SourceSettingsFactory(const ASourceName: string;
+  out ASettings: IDNPackageSourceSettings): Boolean;
+var
+  LSource: IDNPackageSource;
+begin
+  Result := FSourceRegistry.TryGetSource(ASourceName, LSource);
+  if Result then
+    ASettings := LSource.NewSettings;
 end;
 
 procedure TDelphinusDialog.UnInstallPackage(const APackage: IDNPackage);
