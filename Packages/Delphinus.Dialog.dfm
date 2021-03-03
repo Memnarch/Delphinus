@@ -35,6 +35,7 @@ object DelphinusDialog: TDelphinusDialog
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 0
+      Visible = False
       DesignSize = (
         984
         32)

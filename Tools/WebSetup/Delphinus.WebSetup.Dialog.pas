@@ -16,7 +16,10 @@ uses
   DN.VariableResolver.Intf,
   DN.VariableResolver.Compiler.Factory,
   Buttons, ActnList,
-  pngimage;
+  pngimage, System.ImageList,
+  DN.PackageSource.Registry,
+  DN.PackageSource.Registry.Intf,
+  DN.PackageSource.Settings.Intf;
 
 type
   TDNWebSetupDialog = class(TForm)
@@ -64,6 +67,9 @@ type
     FCanExitPage: TDictionary<TTabSheet, TFunc<Boolean>>;
     FSettings: IDNElevatedSettings;
     FLog: TStringList;
+    FSourceRegistry: IDNPackageSourceRegistry;
+    function SourceSettingsFactory(const ASourceName: string;
+                      out ASettings: IDNPackageSourceSettings): Boolean;
     procedure FillVersions;
     procedure LoadPackage;
     procedure RunSetupAsync;
@@ -116,7 +122,11 @@ uses
   DN.Package.Version.Intf,
   DN.VariableResolver.Compiler,
   DN.DelphiInstallation.Editions,
-  Delphinus.WebSetup;
+  Delphinus.WebSetup,
+  DN.PackageSource.Intf,
+  DN.PackageSource.Github,
+  DN.PackageSource.Gitlab,
+  DN.PackageSource.Folder;
 
 {$R *.dfm}
 
@@ -179,6 +189,16 @@ begin
   cbVersions.Enabled := not cbNoVersion.Checked;
 end;
 
+function TDNWebSetupDialog.SourceSettingsFactory(const ASourceName: string;
+  out ASettings: IDNPackageSourceSettings): Boolean;
+var
+  LSource: IDNPackageSource;
+begin
+  Result := FSourceRegistry.TryGetSource(ASourceName, LSource);
+  if Result then
+    ASettings := LSource.NewSettings;
+end;
+
 constructor TDNWebSetupDialog.Create(AOwner: TComponent);
 begin
   inherited;
@@ -195,8 +215,12 @@ begin
   FCanExitPage.Add(tsDelphiSelection, DelphiSelectionCanExit);
   FCanExitPage.Add(tsSettings, SettingsCanExit);
 
-  FLog := TStringList.Create();
-  FSettings := TDNSettings.Create();
+  FSourceRegistry := TDNPackageSourceRegistry.Create();
+  FSourceRegistry.RegisterSource(TDNGithubPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNGitlabPackageSource.Create() as IDNPackageSource);
+  FSourceRegistry.RegisterSource(TDNFolderPackageSource.Create() as IDNPackageSource);
+  FLog := TStringList.Create;
+  FSettings := TDNSettings.Create(SourceSettingsFactory);
   if FSettings.InstallationDirectory <> '' then
   begin
     edInstallDirectory.Text := FSettings.InstallationDirectory;
