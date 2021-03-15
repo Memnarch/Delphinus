@@ -1,6 +1,6 @@
 {
 #########################################################
-# Author: Matthias Heunecke, Navimatix                  #
+# Copyright by Alexander Benikowski                     #
 # This unit is part of the Delphinus project hosted on  #
 # https://github.com/Memnarch/Delphinus                 #
 #########################################################
